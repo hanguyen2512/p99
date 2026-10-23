@@ -137,15 +137,23 @@
   /* Núi ba tầng, xa nhạt gần đậm — phép xa gần của tranh thuỷ mặc.
      Giữ tên .treeline vì nhịp đồng hồ vẫn cầm tay nắm vào nó. */
   .treeline{
-    position:fixed; left:0; right:0; z-index:1;
-    /* Trên iPhone, "đáy = 0" của trang dừng ngay trên vạch gạt về màn hình
-       chính, nên lớp núi không phủ tới mép màn hình và chừa lại một dải.
-       Dìm nó xuống thêm đúng chiều cao dải ấy, rồi cho cao thêm đúng từng ấy
-       — đỉnh núi vẫn đứng nguyên chỗ cũ, chỉ chân núi dài thêm xuống.
-       Android không có vạch gạt nên số đo bằng 0: không đổi một điểm ảnh. */
-    bottom: calc(-1 * var(--an-toan-duoi));
-    height: calc(38vh + var(--an-toan-duoi));
+    position:fixed; left:0; right:0; bottom:0; height:38vh; z-index:1;
     pointer-events:none; transition:opacity 1.1s ease; opacity:0.95;
+  }
+  /* Nối thêm chân núi chạy xuống dưới mép trang.
+     Có máy — iPhone là một — không tính mép dưới màn hình là "đáy = 0" của
+     trang, nên lớp núi dừng sớm và chừa ra một dải trống. Thay vì kéo giãn
+     lớp núi (làm méo cả dãy núi), ta nối thêm đúng MÀU CHÂN NÚI gần nhất,
+     chạy dài 200 điểm ảnh xuống dưới. Máy nào vốn đã phủ kín thì cả dải này
+     nằm ngoài màn hình, không ai nhìn thấy, không đổi gì hết.
+     Lớp mực đêm nhân với --dem y như lớp núi thật, để đêm xuống thì hai chỗ
+     tối đi cùng nhau, không lộ đường nối. */
+  .treeline::after{
+    content:""; position:absolute; left:0; right:0; top:100%; height:200px;
+    background:
+      linear-gradient(rgba(7,12,20,var(--dem,0)), rgba(7,12,20,var(--dem,0))),
+      #1b2c31;
+    pointer-events:none;
   }
   .treeline svg{ width:100%; height:100%; display:block; }
   /* --dem: 0 giữa trưa, 1 lúc nửa đêm. Nhịp đồng hồ đặt lại mỗi giây.
