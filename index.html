@@ -69,6 +69,11 @@
     --wine:       #55212f;   /* nhung bordeaux, dây nhung bảo tàng */
     --ink-text:   #1c1712;
     --sky-top: #0e1526; --sky-mid: #35435e; --sky-horizon: #b3703f; --sky-ember: #7c3a2c;
+
+    /* Vùng an toàn của máy: chỗ khuyết màn hình và thanh trạng thái ở trên,
+       vạch gạt về màn hình chính ở dưới. iPhone có, Android thường bằng 0. */
+    --an-toan-tren: env(safe-area-inset-top, 0px);
+    --an-toan-duoi: env(safe-area-inset-bottom, 0px);
   }
 
   *{ box-sizing:border-box; }
@@ -88,6 +93,11 @@
     font-family: 'Work Sans', sans-serif;
     overflow-x:hidden;
   }
+
+  /* Một lớp màu trơn phía sau tất cả, để iPhone không còn chừa vệt trắng ở
+     vùng an toàn. Màu lấy đúng chân trời — cũng chính là màu ở đáy dải
+     gradient — nên dù trời sáng hay tối cũng không ai thấy đường nối. */
+  html{ background-color: var(--sky-ember); }
 
   /* ---------- ambient sky ---------- */
   .sky-photo{
@@ -331,7 +341,9 @@
     position:relative; z-index:2;
     display:flex; align-items:flex-start; justify-content:space-between;
     flex-wrap:wrap; gap:1.2rem;
-    padding: 3.4vh 5vw 0;
+    /* Chừa thêm đúng chiều cao thanh trạng thái, nếu không hàng VI · EN · 中
+       nằm lọt dưới đồng hồ và cột sóng của iPhone. */
+    padding: calc(3.4vh + var(--an-toan-tren)) 5vw 0;
   }
 
   .lang-switch{
@@ -390,7 +402,9 @@
   .plane-glow{ filter: drop-shadow(0 0 3px rgba(200,162,74,0.9)); }
 
   @media (max-width: 640px){
-    .top-bar{ padding-top: 2.6vh; gap:0.8rem; }
+    /* Màn hình hẹp thì thu bớt — nhưng vẫn phải chừa vùng an toàn, không thì
+       hàng VI · EN · 中 lại chui xuống dưới thanh trạng thái iPhone. */
+    .top-bar{ padding-top: calc(2.6vh + var(--an-toan-tren)); gap:0.8rem; }
     .sky-path{ width:42px; flex-basis:42px; }
     .sky-point .sky-label{ font-size:0.74rem; }
   }
@@ -496,7 +510,7 @@
   .shelf-nav{
     position:fixed; left:0; right:0; bottom:0; z-index:3;
     display:flex; justify-content:center; gap:3em;
-    padding:1.6vh 5vw calc(1.8vh + env(safe-area-inset-bottom));
+    padding:1.6vh 5vw calc(1.8vh + var(--an-toan-duoi));
     pointer-events:none;
   }
   .shelf-nav button{
@@ -551,7 +565,7 @@
     background:rgba(7,10,18,.93); -webkit-backdrop-filter: blur(8px);
  backdrop-filter: blur(8px);
     opacity:0; pointer-events:none; transition:opacity .45s ease;
-    padding:calc(9vh + env(safe-area-inset-top)) 5vw calc(8vh + env(safe-area-inset-bottom));
+    padding:calc(9vh + var(--an-toan-tren)) 5vw calc(8vh + var(--an-toan-duoi));
   }
   .shelf.open{ opacity:1; pointer-events:auto; }
   .shelf-inner{ max-width:540px; margin:0 auto; }
@@ -567,7 +581,7 @@
   /* position:fixed để nó luôn nằm đó dù danh sách đã cuộn xuống rất xa */
   .back-btn{
     position:fixed; z-index:5;
-    top:calc(2.2vh + env(safe-area-inset-top)); left:5vw;
+    top:calc(2.2vh + var(--an-toan-tren)); left:5vw;
     display:flex; align-items:center; gap:.45em;
     padding:.5em 1em .5em .8em; border-radius:20px; cursor:pointer;
     background:rgba(11,14,20,.88); border:1px solid rgba(200,162,74,.4);
@@ -857,7 +871,7 @@
   /* ---------- lời nhắn trượt xuống, kiểu thông báo Facebook ---------- */
   .toast{
     position:fixed; top:0; left:0; right:0; z-index:70;
-    padding:calc(env(safe-area-inset-top, 0px) + 10px) 10px 0;
+    padding:calc(var(--an-toan-tren) + 10px) 10px 0;
     display:flex; justify-content:center; pointer-events:none;
   }
   .toast[hidden]{ display:none; }
