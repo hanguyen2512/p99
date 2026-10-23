@@ -137,7 +137,14 @@
   /* Núi ba tầng, xa nhạt gần đậm — phép xa gần của tranh thuỷ mặc.
      Giữ tên .treeline vì nhịp đồng hồ vẫn cầm tay nắm vào nó. */
   .treeline{
-    position:fixed; left:0; right:0; bottom:0; height:38vh; z-index:1;
+    position:fixed; left:0; right:0; z-index:1;
+    /* Trên iPhone, "đáy = 0" của trang dừng ngay trên vạch gạt về màn hình
+       chính, nên lớp núi không phủ tới mép màn hình và chừa lại một dải.
+       Dìm nó xuống thêm đúng chiều cao dải ấy, rồi cho cao thêm đúng từng ấy
+       — đỉnh núi vẫn đứng nguyên chỗ cũ, chỉ chân núi dài thêm xuống.
+       Android không có vạch gạt nên số đo bằng 0: không đổi một điểm ảnh. */
+    bottom: calc(-1 * var(--an-toan-duoi));
+    height: calc(38vh + var(--an-toan-duoi));
     pointer-events:none; transition:opacity 1.1s ease; opacity:0.95;
   }
   .treeline svg{ width:100%; height:100%; display:block; }
