@@ -686,14 +686,6 @@
   }
   .lock-note.on{ opacity:1; }
 
-  .key-lock{
-    background:none; border:none; cursor:pointer; margin-left:1.4em;
-    font-family:'EB Garamond',serif; font-style:italic; font-size:.82rem;
-    color:#6f6551; letter-spacing:.05em; padding:.4em;
-    transition:color .3s ease;
-  }
-  .key-lock:hover, .key-lock:focus-visible{ color:var(--brass); outline:none; }
-
   /* ---------- lời hứa: hiện ra sau bài thứ 23 ---------- */
   /* Hai câu cuối là tin nhắn thật, nên hiện dạng khung chat — nhưng dùng
      màu của app chứ không phải xanh Facebook, để không phá không khí. */
@@ -860,39 +852,6 @@
     }
     .fwd{ transform:none; }
     .chat-typing i{ animation:none; opacity:.6; }
-  }
-
-  /* ---------- mã khôi phục ---------- */
-  .keys{ margin-top:2.6em; text-align:center; }
-  .key-toggle{
-    background:none; border:none; cursor:pointer;
-    font-family:'EB Garamond',serif; font-style:italic; font-size:.82rem;
-    color:#6f6551; letter-spacing:.05em; padding:.4em;
-    transition:color .3s ease;
-  }
-  .key-toggle:hover, .key-toggle:focus-visible{ color:var(--brass); outline:none; }
-  .key-panel{ margin-top:1.2em; text-align:left; }
-  .key-note{
-    font-family:'EB Garamond',serif; font-style:italic; font-size:.82rem;
-    line-height:1.65; color:#8d8166; margin:0 0 1.1em;
-  }
-  .key-field{
-    width:100%; background:rgba(255,255,255,.04);
-    border:1px solid rgba(200,162,74,.22); border-radius:2px;
-    color:var(--parchment); font-family:'Work Sans',sans-serif;
-    font-size:.88rem; letter-spacing:.08em; padding:.6em .7em; margin-bottom:.6em;
-  }
-  .key-field:focus{ outline:none; border-color:var(--brass); }
-  .key-btn{
-    background:none; border:1px solid rgba(200,162,74,.3); border-radius:2px;
-    color:#c9bb96; font-family:'EB Garamond',serif; font-style:italic;
-    font-size:.88rem; padding:.45em 1.1em; cursor:pointer; margin-bottom:1.4em;
-    transition:border-color .3s ease, color .3s ease;
-  }
-  .key-btn:hover, .key-btn:focus-visible{ border-color:var(--brass); color:var(--brass); outline:none; }
-  .key-msg{
-    font-family:'EB Garamond',serif; font-style:italic; font-size:.82rem;
-    color:var(--brass); margin:0; min-height:1.2em;
   }
 
   /* ---------- lời nhắn trượt xuống, kiểu thông báo Facebook ---------- */
@@ -1407,18 +1366,6 @@
     <p class="shelf-sub" id="albumSub"></p>
     <div id="albumList"></div>
 
-    <div class="keys">
-      <button class="key-toggle" id="keyToggle">mã khôi phục</button>
-      <div class="key-panel" id="keyPanel" hidden>
-        <p class="key-note">Mã này ghi lại anh đã nghe tới đâu. Giữ nó ở đâu đó — đổi máy hay lỡ xoá dữ liệu thì dán vào ô dưới là mọi thứ trở lại.</p>
-        <input class="key-field" id="keyOut" readonly aria-label="Mã hiện tại">
-        <button class="key-btn" id="keyCopy">Chép mã</button>
-        <input class="key-field" id="keyIn" placeholder="dán mã vào đây" aria-label="Dán mã để khôi phục">
-        <button class="key-btn" id="keyApply">Khôi phục</button>
-        <button class="key-lock" id="keyLock">khoá lại</button>
-        <p class="key-msg" id="keyMsg"></p>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -1862,7 +1809,7 @@
   // Nghe hết một lần thì cũng biến mất, giống mọi truyện khác.
   // Để trống đường dẫn thì app lặng lẽ chưa mời, như mọi ô chưa có file.
   const MO_DAU_ID = "mo-dau";
-  const MO_DAU_AUDIO = "assets/stories/chunguaxam.mp3";         
+  const MO_DAU_AUDIO = "assets/stories/chunguaxam.mp3";
 
   // ---- truyện khép lại, mở sau khi nghe xong bài ẩn "Friday Night" ----
   const KET_ID = "ket";
@@ -3395,6 +3342,14 @@
   //   crypto.subtle.digest("SHA-256", new TextEncoder().encode("wanxia-2026-" + "MÃ"))
   //     .then(b => console.log([...new Uint8Array(b)].map(x => x.toString(16).padStart(2,"0")).join("")))
   const PIN_HASH = "634c2cb9037506a343cd009d28888eb4b047755240845d97f416f71e5d52d75e";
+  // Mã riêng của chị. Gõ mã này thì app mở ra y hệt, không khác một chi tiết
+  // nào, nhưng máy sẽ nhớ nó là máy của chị và báo cho người đưa thư — để thư
+  // bay sang đây cùng một khoảnh khắc với máy Minh, chứ không theo giờ châu Âu.
+  const CHI_HASH = "40b2e5b0af6e0eb0c6fdda149626877640a33c08423ebba18fc187f5b3182d07";
+  const AI_KEY   = "wanxia-ai-v1";
+  function laMayChi(){
+    try { return localStorage.getItem(AI_KEY) === "chi"; } catch(e){ return false; }
+  }
 
   const LOCK_KEY = "wanxia-open-v1";
   const lockEl    = document.getElementById("lock");
@@ -3459,7 +3414,12 @@
   async function tryPin(){
     const val = lockInput.value;
     if (val.length < PIN_LEN) return;
-    if (await hash(PIN_SALT + val) === PIN_HASH){
+    const bam = await hash(PIN_SALT + val);
+    if (bam === PIN_HASH || bam === CHI_HASH){
+      if (bam === CHI_HASH){
+        try { localStorage.setItem(AI_KEY, "chi"); } catch(e){}
+        quietSubscribe();          // báo ngay cho người đưa thư, nếu đã có quyền
+      }
       wrongCount = 0;
       openApp(true);
       return;
@@ -3930,7 +3890,7 @@
   // ---------- xin phép nhắn tới máy, kể cả lúc app đóng ----------
   // PUSH_URL để trống thì app bỏ qua hẳn phần này — an toàn để đưa lên mạng
   // trước khi dựng xong người đưa thư.
-  const PUSH_URL  = "https://wanxia-thu.minhp99.workers.dev";          
+  const PUSH_URL  = "https://wanxia-thu.minhp99.workers.dev";
   const PUSH_KEY  = "BAD_OG4Y8PbJfMjlkgvracuxS89WoYLOx-3WRHXk3PBgGzJCMAUb8Naa4AZ6_lQiatrHdfKjsQEJzZVwGjrtOGc";
   const PUSH_ASKED = "wanxia-push-v1";
 
@@ -3979,7 +3939,7 @@
       await fetch(PUSH_URL + "/dangky", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sub, tz })
+        body: JSON.stringify({ sub, tz, ai: laMayChi() ? "chi" : "minh" })
       });
       return true;
     } catch(e){ return false; }
@@ -4069,14 +4029,6 @@
   watchGeo();                     // hỏi trình duyệt xem đang cho hay đang chặn
   if (helloDone) askMySky();      // đã chào rồi thì lặng lẽ lấy lại tên nơi chốn
 
-  // nút khoá lại trong ngăn album
-  document.getElementById("keyLock").addEventListener("click", () => {
-    try { localStorage.removeItem(LOCK_KEY); } catch(e){}
-    closeShelf(albumShelf);
-    wrongCount = 0; lockedUntil = 0;
-    showLock();
-  });
-
   // ---- lời hứa: chuỗi hiện ra sau khi nghe hết bài thứ 23 ----
   const revealEl = document.getElementById("reveal");
   const revealHint = document.getElementById("revealHint");
@@ -4159,84 +4111,6 @@
     }
   });
 
-  // ---- mã khôi phục ----
-  // Toàn bộ tiến trình nén thành một chuỗi bit: 24 ô bài, 11 truyện đã nghe,
-  // 11 truyện đã được mời, 1 cờ 隐藏款 → 47 bit → 12 ký tự hex.
-  function progressBits(){
-    const bits = [];
-    // mỗi bài hai bit: số lượt đã nghe, 0 đến 2
-    ["nam","nu"].forEach(w => ODD_HOURS.forEach(h => {
-      const n = Math.min(SONG_MAX, playCount(slotId(w,h)));
-      bits.push((n >> 1) & 1, n & 1);
-    }));
-    PAIRS.forEach(p => bits.push(progress.stories[p.id] ? 1 : 0));
-    PAIRS.forEach(p => bits.push(progress.asked[p.id] ? 1 : 0));
-    bits.push(progress.hidden ? 1 : 0);
-    return bits;
-  }
-  const CODE_LEN = Math.ceil((24 * 2 + PAIRS.length * 2 + 1) / 4);
-
-  function makeCode(){
-    const bits = progressBits();
-    let hex = "";
-    for (let i = 0; i < bits.length; i += 4){
-      let v = 0;
-      for (let j = 0; j < 4; j++) v = (v << 1) | (bits[i + j] || 0);
-      hex += v.toString(16);
-    }
-    return "MINH-" + hex.toUpperCase().replace(/(.{4})/g, "$1-").replace(/-$/, "");
-  }
-
-  function applyCode(raw){
-    const hex = String(raw).toUpperCase().replace(/^MINH-?/, "").replace(/[^0-9A-F]/g, "");
-    if (hex.length !== CODE_LEN) return false;
-    const bits = [];
-    for (const ch of hex){
-      const v = parseInt(ch, 16);
-      for (let j = 3; j >= 0; j--) bits.push((v >> j) & 1);
-    }
-    let i = 0;
-    const next = { plays:{}, stories:{}, asked:{}, seen:{}, opened:{}, hidden:false };
-    ["nam","nu"].forEach(w => ODD_HOURS.forEach(h => {
-      const hi = bits[i++], lo = bits[i++];
-      const n = (hi << 1) | lo;
-      if (n) next.plays[slotId(w,h)] = n;
-    }));
-    PAIRS.forEach(p => { if (bits[i++]) next.stories[p.id] = true; });
-    PAIRS.forEach(p => { if (bits[i++]) next.asked[p.id] = true; });
-    next.hidden = !!bits[i];
-    ["nam","nu"].forEach(w => ODD_HOURS.forEach(h => {
-      const id = slotId(w, h);
-      if (next.plays[id]) next.seen[id] = true;   // khôi phục xong thì không báo "mới" nữa
-    }));
-    progress = next;
-    saveProgress();
-    renderAlbum(); renderStories(); tick();
-    return true;
-  }
-
-  const keyPanel = document.getElementById("keyPanel");
-  const keyOut = document.getElementById("keyOut");
-  const keyMsg = document.getElementById("keyMsg");
-  function refreshCode(){ keyOut.value = makeCode(); }
-
-  document.getElementById("keyToggle").addEventListener("click", () => {
-    keyPanel.hidden = !keyPanel.hidden;
-    if (!keyPanel.hidden){ refreshCode(); keyMsg.textContent = ""; }
-  });
-  document.getElementById("keyCopy").addEventListener("click", () => {
-    refreshCode();
-    keyOut.select();
-    const done = () => { keyMsg.textContent = "Đã chép."; setTimeout(() => keyMsg.textContent = "", 2200); };
-    if (navigator.clipboard) navigator.clipboard.writeText(keyOut.value).then(done).catch(() => { document.execCommand("copy"); done(); });
-    else { document.execCommand("copy"); done(); }
-  });
-  document.getElementById("keyApply").addEventListener("click", () => {
-    const ok = applyCode(document.getElementById("keyIn").value);
-    keyMsg.textContent = ok ? "Xong, mọi thứ đã trở lại." : "Mã không đúng. Kiểm tra lại xem có thiếu ký tự nào không.";
-    if (ok){ document.getElementById("keyIn").value = ""; refreshCode(); }
-  });
-
   renderAlbum(); renderStories();
 
   // công tắc của riêng bạn — hiện lại hoặc giấu đi mọi thứ đã ẩn
@@ -4246,6 +4120,60 @@
     renderAlbum(); renderStories(); tick();
     return AUTHOR_REVEAL ? "đang hiện lại mọi thứ đã ẩn" : "đã giấu lại như bình thường";
   };
+
+  // ================= tự lấy bản mới =================
+  // Minh ít khi đóng hẳn app: dùng xong là chuyển sang app khác, app này nằm
+  // nền có khi cả ngày. Bảng bài hát thì đã nạp vào bộ nhớ từ lần mở trước,
+  // nên bài chị vừa up lên sẽ không có trong đó. Mỗi lần app sáng lại sau một
+  // hồi nằm nền, hỏi máy chủ một câu rất nhẹ: trang có đổi không?
+  const NGU_LAU   = 3 * 60 * 1000;        // nằm nền quá ba phút mới hỏi lại
+  const DAU_TRANG = "wanxia-dau-v1";
+  let lucAn = 0;
+
+  // Dấu của trang trên máy chủ. HEAD không phải GET nên service worker bỏ qua,
+  // câu hỏi đi thẳng ra mạng và chỉ tốn vài trăm byte — không tải lại cả trang.
+  async function dauCuaTrang(){
+    try {
+      const res = await fetch(location.pathname, { method: "HEAD", cache: "no-store" });
+      if (!res.ok) return "";
+      return (res.headers.get("etag") || res.headers.get("last-modified") || "").trim();
+    } catch (e){ return ""; }
+  }
+
+  // Có gì đang dở dang không. Mọi lớp phủ trong app đều khoá cuộn trang lại,
+  // nên chỉ cần hỏi một câu ấy là biết có cái gì đang mở hay không.
+  function dangDoDang(){
+    if (document.body.style.overflow === "hidden") return true;
+    if (lockEl && !lockEl.classList.contains("off")) return true;
+    const m = document.querySelectorAll("video, audio");
+    for (let i = 0; i < m.length; i++) if (!m[i].paused) return true;
+    return false;
+  }
+
+  async function ghiDauDangChay(){
+    const d = await dauCuaTrang();
+    if (d) try { localStorage.setItem(DAU_TRANG, d); } catch (e){}
+  }
+
+  async function ngoBanMoi(){
+    if (navigator.onLine === false) return;
+    const moi = await dauCuaTrang();
+    if (!moi) return;                       // máy chủ không cho dấu — thôi, kệ
+    let cu = "";
+    try { cu = localStorage.getItem(DAU_TRANG) || ""; } catch (e){}
+    if (!cu){ try { localStorage.setItem(DAU_TRANG, moi); } catch (e){} return; }
+    if (moi === cu) return;                 // không có gì mới
+    if (dangDoDang()) return;               // để lần sau, đừng cắt ngang Minh
+    // KHÔNG ghi dấu mới ở đây: để lần nạp sau tự ghi. Nếu nạp lại hỏng
+    // (mất mạng giữa chừng) thì lần quay lại sau vẫn còn thấy khác mà thử lại.
+    location.reload();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden){ lucAn = Date.now(); return; }
+    if (lucAn && Date.now() - lucAn >= NGU_LAU) ngoBanMoi();
+  });
+  ghiDauDangChay();
 </script>
 
 <script>
