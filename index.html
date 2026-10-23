@@ -2883,8 +2883,15 @@
     if (world && hour !== null && hour !== undefined){
       trackPlay(video, slotId(world, hour), n => {
         renderAlbum(); renderStories(); tick();
-        // nghe trọn lần thứ hai: bài lặng lẽ rời đi ngay
-        if (n >= SONG_MAX && !AUTHOR_REVEAL){ video.pause(); vanishSong(); }
+        // Nghe trọn lần thứ hai thì bài phải rời đi — nhưng KHÔNG cắt ngang.
+        // App tính "đã nghe trọn" ở mốc 90%, mà dừng phựt ngay tại đó thì
+        // Minh mất mười giây cuối và chỉ thấy như máy bị lỗi. Để bài chạy cho
+        // hết câu cuối, rồi mới lặng lẽ mờ đi. Nếu bạn ấy đóng khung giữa
+        // chừng cũng không sao: lượt đã được ghi, bài vẫn đi.
+        if (n >= SONG_MAX && !AUTHOR_REVEAL){
+          if (video.ended) vanishSong();
+          else video.addEventListener("ended", vanishSong, { once: true });
+        }
       });
     } else if (data === HIDDEN){
       // bài thứ 23: nghe xong thì lời hứa hiện ra, và nó ở lại mãi
