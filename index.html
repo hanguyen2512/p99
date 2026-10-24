@@ -94,10 +94,13 @@
     overflow-x:hidden;
   }
 
-  /* Một lớp màu trơn phía sau tất cả, để iPhone không còn chừa vệt trắng ở
-     vùng an toàn. Màu lấy đúng chân trời — cũng chính là màu ở đáy dải
-     gradient — nên dù trời sáng hay tối cũng không ai thấy đường nối. */
-  html{ background-color: var(--sky-ember); }
+  /* Lớp màu trơn phía sau tất cả. Đây là thứ DUY NHẤT chắc chắn được vẽ ra
+     tới tận mép màn hình trên mọi máy — kể cả dải an toàn dưới đáy iPhone,
+     nơi lớp núi không với tới. Nên màu của nó phải đúng bằng MÀU CHÂN NÚI
+     gần nhất, để chỗ ấy nhìn như núi kéo dài xuống, không phải một dải khác
+     màu. --chan-nui do app tính lại theo độ tối của trời, đặt cùng lúc với
+     màu bầu trời. */
+  html{ background-color: var(--chan-nui, #1b2c31); }
 
   /* ---------- ambient sky ---------- */
   .sky-photo{
@@ -245,7 +248,9 @@
 
   .clock-wrap.traveling{
     opacity:0.14;
-    filter: drop-shadow(0 18px 40px rgba(0,0,0,0.55)) blur(2px);
+    /* Bỏ blur(2px): lúc này mặt đồng hồ đã mờ còn 14%, nhoè hay không mắt
+       không phân biệt được, nhưng máy thì phải vẽ lại cả hình suốt nửa giây. */
+    filter: drop-shadow(0 18px 40px rgba(0,0,0,0.55));
   }
 
   svg.clock{ width:100%; height:100%; overflow:visible; }
@@ -2381,18 +2386,37 @@
     el.style.opacity = (m * m * 0.95).toFixed(3);
   }
 
+  let mauTroiCu = null, chanNuiCu = null;
   function applySkyPalette(hourFloat){
     let a = SKY_STOPS[0], b = SKY_STOPS[SKY_STOPS.length-1];
     for (let i=0; i<SKY_STOPS.length-1; i++){
       if (hourFloat >= SKY_STOPS[i].h && hourFloat <= SKY_STOPS[i+1].h){ a=SKY_STOPS[i]; b=SKY_STOPS[i+1]; break; }
     }
     const t = (hourFloat - a.h) / ((b.h - a.h) || 1);
+    // Mỗi giây màu trời chỉ nhích một chút xíu, phần lớn các giây thì bốn màu
+    // tính ra GIỐNG HỆT giây trước. Đặt lại y nguyên một giá trị vẫn làm trình
+    // duyệt khởi động lại hiệu ứng chuyển màu 1,1 giây trên cả nền trời — tức
+    // là vẽ lại toàn màn hình không ngớt. Chỉ đặt khi thật sự khác.
     const root = document.documentElement.style;
-    root.setProperty("--sky-top", lerpColor(a.top, b.top, t));
-    root.setProperty("--sky-mid", lerpColor(a.mid, b.mid, t));
-    root.setProperty("--sky-horizon", lerpColor(a.horizon, b.horizon, t));
-    root.setProperty("--sky-ember", lerpColor(a.ember, b.ember, t));
+    const mau = [lerpColor(a.top, b.top, t), lerpColor(a.mid, b.mid, t),
+                 lerpColor(a.horizon, b.horizon, t), lerpColor(a.ember, b.ember, t)].join("|");
+    if (mau !== mauTroiCu){
+      mauTroiCu = mau;
+      const m = mau.split("|");
+      root.setProperty("--sky-top", m[0]);
+      root.setProperty("--sky-mid", m[1]);
+      root.setProperty("--sky-horizon", m[2]);
+      root.setProperty("--sky-ember", m[3]);
+    }
     lastStarOpacity = lerpNum(a.star, b.star, t);
+    // Màu chân núi: màu núi gần nhất (#1b2c31) chìm dần vào mực đêm (#070c14)
+    // đúng theo độ tối của trời — y như lớp màn đêm phủ trên dải núi thật.
+    const demNui = Math.max(0, Math.min(1, lastStarOpacity));
+    const chanNui = lerpColor("#1b2c31", "#070c14", demNui);
+    if (chanNui !== chanNuiCu){
+      chanNuiCu = chanNui;
+      root.setProperty("--chan-nui", chanNui);
+    }
     if (dangDungAnh) return;        // ảnh thật đang hiện — buông tay cho nó
     // Màn đêm trên dải núi: đi cùng độ sáng của sao, nên núi tối dần đúng
     // nhịp với bầu trời.
@@ -2810,7 +2834,7 @@
     };
   }
 
-  function animateTraveler(reverse, duration = 950){
+  function animateTraveler(reverse, duration = 600){
     return new Promise(resolve => {
       travelerGroupEl.style.opacity = 1;
       const start = performance.now();
@@ -2844,7 +2868,7 @@
     await animateTraveler(toSky === "nam");
     activeSky = toSky;
     tick();
-    setTimeout(() => clockWrapEl.classList.remove("traveling"), 480);
+    setTimeout(() => clockWrapEl.classList.remove("traveling"), 240);
 
   }
 
