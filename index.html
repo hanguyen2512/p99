@@ -1949,6 +1949,7 @@
     if (raw) progress = Object.assign(progress, JSON.parse(raw));
   } catch(e){}
   if (!progress.plays) progress.plays = {};
+  if (!progress.stories) progress.stories = {};
   if (!progress.seen)   progress.seen   = {};
   if (!progress.opened) progress.opened = {};
   if (!progress.pops)   progress.pops   = {};
@@ -2022,9 +2023,14 @@
     const st = STORIES[KET_ID];
     return !!(st && st.audio) && heard("hidden") && !storyGone(KET_ID);
   }
+  // Trái tim trên Ngăn truyện chỉ để báo CÓ TRUYỆN MỚI. Nghe rồi là tắt.
+  // Trước đây nó đếm mọi truyện đã mở khoá, mà truyện thì không còn biến mất
+  // nữa — nên nó sáng mãi, kể cả khi Minh đã nghe hết. Giờ chỉ đếm cái chưa nghe.
+  const truyenChuaNghe = pid => !(progress.stories && progress.stories[pid]);
   function storiesWaiting(){
-    return PAIRS.filter(p => pairComplete(p) && !storyGone(p.id)).length
-         + (moDauCho() ? 1 : 0) + (ketCho() ? 1 : 0);
+    return PAIRS.filter(p => pairComplete(p) && truyenChuaNghe(p.id)).length
+         + (moDauCho() && truyenChuaNghe(MO_DAU_ID) ? 1 : 0)
+         + (ketCho()   && truyenChuaNghe(KET_ID)    ? 1 : 0);
   }
 
   function songTitle(data){
@@ -2842,6 +2848,10 @@
 
   let lastPopMin = -1;
   function tick(){
+    // Máy vừa đổi múi giờ — Minh vừa hạ cánh ở một nước khác. Báo ngay.
+    // Chỉ canh sau khi lúc mở app đã ghi được múi giờ đầu tiên; trước đó
+    // những thứ ở dưới còn chưa dựng xong.
+    if (typeof muiGioDaBao === "string" && muiGioMay() !== muiGioDaBao) baoLaiMuiGio(true);
     const nowMin = new Date().getMinutes();
     if (nowMin !== lastPopMin && window.__popsReady){ lastPopMin = nowMin; checkPopups(); }
     const p = worldParts(activeSky, new Date());
@@ -3275,15 +3285,12 @@
 
   // chấm báo trên nút "nghe em kể", kèm số chuyện đang chờ
   // Huy hiệu trên hai nút: số thứ vừa về mà Minh chưa xem.
+  // Trái tim trên Ngăn nhạc cũng chỉ đếm bài CHƯA NGHE — nghe trực tiếp trên
+  // mặt đồng hồ cũng tính, không bắt Minh mở ngăn ra mới tắt. Mở ngăn ra xem
+  // rồi mà chưa nghe thì vẫn đếm, vì xem thấy không phải là đã nghe.
   function songsUnseen(){
     let n = 0;
-    ["nam","nu"].forEach(w => ODD_HOURS.forEach(h => {
-      const id = slotId(w, h);
-      if (songAt(w, h) && heard(id) && !songGone(id) && !progress.seen[id]) n++;
-      // Bài đã mở mà chưa nghe thì đếm MÃI tới khi nghe — mở ngăn ra xem rồi
-      // vẫn còn đếm, vì xem thấy không phải là đã nghe.
-      else if (baiDangDoi(w, h)) n++;
-    }));
+    ["nam","nu"].forEach(w => ODD_HOURS.forEach(h => { if (baiDangDoi(w, h)) n++; }));
     return n;
   }
   function setBell(el, n){
@@ -3402,6 +3409,8 @@
     askBox.classList.remove("open");
     askBox.setAttribute("aria-hidden", "true");
     askLater(resetAsk, 600);
+    // rảnh tay rồi: lời nhắn nào còn đang chờ thì tới lượt nó
+    setTimeout(() => { if (typeof moiLoiCho === "function") moiLoiCho(700); }, 1500);
   }
 
   function settleAsk(yes){
@@ -3985,12 +3994,18 @@
     const xong = noiDangMo && noiDangMo.xong;
     noiDangMo = null;
     if (xong) setTimeout(xong, 520);
+    // Mạch này đóng rồi: nếu còn lời nào đang chờ thì để nó tới lượt.
+    // Chờ lâu một chút cho lời mời nghe truyện (nếu có) kịp mở ra trước.
+    setTimeout(() => { if (typeof moiLoiCho === "function") moiLoiCho(600); }, 3500);
   }
 
   // `lines`: em nói gì trước khi hỏi. `khoa`: chỗ này đã hỏi bao giờ chưa.
   // `noi`: ghi lại cho chị biết lời ấy được viết ra sau cái gì.
   // `xong`: gọi sau khi mạch đóng — dùng để mời nghe truyện cho khỏi chen ngang.
-  function moNoi(khoa, noi, lines, xong){
+  // `thang`: những lời nhắn hằng ngày CHÍNH LÀ câu hỏi, nên mở thẳng khung chat
+  // cho Minh trả lời vào đó, khỏi phải qua hai nút có/không. Nút "kết thúc"
+  // vẫn hiện, để bạn ấy biết lúc nào thì mạch này đóng lại.
+  function moNoi(khoa, noi, lines, xong, thang){
     if (khoa && daNoiRoi(khoa)){ if (xong) xong(); return; }
     noiDangMo = { khoa, noi, xong };
     popChat.clear();
@@ -4002,10 +4017,21 @@
     popBox.classList.add("open");
     popBox.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+    if (typeof hideToast === "function") hideToast();   // khỏi chồng lên nhau
     popChat.say(lines, null, () => {
+      if (thang){ moKhungNhap(); return; }
       popBtns.hidden = false;
       requestAnimationFrame(() => { popBtns.classList.add("on"); popChat.scroll(); });
     });
+  }
+
+  // ô nhập + nút "kết thúc". Dùng chung cho đường "anh có" và đường vào thẳng.
+  function moKhungNhap(){
+    if (!noiDangMo) return;
+    if (noiDangMo.khoa) ghiDaNoi(noiDangMo.khoa);
+    popGo.hidden = false; popEnd.hidden = false;
+    requestAnimationFrame(() => { popGo.classList.add("on"); popChat.scroll(); });
+    try { popInput.focus(); } catch(e){}
   }
 
   popNo.addEventListener("click", () => {
@@ -4022,12 +4048,7 @@
     popBtns.classList.remove("on");
     setTimeout(() => { popBtns.hidden = true; }, 420);
     popChat.sent("anh có");
-    if (noiDangMo.khoa) ghiDaNoi(noiDangMo.khoa);
-    setTimeout(() => {
-      popGo.hidden = false; popEnd.hidden = false;
-      requestAnimationFrame(() => { popGo.classList.add("on"); popChat.scroll(); });
-      popInput.focus();
-    }, 700);
+    setTimeout(moKhungNhap, 700);
   });
 
   function guiLoiHienTai(){
@@ -4065,7 +4086,7 @@
   function openPopup(text, day){
     moNoi(day ? "hoi-d" + day : null,
           day ? "câu hỏi ngày " + day : "lời nhắn",
-          [text], null);
+          [text], null, true);          // vào thẳng khung chat
   }
   function closePopup(){ dongNoi(); }
 
@@ -4123,9 +4144,57 @@
       progress.pops[popupKey(p)] = true;
       saveProgress();
       showToast(p.text, () => openPopup(p.text, p.day));
+      moiLoiCho(2600);                               // rồi tự mở ra trò chuyện
       return;                                        // mỗi lần một lời thôi
     }
+    moiLoiCho(0);                     // còn lời nào chưa mở thì gọi lại Minh
   }
+
+  // ---------- lời nhắn không được phép mất ----------
+  // Toast tự tắt sau bảy giây. Nếu lúc ấy Minh đang để máy đó, hoặc đang xem
+  // một bài hát, thì lời nhắn coi như trôi qua — mà đó là CÂU HỎI của em.
+  // Nên: lời nào đã tới mà bạn ấy chưa mở ra trò chuyện thì vẫn còn đó, và app
+  // tự mở khung chat ra khi bạn ấy rảnh tay.
+  function loiConCho(){
+    if (!progress.pops) return null;
+    return POPUPS.find(p => progress.pops[popupKey(p)] && !daNoiRoi("hoi-d" + p.day)) || null;
+  }
+  // Rảnh tay: không đang nghe gì, không đang mở ngăn nào, không đang dở mạch nào.
+  function ranhTay(){
+    if (document.hidden) return false;
+    if (popBox.classList.contains("open")) return false;
+    if (lockEl && !lockEl.classList.contains("off")) return false;
+    if (portal && portal.classList.contains("open")) return false;
+    if (albumShelf.classList.contains("open") || storyShelf.classList.contains("open")) return false;
+    if (askBox && askBox.classList.contains("open")) return false;
+    for (const m of document.querySelectorAll("video,audio")) if (!m.paused) return false;
+    return true;
+  }
+  let hoiMoLuc = 0, nhacLuc = 0;
+  function moiLoiCho(cho){
+    const p = loiConCho();
+    if (!p || document.hidden) return;
+    if (popBox.classList.contains("open")) return;
+    const gio = performance.now();
+    if (!ranhTay()){
+      // Minh đang dở tay. Không chồm lên, nhưng cũng KHÔNG để lời nhắn im ỉm
+      // biến mất: cứ một lúc lại gõ cửa một lần, chạm vào là mở ra trò chuyện.
+      if (gio - nhacLuc < 45000) return;
+      nhacLuc = gio;
+      showToast(p.text, () => openPopup(p.text, p.day));
+      return;
+    }
+    if (gio - hoiMoLuc < 15000) return;         // đừng chồm lên Minh liên tục
+    hoiMoLuc = gio;
+    setTimeout(() => {
+      if (loiConCho() === p && ranhTay() && !popBox.classList.contains("open")){
+        openPopup(p.text, p.day);
+      }
+    }, cho || 0);
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && window.__popsReady) setTimeout(() => moiLoiCho(900), 600);
+  });
 
   // lời nhắn của bài ẩn: không theo giờ, mà theo việc đã nghe hết hay chưa
   function popupHidden(){
@@ -4270,6 +4339,31 @@
     subscribePush();
   }
 
+  // ================= Minh đi đâu, thư theo đó =================
+  // Người đưa thư gửi theo múi giờ mà app BÁO LÊN LẦN GẦN NHẤT. Minh bay sang
+  // nước khác thì điện thoại tự đổi múi giờ, nhưng nếu app không báo lại thì
+  // thư vẫn đi theo múi giờ cũ — ghi 9h09 mà tới lúc 7h09.
+  // Nên app tự canh ba chỗ: đồng hồ máy vừa đổi múi giờ, Minh vừa quay lại
+  // app, hoặc máy vừa có mạng lại. Mỗi lần chỉ là một câu rất ngắn gửi đi.
+  var muiGioDaBao, lucBaoMuiGio = 0;   // var: tick() chạy trước chỗ này
+  function muiGioMay(){
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; }
+    catch (e){ return ""; }
+  }
+  function baoLaiMuiGio(gap){
+    if (!PUSH_URL) return;
+    const tz = muiGioMay(), gio = Date.now();
+    // Không gấp thì giữ nhịp: cùng một múi giờ mà mới báo chưa đầy năm phút
+    // thì thôi, khỏi làm phiền máy chủ.
+    if (!gap && tz === muiGioDaBao && gio - lucBaoMuiGio < 300000) return;
+    muiGioDaBao = tz; lucBaoMuiGio = gio;
+    quietSubscribe();
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) baoLaiMuiGio(false);
+  });
+  window.addEventListener("online", () => baoLaiMuiGio(true));
+
   // Minh chạm vào thông báo trên màn hình khoá: app mở lên và mở luôn lời nhắn ấy
   if ("serviceWorker" in navigator){
     navigator.serviceWorker.addEventListener("message", ev => {
@@ -4282,7 +4376,7 @@
 
   if (alreadyOpen) openApp(false); else showLock();
   maybeAskPush();
-  quietSubscribe();
+  baoLaiMuiGio(true);
   xaHangDoi();                    // còn lời nào chưa gửi được thì gửi nốt
   watchGeo();                     // hỏi trình duyệt xem đang cho hay đang chặn
   if (helloDone) askMySky();      // đã chào rồi thì lặng lẽ lấy lại tên nơi chốn
