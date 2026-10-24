@@ -1009,6 +1009,48 @@
   .btn-no{ background:rgba(236,227,209,.04); border:1px solid rgba(200,162,74,.45); color:#d8cba4; }
   .btn-no:hover, .btn-no:focus-visible{ border-color:var(--brass); color:var(--brass); outline:none; }
 
+  /* ---------- ô nhập để Minh nhắn lại ---------- */
+  .noi-go{
+    display:flex; align-items:flex-end; gap:.5em; margin-top:1.1em;
+    opacity:0; transform:translateY(8px);
+    transition:opacity .5s ease, transform .5s cubic-bezier(.16,.7,.28,1);
+  }
+  .noi-go.on{ opacity:1; transform:none; }
+  .noi-go[hidden]{ display:none; }
+  .noi-go textarea{
+    flex:1; resize:none; max-height:7.5em;
+    background:rgba(236,227,209,.06);
+    border:1px solid rgba(200,162,74,.35); border-radius:18px;
+    color:var(--parchment); font-family:'Work Sans',system-ui,sans-serif;
+    font-weight:300; font-size:clamp(.88rem, 3.6vw, .96rem); line-height:1.5;
+    padding:.6em .95em;
+  }
+  .noi-go textarea::placeholder{ color:#8d8166; font-style:italic; }
+  .noi-go textarea:focus{ outline:none; border-color:var(--brass); }
+  .noi-send{
+    flex:0 0 auto; width:2.5em; height:2.5em; border-radius:50%;
+    background:rgba(200,162,74,.9); border:1px solid var(--brass); color:#241a0c;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    padding:0;
+  }
+  .noi-send svg{ width:1.1em; height:1.1em; }
+  .noi-send:disabled{ opacity:.35; cursor:default; }
+  .noi-end{
+    align-self:flex-end; margin-top:.7em;
+    background:none; border:none; cursor:pointer; padding:.4em .2em;
+    font-family:'EB Garamond',serif; font-style:italic;
+    font-size:clamp(.82rem, 3.2vw, .9rem); color:#8d8166;
+    transition:color .3s ease;
+  }
+  .noi-end:hover, .noi-end:focus-visible{ color:var(--brass); outline:none; }
+  .noi-end[hidden]{ display:none; }
+  .noi-cho{
+    align-self:flex-end; margin-top:.4em;
+    font-family:'EB Garamond',serif; font-style:italic; font-size:.8rem;
+    color:#8d8166;
+  }
+  .noi-cho[hidden]{ display:none; }
+
   /* câu vừa chọn, đọng lại thành tin đã gửi */
   .sent{
     display:flex; justify-content:flex-end; margin-top:.6em;
@@ -1389,7 +1431,7 @@
 
 <nav class="shelf-nav">
   <button id="openAlbum"><span data-i18n="navSongs">Ngăn nhạc</span><span class="bell" id="albumBell"></span></button>
-  <button id="openStories"><span data-i18n="navStories">Ngăn chuyện</span><span class="bell" id="storyBell"></span></button>
+  <button id="openStories"><span data-i18n="navStories">Ngăn truyện</span><span class="bell" id="storyBell"></span></button>
 </nav>
 
 <div class="shelf" id="albumShelf" aria-hidden="true">
@@ -1404,7 +1446,7 @@
 <div class="shelf" id="storyShelf" aria-hidden="true">
   <button class="back-btn" data-close="storyShelf" aria-label="Quay về"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>quay về</button>
   <div class="shelf-inner">
-    <h2 data-i18n="navStories">Ngăn chuyện</h2>
+    <h2 data-i18n="navStories">Ngăn truyện</h2>
     <div id="storyList"></div>
     <audio class="story-player" id="storyAudio" controls preload="none"></audio>
   </div>
@@ -1543,6 +1585,25 @@
 <div class="ask hello" id="popBox" aria-hidden="true">
   <div class="ask-card" role="dialog" aria-modal="true" aria-label="Lời nhắn">
     <div class="hello-flow" id="popFlow"></div>
+
+    <div class="btns" id="popBtns" hidden>
+      <button class="btn-yes" id="popYes">anh có</button>
+      <button class="btn-no"  id="popNo">anh không</button>
+    </div>
+
+    <div class="noi-go" id="popGo" hidden>
+      <textarea id="popInput" rows="1" placeholder="nhắn cho em…"
+        autocomplete="off" autocorrect="on" spellcheck="false"
+        aria-label="Nhắn cho em"></textarea>
+      <button class="noi-send" id="popSend" type="button" aria-label="Gửi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline>
+        </svg>
+      </button>
+    </div>
+    <p class="noi-cho" id="popCho" hidden></p>
+    <button class="noi-end" id="popEnd" type="button" hidden>kết thúc</button>
   </div>
   <p class="hello-hint" id="popHint" hidden>chạm để đi tiếp</p>
 </div>
@@ -1679,7 +1740,7 @@
       3:{ video:"", poster:"", title:{ vi:"这世界若崩塌 - Nếu thế giới có vỡ tan", en:"这世界若崩塌 - Nếu thế giới có vỡ tan", zh:"这世界若崩塌 - Nếu thế giới có vỡ tan" } },   // assets/songs/neuthegioi.mp4
       5:{ video:"", poster:"", title:{ vi:"Minh Minh - 暝溟", en:"Minh Minh - 暝溟", zh:"Minh Minh - 暝溟" } },   // assets/songs/minhminh.mp4
       7:{ video:"assets/songs/conca.mp4", poster:"", title:{ vi:"Con Cá", en:"Con Cá", zh:"Con Cá" } },   // assets/songs/conca.mp4
-      9:{ video:"", poster:"", title:{ vi:"Đợi cho trà đọng vị hồng đầu môi", en:"Đợi cho trà đọng vị hồng đầu môi", zh:"Đợi cho trà đọng vị hồng đầu môi" } },   // assets/songs/doichotra.mp4
+      9:{ video:"assets/songs/doichotra.mp4", poster:"", title:{ vi:"Đợi cho trà đọng vị hồng đầu môi", en:"Đợi cho trà đọng vị hồng đầu môi", zh:"Đợi cho trà đọng vị hồng đầu môi" } },   // assets/songs/doichotra.mp4
       11:SILENT,
       13:{ video:"", poster:"", title:{ vi:"Thương Minh", en:"Thương Minh", zh:"Thương Minh" } },   // assets/songs/thuongminh.mp4
       15:{ video:"", poster:"", title:{ vi:"Chuyện một ngày mưa", en:"Chuyện một ngày mưa", zh:"Chuyện một ngày mưa" } },   // assets/songs/chuyenmotngaymua.mp4
@@ -1690,7 +1751,7 @@
     },
     nu: {
       1:{ video:"assets/songs/caymocqua.mp4", poster:"", title:{ vi:"Cây mộc qua đã hoá thành hạt bụi", en:"Cây mộc qua đã hoá thành hạt bụi", zh:"Cây mộc qua đã hoá thành hạt bụi" } },   // assets/songs/caymocqua.mp4
-      3:{ video:"", poster:"", title:{ vi:"Sương đổ triền non ta đợi nàng", en:"Sương đổ triền non ta đợi nàng", zh:"Sương đổ triền non ta đợi nàng" } },   // assets/songs/suongdotriennon.mp4
+      3:{ video:"assets/songs/suongdotriennon.mp4", poster:"", title:{ vi:"Sương đổ triền non ta đợi nàng", en:"Sương đổ triền non ta đợi nàng", zh:"Sương đổ triền non ta đợi nàng" } },   // assets/songs/suongdotriennon.mp4
       5:{ video:"", poster:"", title:{ vi:"Hưởng - 响", en:"Hưởng - 响", zh:"Hưởng - 响" } },   // assets/songs/huong.mp4
       7:{ video:"", poster:"", title:{ vi:"无限流 - Vô Hạn Lưu", en:"无限流 - Vô Hạn Lưu", zh:"无限流 - Vô Hạn Lưu" } },   // assets/songs/vohanluu.mp4
       9:{ video:"", poster:"", title:{ vi:"Canh cánh trong lòng", en:"Canh cánh trong lòng", zh:"Canh cánh trong lòng" } },   // assets/songs/canhcanhtronglong.mp4
@@ -1822,7 +1883,7 @@
   // lẽ chưa mời nghe, y hệt một ô bài hát chưa có video — thay vì mời rồi bật
   // ra một trình phát không kêu. Thu xong bài nào thì điền đường dẫn bài ấy.
   const TRUYEN = {
-    1:"",    // assets/stories/chuyenothanhvan.m4a
+    1:"assets/stories/chuyenothanhvan.mp3",
     2:"",    // assets/stories/nhungnguoikhonglon.m4a
     3:"",    // assets/stories/nghemotcauchuyen.m4a
     4:"",    // assets/stories/tiengdong.m4a
@@ -1881,7 +1942,7 @@
   // "Ẩn" chỉ là không hiện ra nữa — số lượt vẫn nằm trong máy, không mất gì.
   const STORE_KEY = "wanxia-progress-v1";
   const COMPLETE  = 0.9;   // phần bài phải thật sự nghe qua mới tính một lượt
-  const SONG_MAX  = 2;     // quá số này thì bài ẩn đi
+  const SONG_MAX  = 2;     // còn giữ cho các bản thử cũ; không đuổi bài đi nữa
   let progress = { plays:{}, stories:{}, asked:{}, seen:{}, opened:{}, pops:{}, hidden:false };
   try {
     const raw = localStorage.getItem(STORE_KEY);
@@ -1903,8 +1964,11 @@
 
   const playCount = id => progress.plays[id] || 0;
   const heard     = id => playCount(id) >= 1;
-  const songGone  = id => !AUTHOR_REVEAL && playCount(id) >= SONG_MAX;
-  const storyGone = pid => !AUTHOR_REVEAL && !!progress.stories[pid];
+  // Bài hát và truyện KHÔNG bao giờ rời đi nữa. Nghe một lần hay mười lần thì
+  // chúng vẫn nằm đó. Vẫn đếm số lượt như cũ, vì "đã nghe" là thứ quyết định
+  // truyện nào mở ra và bao giờ tới bài ẩn — chỉ là đếm xong không đuổi ai đi.
+  const songGone  = () => false;
+  const storyGone = () => false;
 
   // bài còn hiện ra được không: có bài, và chưa nghe quá số lượt
   // Bài đã đặt tên nhưng chưa có tệp thì coi như chưa tới lượt: số không sáng,
@@ -2011,7 +2075,7 @@
       hourReserved: h => `${h} giờ — sẽ có hai bản, sáng và tối, chưa ra mắt`,
       hourActive: (h, label) => `${h} giờ — ${label}`,
       navSongs: "Ngăn nhạc",
-      navStories: "Ngăn chuyện",
+      navStories: "Ngăn truyện",
       geoLang: "vi"
     },
     en: {
@@ -2904,15 +2968,9 @@
     if (world && hour !== null && hour !== undefined){
       trackPlay(video, slotId(world, hour), n => {
         renderAlbum(); renderStories(); tick();
-        // Nghe trọn lần thứ hai thì bài phải rời đi — nhưng KHÔNG cắt ngang.
-        // App tính "đã nghe trọn" ở mốc 90%, mà dừng phựt ngay tại đó thì
-        // Minh mất mười giây cuối và chỉ thấy như máy bị lỗi. Để bài chạy cho
-        // hết câu cuối, rồi mới lặng lẽ mờ đi. Nếu bạn ấy đóng khung giữa
-        // chừng cũng không sao: lượt đã được ghi, bài vẫn đi.
-        if (n >= SONG_MAX && !AUTHOR_REVEAL){
-          if (video.ended) vanishSong();
-          else video.addEventListener("ended", vanishSong, { once: true });
-        }
+        // Nghe trọn lần ĐẦU: để dành một lời hỏi cho lúc Minh đóng khung bài.
+        // Hỏi ngay giữa lúc nhạc còn chạy thì cắt ngang mất.
+        if (n === 1) choHoiSauBai = { world, hour, song: data };
       });
     } else if (data === HIDDEN){
       // bài thứ 23: nghe xong thì lời hứa hiện ra, và nó ở lại mãi
@@ -3012,12 +3070,16 @@
     document.body.style.overflow = "hidden";
   }
   // bài hát rời đi: mờ dần rồi đóng lại, không báo gì thêm
+  // Không còn ai gọi tới: từ khi bỏ giới hạn lượt nghe thì bài không rời đi
+  // nữa. Giữ lại phòng khi sau này chị muốn một bài nào đó biết tự đi.
   function vanishSong(){
     portal.classList.add("vanishing");
     setTimeout(() => { portal.classList.remove("vanishing"); closeSong(); }, 1100);
   }
   // mở bài từ trong album thì đóng lại phải quay về album, không văng ra đồng hồ
   let songOrigin = null;
+  // bài vừa nghe trọn lần đầu, đang đợi được hỏi lúc đóng khung
+  let choHoiSauBai = null;
   function closeSong(){
     artworksEl.querySelectorAll("video").forEach(v => v.pause());
     portal.classList.remove("open");
@@ -3026,7 +3088,17 @@
     if (lastFocused) lastFocused.focus();
     const back = songOrigin; songOrigin = null;
     if (back) setTimeout(() => openShelf(back), 320);
-    maybeOffer();
+    // Vừa nghe trọn lần đầu thì hỏi trước; mời nghe truyện để sau, khi mạch
+    // trả lời đã đóng — hai thứ chen nhau thì dồn dập quá.
+    const ch = choHoiSauBai; choHoiSauBai = null;
+    if (ch && !AUTHOR_REVEAL){
+      setTimeout(() => moNoi(
+        "bai-" + slotId(ch.world, ch.hour),
+        "bài " + songTitle(ch.song),
+        [HOI_THEM], maybeOffer), 1400);
+    } else {
+      maybeOffer();
+    }
   }
   closeBtn.addEventListener("click", closeSong);
   portal.addEventListener("click", (e) => { if (e.target === portal) closeSong(); });
@@ -3103,7 +3175,7 @@
         const song = songAt(world, h);
         if (!song) return;
         const id = slotId(world, h);
-        if (songGone(id)) return;                 // nghe đủ hai lượt rồi thì bài đi
+        if (songGone(id)) return;                 // không còn xảy ra: bài ở lại mãi
         const dangDoi = baiDangDoi(world, h);
         if (!dangDoi && !heard(id)) return;       // chưa tới ngày của nó
         here++;
@@ -3258,6 +3330,12 @@
       storyAudio.removeAttribute("src");
       storyAudio.ontimeupdate = null;
       renderStories();
+      // Nghe xong một câu chuyện cũng là một khoảnh khắc đáng hỏi.
+      if (!AUTHOR_REVEAL){
+        setTimeout(() => moNoi("truyen-" + pid,
+          "truyện " + (st.title[currentLang] || st.title.vi),
+          [HOI_THEM], null), 1400);
+      }
     };
     storyAudio.onended = xong;
     // Lưới đỡ: có máy không bắn ra sự kiện "hết bài" khi kéo tay tới sát cuối,
@@ -3839,27 +3917,157 @@
     toastTimers.push(setTimeout(hideToast, 7000));
   }
 
-  function openPopup(text){
-    popChat.clear();
-    popHint.hidden = true;
-    popHint.classList.remove("on");
-    popBox.classList.add("open");
-    popBox.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
-    popChat.say([text], null, () => {
-      popHint.hidden = false;
-      requestAnimationFrame(() => popHint.classList.add("on"));
-      popBox.addEventListener("click", closePopup, { once: true });
-    });
+  // ================= mạch trả lời =================
+  // Dùng chung cho cả ba chỗ: lời nhắn hằng ngày, sau một bài hát, sau một
+  // câu chuyện. Em hỏi → hai nút → nếu "anh có" thì hiện ô nhập.
+  const popBtns  = document.getElementById("popBtns");
+  const popYes   = document.getElementById("popYes");
+  const popNo    = document.getElementById("popNo");
+  const popGo    = document.getElementById("popGo");
+  const popInput = document.getElementById("popInput");
+  const popSend  = document.getElementById("popSend");
+  const popEnd   = document.getElementById("popEnd");
+  const popCho   = document.getElementById("popCho");
+
+  const MA_NOI = "9vrPzlJtyZbn5shy";   // then cửa, không phải khoá bảo mật
+  let noiDangMo = null;                // { khoa, xong }
+
+  function daNoiRoi(khoa){
+    return !!(progress.noi && progress.noi[khoa]);
   }
-  function closePopup(){
+  function ghiDaNoi(khoa){
+    if (!progress.noi) progress.noi = {};
+    progress.noi[khoa] = true;
+    saveProgress();
+  }
+
+  // ---- gửi lời Minh nhắn về cho chị ----
+  // Mất mạng thì xếp hàng trong máy, lần mở app sau tự gửi tiếp.
+  function xepHang(noi, chu){
+    if (!progress.hangDoi) progress.hangDoi = [];
+    progress.hangDoi.push({ noi, chu, luc: new Date().toISOString() });
+    if (progress.hangDoi.length > 200) progress.hangDoi.shift();
+    saveProgress();
+  }
+  async function guiMotLoi(m){
+    if (!PUSH_URL) return false;
+    try {
+      const r = await fetch(PUSH_URL + "/traloi", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ma: MA_NOI, noi: m.noi, text: m.chu })
+      });
+      return r.ok;
+    } catch (e){ return false; }
+  }
+  async function xaHangDoi(){
+    if (!progress.hangDoi || !progress.hangDoi.length) return;
+    if (navigator.onLine === false) return;
+    while (progress.hangDoi.length){
+      const m = progress.hangDoi[0];
+      if (!(await guiMotLoi(m))) return;        // hỏng thì để nguyên, lần sau thử lại
+      progress.hangDoi.shift();
+      saveProgress();
+    }
+  }
+  window.addEventListener("online", xaHangDoi);
+
+  function dongNoi(){
     popChat.stop();
+    popBtns.hidden = true; popBtns.classList.remove("on");
+    popGo.hidden = true;   popGo.classList.remove("on");
+    popEnd.hidden = true;  popCho.hidden = true;
+    popInput.value = "";
     popHint.classList.remove("on");
     popBox.classList.remove("open");
     popBox.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
     setTimeout(() => { popHint.hidden = true; }, 1200);
+    const xong = noiDangMo && noiDangMo.xong;
+    noiDangMo = null;
+    if (xong) setTimeout(xong, 520);
   }
+
+  // `lines`: em nói gì trước khi hỏi. `khoa`: chỗ này đã hỏi bao giờ chưa.
+  // `noi`: ghi lại cho chị biết lời ấy được viết ra sau cái gì.
+  // `xong`: gọi sau khi mạch đóng — dùng để mời nghe truyện cho khỏi chen ngang.
+  function moNoi(khoa, noi, lines, xong){
+    if (khoa && daNoiRoi(khoa)){ if (xong) xong(); return; }
+    noiDangMo = { khoa, noi, xong };
+    popChat.clear();
+    popHint.hidden = true; popHint.classList.remove("on");
+    popBtns.hidden = true; popBtns.classList.remove("on");
+    popGo.hidden = true;   popGo.classList.remove("on");
+    popEnd.hidden = true;  popCho.hidden = true;
+    popInput.value = "";
+    popBox.classList.add("open");
+    popBox.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    popChat.say(lines, null, () => {
+      popBtns.hidden = false;
+      requestAnimationFrame(() => { popBtns.classList.add("on"); popChat.scroll(); });
+    });
+  }
+
+  popNo.addEventListener("click", () => {
+    if (!noiDangMo) return;
+    popBtns.classList.remove("on");
+    setTimeout(() => { popBtns.hidden = true; }, 420);
+    popChat.sent("anh không");
+    if (noiDangMo.khoa) ghiDaNoi(noiDangMo.khoa);
+    setTimeout(dongNoi, 1500);
+  });
+
+  popYes.addEventListener("click", () => {
+    if (!noiDangMo) return;
+    popBtns.classList.remove("on");
+    setTimeout(() => { popBtns.hidden = true; }, 420);
+    popChat.sent("anh có");
+    if (noiDangMo.khoa) ghiDaNoi(noiDangMo.khoa);
+    setTimeout(() => {
+      popGo.hidden = false; popEnd.hidden = false;
+      requestAnimationFrame(() => { popGo.classList.add("on"); popChat.scroll(); });
+      popInput.focus();
+    }, 700);
+  });
+
+  function guiLoiHienTai(){
+    const chu = popInput.value.trim();
+    if (!chu || !noiDangMo) return;
+    popInput.value = "";
+    popInput.style.height = "auto";
+    popChat.sent(chu);
+    const m = { noi: noiDangMo.noi, chu, luc: new Date().toISOString() };
+    xepHang(m.noi, m.chu);
+    guiMotLoi(m).then(ok => {
+      if (ok){
+        const i = (progress.hangDoi || []).findIndex(x => x.chu === m.chu && x.luc === m.luc);
+        if (i >= 0){ progress.hangDoi.splice(i, 1); saveProgress(); }
+        popCho.hidden = true;
+      } else {
+        popCho.hidden = false;
+        popCho.textContent = "chưa gửi được, để em giữ đó gửi sau nhé";
+      }
+    });
+  }
+  popSend.addEventListener("click", guiLoiHienTai);
+  popInput.addEventListener("input", () => {
+    popInput.style.height = "auto";
+    popInput.style.height = Math.min(popInput.scrollHeight, 120) + "px";
+    popChat.scroll();
+  });
+  popInput.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); guiLoiHienTai(); }
+  });
+  popEnd.addEventListener("click", dongNoi);
+
+  const HOI_THEM = "anh có muốn nói gì với em không ạ?";
+
+  function openPopup(text, day){
+    moNoi(day ? "hoi-d" + day : null,
+          day ? "câu hỏi ngày " + day : "lời nhắn",
+          [text], null);
+  }
+  function closePopup(){ dongNoi(); }
 
   // ---------- tới giờ thì nhắn ----------
   // Giờ ghi trong bảng là giờ máy của Minh (cùng nhịp với khoảng trời bên nam).
@@ -3914,7 +4122,7 @@
       if (bay.h !== p.at[0] || bay.m < p.at[1]) continue;
       progress.pops[popupKey(p)] = true;
       saveProgress();
-      showToast(p.text, () => openPopup(p.text));
+      showToast(p.text, () => openPopup(p.text, p.day));
       return;                                        // mỗi lần một lời thôi
     }
   }
@@ -3925,11 +4133,11 @@
     if (!p || !progress.pops || progress.pops[popupKey(p)]) return;
     progress.pops[popupKey(p)] = true;
     saveProgress();
-    showToast(p.text, () => openPopup(p.text));
+    showToast(p.text, () => openPopup(p.text, p.day));
   }
   window.wanxiaPopup = i => {           // để thử: wanxiaPopup(1)
     const p = POPUPS.find(x => x.day === i) || POPUPS[0];
-    showToast(p.text, () => openPopup(p.text));
+    showToast(p.text, () => openPopup(p.text, p.day));
   };
 
   // Từ đây trở đi mới được phép nhắn. Trước dòng này mọi thứ ở trên còn dở dang.
@@ -4068,13 +4276,14 @@
       const m = ev.data || {};
       if (m.wanxia !== "popup" || !m.text) return;
       if (m.day && progress.pops){ progress.pops["d" + m.day] = true; saveProgress(); }
-      openPopup(m.text);
+      openPopup(m.text, m.day);
     });
   }
 
   if (alreadyOpen) openApp(false); else showLock();
   maybeAskPush();
   quietSubscribe();
+  xaHangDoi();                    // còn lời nào chưa gửi được thì gửi nốt
   watchGeo();                     // hỏi trình duyệt xem đang cho hay đang chặn
   if (helloDone) askMySky();      // đã chào rồi thì lặng lẽ lấy lại tên nơi chốn
 
