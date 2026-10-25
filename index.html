@@ -4434,13 +4434,29 @@
       requestAnimationFrame(() => { pushBtns.classList.add("on"); pushChat.scroll(); });
     });
   }
+  // Rảnh để nghe một câu hỏi. KHÁC với ranhTay(): mở Ngăn nhạc hay Ngăn truyện
+  // KHÔNG tính là bận — Minh vào bài từ trong ngăn thì nghe xong app trả bạn ấy
+  // về đúng chỗ ấy, mà mạch trả lời vẫn mở đè lên ngăn được. Cái gì thật sự
+  // không được chen ngang: đang nghe, đang xem, hay đang dở một mạch khác.
+  function ranhDeHoi(){
+    if (document.hidden) return false;
+    for (const id of ["popBox", "pushBox", "askBox", "geoBox"]){
+      const e = document.getElementById(id);
+      if (e && e.classList.contains("open")) return false;
+    }
+    const khoa = document.getElementById("lock");
+    if (khoa && !khoa.classList.contains("off")) return false;
+    const cua = document.getElementById("portal");
+    if (cua && cua.classList.contains("open")) return false;
+    for (const m of document.querySelectorAll("video,audio")) if (!m.paused) return false;
+    return true;
+  }
+
   // Chỉ hỏi khi Minh đang rảnh tay, và LUÔN nhường lời nhắn của em đi trước.
   function moiXinQuyen(){
     if (!choXinQuyen || daHoiNangCapHomNay()) return;
     if (typeof loiConCho === "function" && loiConCho()) return;
-    const hopXin = document.getElementById("pushBox");
-    if (hopXin && hopXin.classList.contains("open")) return;
-    if (typeof ranhTay === "function" && !ranhTay()) return;
+    if (!ranhDeHoi()) return;
     const loai = quyenConThieu();
     choXinQuyen = false;
     if (!loai) return;                       // đủ cả hai rồi thì thôi, không làm phiền
