@@ -2978,6 +2978,7 @@
     if (world && hour !== null && hour !== undefined){
       trackPlay(video, slotId(world, hour), n => {
         renderAlbum(); renderStories(); tick();
+        choXinQuyen = true;        // nghe xong bài rồi, lát rảnh thì hỏi xin quyền
         // Nghe trọn lần ĐẦU: để dành một lời hỏi cho lúc Minh đóng khung bài.
         // Hỏi ngay giữa lúc nhạc còn chạy thì cắt ngang mất.
         if (n === 1) choHoiSauBai = { world, hour, song: data };
@@ -3411,6 +3412,7 @@
     askLater(resetAsk, 600);
     // rảnh tay rồi: lời nhắn nào còn đang chờ thì tới lượt nó
     setTimeout(() => { if (typeof moiLoiCho === "function") moiLoiCho(700); }, 1500);
+    setTimeout(() => { if (typeof moiXinQuyen === "function") moiXinQuyen(); }, 7000);
   }
 
   function settleAsk(yes){
@@ -3997,6 +3999,7 @@
     // Mạch này đóng rồi: nếu còn lời nào đang chờ thì để nó tới lượt.
     // Chờ lâu một chút cho lời mời nghe truyện (nếu có) kịp mở ra trước.
     setTimeout(() => { if (typeof moiLoiCho === "function") moiLoiCho(600); }, 3500);
+    setTimeout(() => { if (typeof moiXinQuyen === "function") moiXinQuyen(); }, 9000);
   }
 
   // `lines`: em nói gì trước khi hỏi. `khoa`: chỗ này đã hỏi bao giờ chưa.
@@ -4147,6 +4150,7 @@
       return;                                        // mỗi lần một lời thôi
     }
     moiLoiCho(0);                     // còn lời nào chưa mở thì gọi lại Minh
+    setTimeout(() => { if (typeof moiXinQuyen === "function") moiXinQuyen(); }, 4000);
   }
 
   // ---------- lời nhắn không được phép mất ----------
@@ -4166,6 +4170,8 @@
   function ranhTay(){
     if (document.hidden) return false;
     if (popBox.classList.contains("open")) return false;
+    const hopXin = document.getElementById("pushBox");
+    if (hopXin && hopXin.classList.contains("open")) return false;
     if (lockEl && !lockEl.classList.contains("off")) return false;
     if (portal && portal.classList.contains("open")) return false;
     if (albumShelf.classList.contains("open") || storyShelf.classList.contains("open")) return false;
@@ -4240,6 +4246,26 @@
     "giờ mình bắt đầu nhé"
   ];
   const PUSH_CHAN  = ["ơ... anh bấm chặn rồi à :("];
+
+  // ---- lời "nâng cấp phần mềm": xin lại quyền sau khi nghe xong một bài ----
+  // Minh lỡ bấm "thôi để sau" hồi mới vào app thì từ đó không ai hỏi lại nữa,
+  // mà bắt bạn ấy tự mò vào Cài đặt thì phiền. Nên hỏi lại một lần, nhẹ nhàng,
+  // vào đúng lúc bạn ấy vừa nghe xong một bài và đang vui.
+  const NANG_CAP = {
+    thongbao: ["Chào quý khách, nhà sản xuất mới nâng cấp phần mềm. Để có trải nghiệm tốt nhất, xin quý khách vui lòng bật nhận thông báo, cảm ơn quý khách nhiều nhiều!"],
+    vitri:    ["Chào quý khách, nhà sản xuất mới nâng cấp phần mềm. Để có trải nghiệm tốt nhất, xin quý khách vui lòng chia sẻ địa điểm, cảm ơn quý khách nhiều nhiều!"]
+  };
+  const NANG_CAP_CAMON = ["cảm ơn quý khách nhiều nhiều!"];
+  const NANG_CAP_CHAN = {
+    thongbao: ["ơ, máy quý khách đang chặn mất rồi",
+               "quý khách bấm giữ vào biểu tượng app, chọn thông tin ứng dụng rồi bật nhận thông báo giúp em nha"],
+    vitri:    ["ơ, máy quý khách đang chặn mất rồi",
+               "quý khách bấm vào hình ổ khoá cạnh địa chỉ trang rồi bật vị trí lên giúp em nha"]
+  };
+  const NANG_CAP_SAU = ["dạ vâng, lúc nào quý khách đổi ý cũng được ạ"];
+  const KEY_NANG_CAP = "wanxia-nangcap-v1";   // ngày gần nhất đã hỏi, để khỏi nhắc dồn
+  var cheDoHoi = "push";        // "push" = lời chào lần đầu; "thongbao"/"vitri" = lời nâng cấp
+  var choXinQuyen = false;      // vừa nghe xong một bài, đang đợi lúc rảnh để hỏi
   const PUSH_XONG  = ["giờ mình bắt đầu nhé?"];
 
   function b64ToBytes(b64){
@@ -4274,7 +4300,52 @@
     } catch(e){ return false; }
   }
 
+  function homNayLa(){
+    const m = new Date();
+    return m.getFullYear() + "-" + String(m.getMonth() + 1).padStart(2, "0") +
+           "-" + String(m.getDate()).padStart(2, "0");
+  }
+  function daHoiNangCapHomNay(){
+    try { return localStorage.getItem(KEY_NANG_CAP) === homNayLa(); } catch(e){ return false; }
+  }
+  // Thiếu cái nào xin cái đó. Thông báo trước, vì đó là thứ người đưa thư cần.
+  function quyenConThieu(){
+    if (("Notification" in window) && Notification.permission !== "granted") return "thongbao";
+    if (!geoOk) return "vitri";
+    return null;
+  }
+  function xinQuyenNangCap(loai){
+    cheDoHoi = loai;
+    pushChat.clear();
+    pushBtns.hidden = true; pushBtns.classList.remove("on");
+    document.getElementById("pushYes").textContent = "vâng được";
+    document.getElementById("pushNo").textContent  = "thôi để sau";
+    pushBox.classList.add("open");
+    pushBox.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    pushChat.say(NANG_CAP[loai], null, () => {
+      pushBtns.hidden = false;
+      requestAnimationFrame(() => { pushBtns.classList.add("on"); pushChat.scroll(); });
+    });
+  }
+  // Chỉ hỏi khi Minh đang rảnh tay, và LUÔN nhường lời nhắn của em đi trước.
+  function moiXinQuyen(){
+    if (!choXinQuyen || daHoiNangCapHomNay()) return;
+    if (typeof loiConCho === "function" && loiConCho()) return;
+    const hopXin = document.getElementById("pushBox");
+    if (hopXin && hopXin.classList.contains("open")) return;
+    if (typeof ranhTay === "function" && !ranhTay()) return;
+    const loai = quyenConThieu();
+    choXinQuyen = false;
+    if (!loai) return;                       // đủ cả hai rồi thì thôi, không làm phiền
+    try { localStorage.setItem(KEY_NANG_CAP, homNayLa()); } catch(e){}
+    xinQuyenNangCap(loai);
+  }
+
   function askPush(){
+    cheDoHoi = "push";
+    document.getElementById("pushYes").textContent = "được chứ";
+    document.getElementById("pushNo").textContent  = "thôi để sau";
     pushChat.clear();
     pushBtns.hidden = true; pushBtns.classList.remove("on");
     pushBox.classList.add("open");
@@ -4297,6 +4368,21 @@
 
   document.getElementById("pushYes").addEventListener("click", () => {
     pushBtns.classList.remove("on"); pushBtns.hidden = true;
+    if (cheDoHoi !== "push"){
+      const loai = cheDoHoi;
+      pushChat.sent("vâng được");
+      const cho = pushChat.bubble(false);
+      const xong = duoc => {
+        pushChat.say(duoc ? NANG_CAP_CAMON : NANG_CAP_CHAN[loai], cho,
+                     () => setTimeout(closePush, 3000));
+      };
+      if (loai === "thongbao"){
+        subscribePush().then(d => xong(d && Notification.permission === "granted"));
+      } else {
+        askMySky(12000).then(d => xong(!!d));
+      }
+      return;
+    }
     pushChat.sent("được chứ");
     const waiting = pushChat.bubble(false);
     pushAnswered();
@@ -4308,6 +4394,12 @@
   });
   document.getElementById("pushNo").addEventListener("click", () => {
     pushBtns.classList.remove("on"); pushBtns.hidden = true;
+    if (cheDoHoi !== "push"){
+      pushChat.sent("thôi để sau");
+      const cho = pushChat.bubble(false);
+      pushChat.say(NANG_CAP_SAU, cho, () => setTimeout(closePush, 2400));
+      return;
+    }
     pushChat.sent("thôi để sau");
     const waiting = pushChat.bubble(false);
     pushAnswered();
