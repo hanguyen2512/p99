@@ -4094,8 +4094,8 @@
   // Giờ ghi trong bảng là giờ máy của Minh (cùng nhịp với khoảng trời bên nam).
   // Một lời nhắn chỉ tới lượt khi cặp bài của ngày ấy đã có tệp trong app —
   // chưa có bài thì nhắn cũng chẳng để làm gì. Mỗi lời chỉ hiện đúng một lần.
-  // Hôm nay có ĐÚNG LÀ ngày của lời nhắn ấy không? Không phải "đã qua chưa" —
-  // qua rồi thì thôi hẳn, lời nhắn không gõ cửa lại vào hôm sau.
+  // Hôm nay có đúng là ngày của lời nhắn ấy không. Giữ lại cho dễ đọc mã,
+  // nhưng luật gõ cửa giờ nằm ở daToiLucNhan() phía trên: lỡ giờ vẫn còn nợ.
   function dungNgay(day){
     const ng = NGAY_MO[day];
     if (!ng) return false;
@@ -4106,41 +4106,40 @@
     return homNay === ng;
   }
 
-  // Hôm nay đã tới hoặc qua ngày mở của ngày thứ `day` chưa?
-  function ngayDaToi(day){
-    const ng = NGAY_MO[day];
+  // Ngày ấy đã có bài chưa — chưa thu bài thì lời nhắn cũng chưa gõ cửa.
+  function coBaiNgay(p){
+    const pair = PAIRS.find(x => x.day === p.day);
+    if (!pair) return false;
+    return songReady(songAt("nam", pair.nam)) || songReady(songAt("nu", pair.nu));
+  }
+
+  // Đã tới lúc Minh được nhận lời này chưa? KHÔNG hết hạn: qua ngày rồi vẫn
+  // tính là tới. Bạn ấy để chế độ máy bay cả buổi sáng, mở app lúc mười giờ,
+  // hay ba hôm sau mới mở — lời nhắn vẫn còn đó chờ. Không lời nào im ỉm mất.
+  function daToiLucNhan(p){
+    if (!p.at) return false;              // lời của bài ẩn: theo việc nghe hết, không theo giờ
+    const ng = NGAY_MO[p.day];
     if (!ng) return false;
     const m = new Date();
     const homNay = m.getFullYear() + "-" +
       String(m.getMonth() + 1).padStart(2, "0") + "-" +
       String(m.getDate()).padStart(2, "0");
-    return homNay >= ng;                     // chuỗi YYYY-MM-DD so được trực tiếp
+    if (homNay > ng) return true;         // đã qua ngày của nó
+    if (homNay < ng) return false;        // chưa tới ngày — không lộ sớm
+    const bay = worldParts("nam", m);     // đúng ngày: phải qua phút đã hẹn
+    return bay.h > p.at[0] || (bay.h === p.at[0] && bay.m >= p.at[1]);
   }
 
-  function popupReady(p){
-    const pair = PAIRS.find(x => x.day === p.day);
-    if (!pair) return false;
-    // PHẢI đúng ngày của nó — không sớm một ngày, mà cũng không muộn một ngày.
-    // Sớm thì lộ bài; muộn thì lời nhắn gõ cửa lại sau khi đã lỡ, điều mà
-    // một thông báo thật không bao giờ làm.
-    if (!dungNgay(p.day)) return false;
-    return songReady(songAt("nam", pair.nam)) || songReady(songAt("nu", pair.nu));
-  }
   function popupKey(p){ return "d" + p.day; }
 
   function checkPopups(){
     if (!progress.pops) progress.pops = {};
     // Lấy giờ từ CHÍNH cái đồng hồ Minh đang nhìn, chứ không phải đồng hồ máy.
     // Hai thứ ấy lệch nhau nếu máy Minh đặt sai múi giờ, hoặc bạn ấy đi xa.
-    const bay = worldParts("nam", new Date());
-    const mins = bay.h * 60 + bay.m;
     for (const p of POPUPS){
-      if (!p.at || progress.pops[popupKey(p)] || !popupReady(p)) continue;
-      // Lời nhắn chỉ bật ra TRONG chính giờ của nó, sau phút đã hẹn: 7h00 bài
-      // hát hiện lên, 7h07 lời nhắn tới. Trước đây chỉ hỏi "đã qua phút hẹn
-      // chưa", nên lời của ngày 4 (hẹn 3h03) bật ra lúc 6h59 sáng ngày 6.
-      // Lỡ giờ thì chờ ngày mai, đúng giờ ấy — lúc bài hát cũng quay lại.
-      if (bay.h !== p.at[0] || bay.m < p.at[1]) continue;
+      if (!p.at || progress.pops[popupKey(p)] || !coBaiNgay(p) || !daToiLucNhan(p)) continue;
+      // 7h00 bài hát hiện lên, 7h07 lời nhắn tới — không bao giờ sớm hơn.
+      // Còn muộn thì được: lỡ giờ, lỡ cả ngày, lời nhắn vẫn nằm chờ.
       progress.pops[popupKey(p)] = true;
       saveProgress();
       showToast(p.text, () => openPopup(p.text, p.day));
@@ -4155,9 +4154,13 @@
   // một bài hát, thì lời nhắn coi như trôi qua — mà đó là CÂU HỎI của em.
   // Nên: lời nào đã tới mà bạn ấy chưa mở ra trò chuyện thì vẫn còn đó, và app
   // tự mở khung chat ra khi bạn ấy rảnh tay.
+  // Lời đầu tiên theo thứ tự ngày mà Minh chưa mở ra trò chuyện. POPUPS xếp
+  // theo ngày nên lời cũ nhất luôn tới lượt trước — mỗi lần một lời thôi.
   function loiConCho(){
-    if (!progress.pops) return null;
-    return POPUPS.find(p => progress.pops[popupKey(p)] && !daNoiRoi("hoi-d" + p.day)) || null;
+    if (!progress.pops) progress.pops = {};
+    return POPUPS.find(p => !daNoiRoi("hoi-d" + p.day) && (p.at
+      ? (coBaiNgay(p) && daToiLucNhan(p))     // lời theo giờ: tới giờ là còn nợ mãi
+      : progress.pops[popupKey(p)])) || null; // lời của bài ẩn: theo việc nghe hết
   }
   // Rảnh tay: không đang nghe gì, không đang mở ngăn nào, không đang dở mạch nào.
   function ranhTay(){
