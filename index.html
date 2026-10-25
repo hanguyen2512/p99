@@ -1285,7 +1285,7 @@
   <div class="sky-toggle" role="group" aria-label="Chuyển giữa hai bầu trời" id="skyToggle">
     <button class="sky-point active" id="pointMine" data-sky="mine" aria-pressed="true">
       <span class="dot"></span>
-      <span class="sky-label">my sky<br><small id="mySkyPlace">khoảng trời của bạn</small></span>
+      <span class="sky-label"><span id="namTitle">my sky</span><br><small id="mySkyPlace">khoảng trời của bạn</small></span>
     </button>
     <div class="sky-path">
       <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="flight-svg" aria-hidden="true">
@@ -1306,7 +1306,7 @@
     </div>
     <button class="sky-point" id="pointHers" data-sky="hers" aria-pressed="false">
       <span class="dot"></span>
-      <span class="sky-label">her sky<br><small id="herSkyPlace">khoảng trời của cô ấy</small></span>
+      <span class="sky-label"><span id="nuTitle">her sky</span><br><small id="herSkyPlace">khoảng trời của cô ấy</small></span>
     </button>
   </div>
 </header>
@@ -1800,7 +1800,7 @@
   // giờ đã TỚI LƯỢT chưa. Chưa tới lượt thì chữ số im lìm như mọi giờ khác —
   // không hé lộ trước là hôm ấy sẽ có gì.
   const NGAY_MO = {
-    1:"2026-10-25",  2:"2026-10-29",  3:"2026-10-31",  4:"2026-11-03",
+    1:"2026-10-25", 13:"2026-10-27",  2:"2026-10-29",  3:"2026-10-31",  4:"2026-11-03",
     5:"2026-11-05",  6:"2026-11-09",  7:"2026-11-11",  8:"2026-11-15",
     9:"2026-11-17", 10:"2026-11-19", 11:"2026-11-22"
   };
@@ -1819,8 +1819,11 @@
       // Lấy độ lệch ĐÚNG VÀO NGÀY khung ấy mở, không phải lúc này: bên nữ đổi
       // giờ cuối tháng Mười, lấy nhầm mốc là sai nguyên một tiếng.
       const giua = new Date(+t[0], +t[1] - 1, +t[2], 12, 0, 0);
-      let gioNam = world === "nam" ? h
-                 : ((h + (7 - nuLech(giua))) % 24 + 24) % 24;
+      // Khung bên nữ mở cùng lúc với khung bên nam của NGÀY ẤY. Trước đây suy
+      // ra từ độ lệch giờ Bỉ, nên hễ bên ấy đổi giờ mùa hè hay chị đi xa là cặp
+      // lệch đi. Giờ neo thẳng vào sáu tiếng cố định — bài 3h bên nữ mãi mãi đi
+      // cùng bài 9h bên nam, không luật giờ nào bẻ được.
+      let gioNam = world === "nam" ? h : partnerHour("nu", h);
       // Khung bên nữ của ngày bẻ cong mở theo giờ ĐÃ BẺ, không theo giờ thật,
       // nên nó vang lên cùng lúc với khung bên nam của ngày ấy.
       const be = beCongCuaNgay(ng);
@@ -1880,6 +1883,11 @@
 
   const POPUPS = [
     { day:1, at:[9,9], text:"Nếu một ngày anh phát hiện ra anh đã hiểu nhầm một điều ngay từ đầu, mà điều đó có thể đã dẫn đến một chuỗi các sự việc khác, thì anh sẽ cảm thấy thế nào, và anh sẽ làm gì?" },
+    // Ngày thêm: truyện sân bay Narita. Lời nhắn tới đúng lúc đồng hồ máy Minh
+    // bước sang ngày 27/10. "truyen" nghĩa là lời này không đi kèm bài hát nào,
+    // mà đi kèm một câu chuyện — trả lời xong thì em mời kể luôn.
+    { day:13, at:[0,0], truyen:"narita",
+      text:"anh có nhớ lần đầu tiên anh bay một chuyến dài là lúc nào không? lúc đó tâm trạng của anh thế nào?" },
     { day:2, at:[19,7], text:"Nếu anh có thể đi được đến bất kỳ nơi nào trên thế giới này, anh sẽ chọn đi đến “một nơi nào đó” hay đi đến bên “một người nào đó”?" },
     { day:3, at:[7,7], text:"Nếu mà anh biết mình chỉ còn đúng một tháng rồi sẽ rời khỏi thế giới này, anh biết cụ thể từng giây từng phút nào mình sẽ rời đi, thì anh có lựa chọn nói ra điều ấy hay không? Và nếu chỉ được làm một điều duy nhất trong một tháng đó, anh sẽ làm gì?" },
     { day:4, at:[3,3], text:"Nếu anh có một điều ước về một thứ “ràng buộc” (ví dụ: họ phải làm điều gì đó) mà sẽ áp lên tất cả những ai anh từng tiếp xúc – thì điều ước đó của anh sẽ là gì?" },
@@ -1920,6 +1928,9 @@
 
   // ---- truyện khép lại, mở sau khi nghe xong bài ẩn "Friday Night" ----
   const KET_ID = "ket";
+  const NARITA_ID = "narita";
+  const NARITA_AUDIO = "assets/stories/sanbaynarita.mp3";
+  const NARITA_NGAY = "2026-10-27";
   const KET_AUDIO = "";             // → "assets/stories/thegioidabienmat.m4a" khi thu xong
 
   // 11 truyện audio, mỗi truyện gắn với một cặp
@@ -1931,6 +1942,19 @@
     ask:   { vi:"để em kể cho anh nghe một câu chuyện này",
              en:"let me tell you a story",
              zh:"让我给你讲个故事" }
+  };
+  // ---- một truyện đứng riêng, không theo cặp bài nào ----
+  // Nó mở ra đúng lúc đồng hồ máy Minh bước sang ngày 27/10, và lời nhắn của
+  // nó tới cùng giây ấy.
+  STORIES[NARITA_ID] = {
+    n: "\u2708",
+    audio: NARITA_AUDIO,
+    title: { vi:"Chuyện ở sân bay Narita tháng tám",
+             en:"Chuyện ở sân bay Narita tháng tám",
+             zh:"Chuyện ở sân bay Narita tháng tám" },
+    ask:   { vi:"em kể anh nghe chuyện ở sân bay Narita nhé",
+             en:"let me tell you about Narita airport",
+             zh:"让我给你讲成田机场的故事" }
   };
   STORIES[KET_ID] = {
     n: "\u2727",
@@ -2042,10 +2066,18 @@
   // Trước đây nó đếm mọi truyện đã mở khoá, mà truyện thì không còn biến mất
   // nữa — nên nó sáng mãi, kể cả khi Minh đã nghe hết. Giờ chỉ đếm cái chưa nghe.
   const truyenChuaNghe = pid => !(progress.stories && progress.stories[pid]);
+  // Truyện Narita: mở từ 00:00 ngày 27/10 theo đồng hồ bên nam, rồi ở lại mãi.
+  function naritaCho(){
+    const st = STORIES[NARITA_ID];
+    if (!st || !st.audio) return false;              // chưa thu xong thì chưa hiện
+    return ngayBenNam(new Date()) >= NARITA_NGAY;
+  }
+
   function storiesWaiting(){
     return PAIRS.filter(p => pairComplete(p) && truyenChuaNghe(p.id)).length
-         + (moDauCho() && truyenChuaNghe(MO_DAU_ID) ? 1 : 0)
-         + (ketCho()   && truyenChuaNghe(KET_ID)    ? 1 : 0);
+         + (moDauCho()  && truyenChuaNghe(MO_DAU_ID) ? 1 : 0)
+         + (naritaCho() && truyenChuaNghe(NARITA_ID) ? 1 : 0)
+         + (ketCho()    && truyenChuaNghe(KET_ID)    ? 1 : 0);
   }
 
   function songTitle(data){
@@ -2161,11 +2193,8 @@
     });
     document.getElementById("closeBtn").setAttribute("aria-label", t.closeAria);
     document.getElementById("frameContainer").setAttribute("aria-label", t.dialogAria);
-    if (!mySkyResolved){
-      const mySkyEl = document.getElementById("mySkyPlace");
-      if (mySkyEl) mySkyEl.textContent = t.mySkyDefault;
-    }
-    document.getElementById("herSkyPlace").textContent = t.herSkyPlace;
+    // Hai nhãn khoảng trời do veNhanTroi() lo, vì vai của chúng đổi theo máy.
+    if (typeof veNhanTroi === "function") veNhanTroi();
     document.querySelectorAll(".lang-btn").forEach(b => {
       const active = b.dataset.lang === lang;
       b.classList.toggle("active", active);
@@ -2632,15 +2661,15 @@
     { ngay:"2026-11-22", gioNam:23, lech:+6 },   // nữ 17h chiều → hiện 23h đêm
   ];
   const BE_CONG_DAI = 3600000;
-  BE_CONG.forEach(c => {
-    const t = c.ngay.split("-");
-    c.tu = new Date(+t[0], +t[1] - 1, +t[2], c.gioNam, 0, 0).getTime();
-  });
+  // Mốc tính theo đồng hồ BÊN NAM, và tính lúc cần chứ không tính sẵn — vì lúc
+  // mã này chạy thì app còn chưa biết Minh đang ở múi giờ nào.
+  function luoBeCong(c){ return lucBenNam(c.ngay, c.gioNam); }
   function dangBeCong(date){
     const t = date.getTime();
     for (let i = 0; i < BE_CONG.length; i++){
       const c = BE_CONG[i];
-      if (t >= c.tu && t < c.tu + BE_CONG_DAI) return c;
+      const tu = luoBeCong(c);
+      if (t >= tu && t < tu + BE_CONG_DAI) return c;
     }
     return null;
   }
@@ -2706,15 +2735,72 @@
     return doan;
   }
   // Máy chị hỏi người đưa thư xem Minh đang ở đâu. Hỏng thì dùng lại lần trước.
+  // Nơi mình đang đứng (lấy được từ định vị) và nơi người kia đang đứng
+  // (người đưa thư mang về). Nhớ lại trong máy để mất mạng vẫn hiện đúng.
+  var noiCuaToi = "", noiNguoiKia = "", muiNguoiKia = null;
+  try {
+    noiCuaToi    = localStorage.getItem("wanxia-noi-toi")  || "";
+    noiNguoiKia  = localStorage.getItem("wanxia-noi-kia")  || "";
+    muiNguoiKia  = localStorage.getItem("wanxia-mui-kia")  || null;
+  } catch(e){}
+
+  // Tên lùi, khi chưa có định vị: suy từ chính múi giờ. Asia/Seoul → Seoul.
+  // Hai cái nhãn trên đầu trang. Trên máy Minh: bên nam là "my sky", bên nữ là
+  // "her sky". Trên máy chị thì đổi vai: bên nam thành "his sky", bên nữ thành
+  // "my sky" — vì khoảng trời bên nữ chính là chỗ chị đang đứng.
+  function veNhanTroi(){
+    const laChi = mayCuaChi();
+    const t = (typeof I18N !== "undefined" && I18N[currentLang]) || null;
+    const dat = (id, chu) => { const e = document.getElementById(id); if (e && chu) e.textContent = chu; };
+    dat("namTitle", laChi ? "his sky" : "my sky");
+    dat("nuTitle",  laChi ? "my sky"  : "her sky");
+
+    // nơi chốn: bên nam là của Minh, bên nữ là của chị — dù đang mở trên máy nào
+    const noiNam = laChi ? (noiNguoiKia || noiTheoMui(muiNamNho)) : noiCuaToi;
+    const noiNu  = laChi ? noiCuaToi : (noiNguoiKia || noiTheoMui(muiNguoiKia));
+    const eNam = document.getElementById("mySkyPlace");
+    const eNu  = document.getElementById("herSkyPlace");
+    if (eNam) eNam.textContent = noiNam || (t ? t.mySkyDefault : "");
+    if (eNu)  eNu.textContent  = noiNu  || (t ? t.herSkyPlace  : "");
+  }
+
+  function noiTheoMui(tz){
+    if (!tz) return "";
+    const d = tz.split("/");
+    const ten = (d[d.length - 1] || "").replace(/_/g, " ");
+    return ten === "Ho Chi Minh" ? "Sài Gòn" : ten;
+  }
+
+  // Hỏi người đưa thư: người kia đang ở múi giờ nào, nơi nào. Hai máy cùng
+  // gọi hàm này, chỉ khác là mỗi bên đọc nửa còn lại của tờ giấy.
   function doiMuiGioNam(){
-    if (!mayCuaChi() || !PUSH_URL) return;
+    if (!PUSH_URL) return;
+    const laChi = mayCuaChi();
     fetch(PUSH_URL + "/xem", { cache: "no-store" })
       .then(r => r.json())
       .then(j => {
-        const tz = j && j.muiGioMayMinh;
-        if (!tz || tz === muiNamNho) return;
-        muiNamNho = tz;
-        try { localStorage.setItem("wanxia-muinam-v1", tz); } catch(e){}
+        if (!j) return;
+        let doi = false;
+        // múi giờ của Minh — chỉ máy chị mới cần, để chạy khoảng trời bên nam
+        if (laChi && j.muiGioMayMinh && j.muiGioMayMinh !== muiNamNho){
+          muiNamNho = j.muiGioMayMinh;
+          try { localStorage.setItem("wanxia-muinam-v1", muiNamNho); } catch(e){}
+          doi = true;
+        }
+        const tzKia  = laChi ? j.muiGioMayMinh : j.muiGioMayChi;
+        const noiKia = laChi ? j.noiMayMinh    : j.noiMayChi;
+        if (tzKia && tzKia !== muiNguoiKia){
+          muiNguoiKia = tzKia;
+          try { localStorage.setItem("wanxia-mui-kia", tzKia); } catch(e){}
+          doi = true;
+        }
+        if (typeof noiKia === "string" && noiKia !== noiNguoiKia){
+          noiNguoiKia = noiKia;
+          try { localStorage.setItem("wanxia-noi-kia", noiKia); } catch(e){}
+          doi = true;
+        }
+        if (!doi) return;
+        if (typeof veNhanTroi === "function") veNhanTroi();
         if (typeof tick === "function") tick();
         if (typeof renderAlbum === "function") renderAlbum();
         if (typeof renderStories === "function") renderStories();
@@ -2722,13 +2808,45 @@
       .catch(() => {});
   }
 
+  // Khoảng trời bên nữ LUÔN cách bên nam đúng sáu tiếng.
+  //
+  // Hai nơi vốn cách nhau sáu tiếng (Sài Gòn và Bỉ mùa đông) thì con số này
+  // chính là giờ thật của chị, không bẻ gì cả. Nhưng Minh bay sang Hàn thì hai
+  // nơi cách nhau tám tiếng — bạn ấy 13h chiều mà chị 5h sáng — và cặp "bài 3h
+  // bên nữ đi cùng bài 9h bên nam" sẽ vỡ. Lúc ấy thời gian bên chị được bẻ cong
+  // lại thành 7h, để sáu tiếng được giữ nguyên và hai bài vẫn vang lên cùng một
+  // giây. Người đi xa bao nhiêu thì thời gian cong lại bấy nhiêu.
+  // Hết ngày này thì thôi bẻ: bài cuối cùng đã vang lên, không còn gì phải
+  // hẹn nhau nữa. Từ 23/11 trở đi mỗi khoảng trời báo đúng giờ nơi mình đứng.
+  const HET_BE_CONG = "2026-11-22";
+
+  function gioBenNu(date){
+    if (ngayBenNam(date) <= HET_BE_CONG){
+      const n = gioBenNam(date);
+      return { h: ((n.h - OFFSET_HOURS) % 24 + 24) % 24, m: n.m, s: n.s };
+    }
+    return gioBenNuThat(date);
+  }
+
+  // Giờ THẬT nơi chị đang đứng. Trên máy chị là đồng hồ máy; trên máy Minh thì
+  // lấy múi giờ chị vừa khai. Không khai được thì lùi về luật giờ bên Âu.
+  function gioBenNuThat(date){
+    if (mayCuaChi()) return { h: date.getHours(), m: date.getMinutes(), s: date.getSeconds() };
+    if (muiNguoiKia){
+      const p = phanTheoMui(muiNguoiKia, date.getTime());
+      return { h: p.h, m: p.m, s: p.s };
+    }
+    const d = new Date(date.getTime() + nuLech(date) * 3600000);
+    return { h: d.getUTCHours(), m: d.getUTCMinutes(), s: d.getUTCSeconds() };
+  }
+
   function worldParts(world, date){
     if (world === "nu"){
-      const d = new Date(date.getTime() + nuLech(date) * 3600000);
-      let h = d.getUTCHours();
+      const g = gioBenNu(date);
+      let h = g.h;
       const be = dangBeCong(date);
       if (be) h = ((h + be.lech) % 24 + 24) % 24;
-      return { h, m: d.getUTCMinutes(), s: d.getUTCSeconds() };
+      return { h, m: g.m, s: g.s };
     }
     return gioBenNam(date);
   }
@@ -2754,10 +2872,18 @@
     if (typeof tick === "function") tick();
     if (typeof renderAlbum === "function") renderAlbum();
     if (typeof renderStories === "function") renderStories();
+    if (geoOk && typeof doNoiCuaToi === "function") doNoiCuaToi();
   }
 
   // khoảng trời bên nam là của Minh; em chưa vào được thì chưa hát ở đấy được
-  function skyLocked(world){ return !AUTHOR_REVEAL && world === "nam" && !geoOk; }
+  // Định vị gác khoảng trời của CHÍNH người đang cầm máy: trên máy Minh là bên
+  // nam, trên máy chị là bên nữ. Trước đây máy chị phải cho định vị mới xem
+  // được khoảng trời của Minh — vô lý, vì toạ độ ấy đâu phải của bạn ấy.
+  function skyLocked(world){
+    if (AUTHOR_REVEAL) return false;
+    const cuaToi = mayCuaChi() ? "nu" : "nam";
+    return world === cuaToi && !geoOk;
+  }
 
   function watchGeo(){
     geoState().then(st => {
@@ -2783,9 +2909,29 @@
       .then(r => r.json())
       .then(data => {
         const place = data.city || data.locality || data.principalSubdivision;
-        if (place){ label.textContent = place; mySkyResolved = true; }
+        if (!place) return;
+        mySkyResolved = true;
+        noiCuaToi = place;
+        try { localStorage.setItem("wanxia-noi-toi", place); } catch(e){}
+        if (typeof veNhanTroi === "function") veNhanTroi();
+        // khai luôn cho người đưa thư, để máy bên kia dán được xuống nhãn
+        if (typeof quietSubscribe === "function") quietSubscribe();
       })
       .catch(() => {});
+  }
+
+  // Đã cho định vị từ trước thì app lặng lẽ dò lại tên nơi chốn mỗi lần mở —
+  // KHÔNG hỏi xin gì, chỉ dùng cái quyền đã có. Thiếu bước này thì máy nào
+  // từng đồng ý rồi sẽ mãi không biết mình đang ở đâu, và nhãn khoảng trời
+  // của người ấy trống trơn trên máy bên kia.
+  function doNoiCuaToi(){
+    if (!geoOk || !navigator.geolocation) return;
+    try {
+      navigator.geolocation.getCurrentPosition(
+        pos => lookUpPlace(pos, document.getElementById("mySkyPlace")),
+        () => {},
+        { timeout: 12000, maximumAge: 600000 });
+    } catch(e){}
   }
 
   // trạng thái quyền định vị, nếu trình duyệt chịu nói
@@ -3360,7 +3506,27 @@
       storyList.appendChild(hang);
     }
 
+    // Truyện Narita của ngày 27/10 nằm giữa truyện ngày 1 và ngày 2.
+    let daVeNarita = false;
+    const veNarita = () => {
+      if (daVeNarita || !naritaCho()) return;
+      daVeNarita = true;
+      const st = STORIES[NARITA_ID];
+      waiting++;
+      const moi = !progress.opened[NARITA_ID];
+      const hang = document.createElement("button");
+      hang.className = "row nu" + (moi ? " unread" : "");
+      hang.innerHTML =
+        '<span class="hour">' + st.n + '</span>' +
+        '<span class="name">' + (moi ? '<i class="heart"></i>' : "") +
+          (st.title[currentLang] || st.title.vi) + '</span>' +
+        '<span class="mark"></span>';
+      hang.addEventListener("click", () => playStory(NARITA_ID));
+      storyList.appendChild(hang);
+    };
+
     PAIRS.forEach(p => {
+      if (p.day >= 2) veNarita();
       const st = STORIES[p.id];
       if (!st.audio) return;                      // chưa thu xong — chưa hiện ra
       if (storyGone(p.id) || !pairComplete(p)) return;
@@ -3376,6 +3542,8 @@
       row.addEventListener("click", () => playStory(p.id));
       storyList.appendChild(row);
     });
+
+    veNarita();          // phòng khi chưa có cặp nào từ ngày 2 trở đi hiện ra
 
     // Truyện khép lại đứng cuối hàng, sau tất cả.
     if (ketCho()){
@@ -4199,9 +4367,15 @@
   const HOI_THEM = "anh có muốn nói gì với em không ạ?";
 
   function openPopup(text, day){
+    const p = POPUPS.find(x => x.day === day);
+    // Lời nào đi kèm truyện thì mạch đóng lại là em mời kể luôn, y như các
+    // truyện khác. Đã mời rồi thì thôi, không mời lại.
+    const xong = (p && p.truyen && STORIES[p.truyen] && STORIES[p.truyen].audio)
+      ? () => { if (!progress.asked[p.truyen]) setTimeout(() => offerStory({ id: p.truyen }), 1200); }
+      : null;
     moNoi(day ? "hoi-d" + day : null,
           day ? "câu hỏi ngày " + day : "lời nhắn",
-          [text], null, true);          // vào thẳng khung chat
+          [text], xong, true);          // vào thẳng khung chat
   }
   function closePopup(){ dongNoi(); }
 
@@ -4219,6 +4393,11 @@
 
   // Ngày ấy đã có bài chưa — chưa thu bài thì lời nhắn cũng chưa gõ cửa.
   function coBaiNgay(p){
+    // Lời đi kèm một câu chuyện: chưa thu xong truyện thì lời cũng chưa gõ cửa.
+    if (p.truyen){
+      const st = STORIES[p.truyen];
+      return !!(st && st.audio);
+    }
     const pair = PAIRS.find(x => x.day === p.day);
     if (!pair) return false;
     return songReady(songAt("nam", pair.nam)) || songReady(songAt("nu", pair.nu));
@@ -4400,7 +4579,8 @@
       await fetch(PUSH_URL + "/dangky", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sub, tz, ai: laMayChi() ? "chi" : "minh" })
+        body: JSON.stringify({ sub, tz, noi: noiCuaToi || "",
+                               ai: laMayChi() ? "chi" : "minh" })
       });
       return true;
     } catch(e){ return false; }
@@ -4596,7 +4776,9 @@
   if (alreadyOpen) openApp(false); else showLock();
   maybeAskPush();
   baoLaiMuiGio(true);
-  doiMuiGioNam();                 // máy chị: hỏi xem Minh đang ở múi giờ nào
+  veNhanTroi();                   // đặt đúng vai hai khoảng trời cho máy này
+  doNoiCuaToi();                  // mình đang ở đâu — để khai với người kia
+  doiMuiGioNam();                 // hỏi xem người kia đang ở đâu
   xaHangDoi();                    // còn lời nào chưa gửi được thì gửi nốt
   watchGeo();                     // hỏi trình duyệt xem đang cho hay đang chặn
   if (helloDone) askMySky();      // đã chào rồi thì lặng lẽ lấy lại tên nơi chốn
