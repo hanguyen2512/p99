@@ -562,6 +562,19 @@
     100%{ transform:scale(1); opacity:1; }
   }
 
+  /* Bài chưa kịp về máy mà Minh lại đang mất mạng: khung bài sẽ đen trơn,
+     không một lời nào. Nói cho bạn ấy biết, kẻo tưởng app hỏng. */
+  .can-mang{
+    position:absolute; inset:0; display:none;
+    align-items:center; justify-content:center; text-align:center;
+    padding:2em 1.6em; z-index:3;
+    background:rgba(7,12,20,.86);
+    font-family:'EB Garamond',serif; font-style:italic;
+    font-size:1.02rem; line-height:1.7; color:#e6dcc4;
+    text-shadow:0 1px 6px rgba(0,0,0,.9);
+  }
+  .can-mang.on{ display:flex; }
+
   /* trái tim nhỏ trước tên: thứ vừa về mà chưa mở ra lần nào */
   .heart{
     display:inline-block; width:11px; height:10px; flex:none;
@@ -1812,7 +1825,9 @@
       // nên nó vang lên cùng lúc với khung bên nam của ngày ấy.
       const be = beCongCuaNgay(ng);
       if (world === "nu" && be) gioNam = be.gioNam;
-      return new Date(+t[0], +t[1] - 1, +t[2], gioNam, 0, 0).getTime();
+      // Mốc tuyệt đối, tính theo đồng hồ BÊN NAM — nên máy chị và máy Minh
+      // cùng mở khung bài vào đúng một khoảnh khắc.
+      return lucBenNam(ng, gioNam);
     }
     return null;
   }
@@ -2634,6 +2649,79 @@
     return null;
   }
 
+  // ---------------- đồng hồ bên nam = đồng hồ máy MINH ----------------
+  // Trên máy Minh, đó chính là đồng hồ của máy — không phải tính toán gì.
+  // Trên máy chị thì khác: chị ở Bỉ, mà bên nam phải là giờ Sài Gòn. Trước đây
+  // nó đọc thẳng đồng hồ máy, nên trên máy chị CẢ HAI khoảng trời cùng chỉ giờ
+  // Bỉ, và bài mở muộn hơn Minh sáu tiếng. Giờ máy chị hỏi người đưa thư xem
+  // Minh đang ở múi giờ nào rồi chạy y như máy bạn ấy.
+  // Dùng chuỗi khoá thẳng, không qua AI_KEY: hàm này chạy trước lúc hằng số ấy
+  // kịp khai sinh.
+  var muiNamNho = null;
+  try { muiNamNho = localStorage.getItem("wanxia-muinam-v1") || null; } catch(e){}
+  function mayCuaChi(){
+    try { return localStorage.getItem("wanxia-ai-v1") === "chi"; } catch(e){ return false; }
+  }
+  // null nghĩa là "cứ dùng đồng hồ máy" — đường của Minh, không đụng gì tới.
+  function muiGioNam(){
+    return mayCuaChi() ? (muiNamNho || "Asia/Ho_Chi_Minh") : null;
+  }
+  function phanTheoMui(tz, t){
+    const f = new Intl.DateTimeFormat("en-CA", { timeZone: tz,
+      year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false });
+    const p = {};
+    for (const x of f.formatToParts(new Date(t))) p[x.type] = x.value;
+    return { y:+p.year, mo:+p.month, d:+p.day, h:(+p.hour) % 24, m:+p.minute, s:+p.second };
+  }
+  // Giờ bên nam, dạng {h,m,s}
+  function gioBenNam(date){
+    const tz = muiGioNam();
+    if (!tz) return { h: date.getHours(), m: date.getMinutes(), s: date.getSeconds() };
+    const p = phanTheoMui(tz, date.getTime());
+    return { h: p.h, m: p.m, s: p.s };
+  }
+  // Hôm nay là ngày mấy — theo lịch bên nam, chứ không theo lịch máy chị
+  function ngayBenNam(date){
+    const tz = muiGioNam();
+    const m = date || new Date();
+    if (!tz) return m.getFullYear() + "-" + String(m.getMonth() + 1).padStart(2, "0") +
+                    "-" + String(m.getDate()).padStart(2, "0");
+    const p = phanTheoMui(tz, m.getTime());
+    return p.y + "-" + String(p.mo).padStart(2, "0") + "-" + String(p.d).padStart(2, "0");
+  }
+  // Đúng giờ `gio`:00 của ngày `ng` bên nam là lúc nào, tính theo mốc tuyệt đối.
+  // Lặp hai vòng cho chắc, phòng đúng ngày đổi giờ.
+  function lucBenNam(ng, gio){
+    const t = ng.split("-");
+    const tz = muiGioNam();
+    if (!tz) return new Date(+t[0], +t[1] - 1, +t[2], gio, 0, 0).getTime();
+    const dich = Date.UTC(+t[0], +t[1] - 1, +t[2], gio, 0, 0);
+    let doan = dich;
+    for (let i = 0; i < 3; i++){
+      const p = phanTheoMui(tz, doan);
+      const dangO = Date.UTC(p.y, p.mo - 1, p.d, p.h, p.m, p.s);
+      doan = doan + (dich - dangO);
+    }
+    return doan;
+  }
+  // Máy chị hỏi người đưa thư xem Minh đang ở đâu. Hỏng thì dùng lại lần trước.
+  function doiMuiGioNam(){
+    if (!mayCuaChi() || !PUSH_URL) return;
+    fetch(PUSH_URL + "/xem", { cache: "no-store" })
+      .then(r => r.json())
+      .then(j => {
+        const tz = j && j.muiGioMayMinh;
+        if (!tz || tz === muiNamNho) return;
+        muiNamNho = tz;
+        try { localStorage.setItem("wanxia-muinam-v1", tz); } catch(e){}
+        if (typeof tick === "function") tick();
+        if (typeof renderAlbum === "function") renderAlbum();
+        if (typeof renderStories === "function") renderStories();
+      })
+      .catch(() => {});
+  }
+
   function worldParts(world, date){
     if (world === "nu"){
       const d = new Date(date.getTime() + nuLech(date) * 3600000);
@@ -2642,7 +2730,7 @@
       if (be) h = ((h + be.lech) % 24 + 24) % 24;
       return { h, m: d.getUTCMinutes(), s: d.getUTCSeconds() };
     }
-    return { h: date.getHours(), m: date.getMinutes(), s: date.getSeconds() };
+    return gioBenNam(date);
   }
 
   // Gợi ý tên nơi bạn đang đứng — CHỈ để hiện cái nhãn dưới "khoảng trời của bạn".
@@ -2975,6 +3063,29 @@
     source.type = "video/mp4";
     video.appendChild(source);
 
+    // Bài chỉ nằm lại trong máy sau khi đã mở ra nghe một lần lúc có mạng.
+    // Chưa kịp về mà lại mất mạng thì khung bài đen trơn — phải nói một câu.
+    const baoMang = document.createElement("div");
+    baoMang.className = "can-mang";
+    const chuaCo = "chỗ này cần mạng một chút thôi à,\nanh bật mạng rồi quay lại nghe em hát nhé";
+    const hong   = "ơ, bài này em gửi hỏng mất rồi,\nanh nhắn em một tiếng nha";
+    baoMang.textContent = chuaCo;
+    const hienBao = () => {
+      // Mất mạng là chuyện hay gặp nhất; còn nếu đang có mạng mà vẫn hỏng thì
+      // là tệp trên mạng có vấn đề, nói khác đi cho đúng.
+      baoMang.textContent = (navigator.onLine === false) ? chuaCo : hong;
+      baoMang.classList.add("on");
+      video.controls = false;
+    };
+    const xoaBao = () => { baoMang.classList.remove("on"); video.controls = true; };
+    source.addEventListener("error", hienBao);
+    video.addEventListener("error", hienBao);
+    // Có mạng lại thì thử nạp lần nữa, khỏi bắt Minh đóng ra mở vào
+    video.addEventListener("loadeddata", xoaBao);
+    const thuLai = () => { if (baoMang.classList.contains("on")){ xoaBao(); video.load(); } };
+    window.addEventListener("online", thuLai);
+    baoMang.addEventListener("click", thuLai);
+
     if (world && hour !== null && hour !== undefined){
       trackPlay(video, slotId(world, hour), n => {
         renderAlbum(); renderStories(); tick();
@@ -3021,6 +3132,7 @@
     });
 
     border.appendChild(video);
+    border.appendChild(baoMang);     // nằm đè lên khung bài, chỉ hiện khi cần
 
     // Tên bài không bày ra nữa — Minh vừa chạm vào đúng giờ ấy nên đã biết
     // mình đang mở cái gì. Nhưng vẫn phải giữ lại cho máy đọc màn hình và cho
@@ -4102,11 +4214,7 @@
   function dungNgay(day){
     const ng = NGAY_MO[day];
     if (!ng) return false;
-    const m = new Date();
-    const homNay = m.getFullYear() + "-" +
-      String(m.getMonth() + 1).padStart(2, "0") + "-" +
-      String(m.getDate()).padStart(2, "0");
-    return homNay === ng;
+    return ngayBenNam(new Date()) === ng;
   }
 
   // Ngày ấy đã có bài chưa — chưa thu bài thì lời nhắn cũng chưa gõ cửa.
@@ -4124,9 +4232,7 @@
     const ng = NGAY_MO[p.day];
     if (!ng) return false;
     const m = new Date();
-    const homNay = m.getFullYear() + "-" +
-      String(m.getMonth() + 1).padStart(2, "0") + "-" +
-      String(m.getDate()).padStart(2, "0");
+    const homNay = ngayBenNam(m);         // lịch bên nam, không phải lịch máy chị
     if (homNay > ng) return true;         // đã qua ngày của nó
     if (homNay < ng) return false;        // chưa tới ngày — không lộ sớm
     const bay = worldParts("nam", m);     // đúng ngày: phải qua phút đã hẹn
@@ -4455,9 +4561,11 @@
     quietSubscribe();
   }
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) baoLaiMuiGio(false);
+    if (document.hidden) return;
+    baoLaiMuiGio(false);
+    doiMuiGioNam();                 // Minh có đi đâu không — máy chị cần biết
   });
-  window.addEventListener("online", () => baoLaiMuiGio(true));
+  window.addEventListener("online", () => { baoLaiMuiGio(true); doiMuiGioNam(); });
 
   // Minh chạm vào thông báo trên màn hình khoá: app mở lên và mở luôn lời nhắn ấy
   if ("serviceWorker" in navigator){
@@ -4472,6 +4580,7 @@
   if (alreadyOpen) openApp(false); else showLock();
   maybeAskPush();
   baoLaiMuiGio(true);
+  doiMuiGioNam();                 // máy chị: hỏi xem Minh đang ở múi giờ nào
   xaHangDoi();                    // còn lời nào chưa gửi được thì gửi nốt
   watchGeo();                     // hỏi trình duyệt xem đang cho hay đang chặn
   if (helloDone) askMySky();      // đã chào rồi thì lặng lẽ lấy lại tên nơi chốn
