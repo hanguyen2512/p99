@@ -529,7 +529,7 @@
   /* ---------- album & truyện ---------- */
   .shelf-nav{
     position:fixed; left:0; right:0; bottom:0; z-index:3;
-    display:flex; justify-content:center; gap:3em;
+    display:flex; justify-content:center; gap:2.1em;
     padding:1.6vh 5vw calc(1.8vh + var(--an-toan-duoi));
     pointer-events:none;
   }
@@ -575,6 +575,19 @@
   }
   .can-mang.on{ display:flex; }
 
+  /* Một lá thư trong Ngăn thư: câu hỏi ở trên, ngày tháng ở dưới. */
+  .thu-row{ display:block; text-align:left; }
+  .thu-row .thu-hoi{
+    display:block; font-family:'EB Garamond',serif; font-size:0.97rem;
+    line-height:1.5; color:#d8cdb4;
+  }
+  .thu-row.unread .thu-hoi{ color:#f1d98a; font-weight:500; }
+  .thu-row .thu-ngay{
+    display:block; margin-top:.3em; font-family:'Work Sans',system-ui,sans-serif;
+    font-size:.72rem; letter-spacing:.04em; color:#8d8370;
+  }
+  .thu-row.daMo .thu-ngay::after{ content:" · đã mở"; }
+
   /* trái tim nhỏ trước tên: thứ vừa về mà chưa mở ra lần nào */
   .heart{
     display:inline-block; width:11px; height:10px; flex:none;
@@ -584,6 +597,10 @@
   /* Hàng bên cô ấy — cả bài hát lẫn truyện — mang trái tim tím. */
   .row.nu .heart{
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 20.7 4.1 12.8a5.2 5.2 0 1 1 7.35-7.35L12 6.1l.55-.65A5.2 5.2 0 1 1 19.9 12.8z' fill='%23a066c8' stroke='%230e1526' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+  .shelf-empty{
+    font-family:'EB Garamond',serif; font-style:italic; opacity:.6;
+    color:#d8cdb4; padding:1.4em .2em; text-align:center;
   }
   .row.unread .name{ font-weight:500; }
   .row.nam.unread .name{ color:#f1d98a; }
@@ -1086,7 +1103,7 @@
   audio.story-player.on{ display:block; }
 
   @media (max-width:640px){
-    .shelf-nav{ gap:2.2em; }
+    .shelf-nav{ gap:1.5em; }
     .shelf-nav button{ font-size:.85rem; }
     .stage{ padding-bottom:13vh; }
   }
@@ -1445,6 +1462,7 @@
 <nav class="shelf-nav">
   <button id="openAlbum"><span data-i18n="navSongs">Ngăn nhạc</span><span class="bell" id="albumBell"></span></button>
   <button id="openStories"><span data-i18n="navStories">Ngăn truyện</span><span class="bell" id="storyBell"></span></button>
+  <button id="openThu"><span data-i18n="navThu">Ngăn thư</span><span class="bell" id="thuBell"></span></button>
 </nav>
 
 <div class="shelf" id="albumShelf" aria-hidden="true">
@@ -1453,6 +1471,14 @@
     <h2 data-i18n="navSongs">Ngăn nhạc</h2>
     <div id="albumList"></div>
 
+  </div>
+</div>
+
+<div class="shelf" id="thuShelf" aria-hidden="true">
+  <button class="back-btn" data-close="thuShelf" aria-label="Quay về"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>quay về</button>
+  <div class="shelf-inner">
+    <h2 data-i18n="navThu">Ngăn thư</h2>
+    <div id="thuList"></div>
   </div>
 </div>
 
@@ -2129,6 +2155,7 @@
       hourActive: (h, label) => `${h} giờ — ${label}`,
       navSongs: "Ngăn nhạc",
       navStories: "Ngăn truyện",
+      navThu: "Ngăn thư",
       geoLang: "vi"
     },
     en: {
@@ -2143,6 +2170,7 @@
       hourActive: (h, label) => `${h} o'clock — ${label}`,
       navSongs: "Songs",
       navStories: "Stories",
+      navThu: "Letters",
       geoLang: "en"
     },
     zh: {
@@ -2157,6 +2185,7 @@
       hourActive: (h, label) => `${h}点 — ${label}`,
       navSongs: "歌曲",
       navStories: "故事",
+      navThu: "信箱",
       geoLang: "zh"
     }
   };
@@ -3386,9 +3415,12 @@
   const storyShelf = document.getElementById("storyShelf");
   const albumList  = document.getElementById("albumList");
   const storyList  = document.getElementById("storyList");
+  const thuShelf   = document.getElementById("thuShelf");
+  const thuList    = document.getElementById("thuList");
   const storyAudio = document.getElementById("storyAudio");
   const storyBell  = document.getElementById("storyBell");
   const albumBell  = document.getElementById("albumBell");
+  const thuBell    = document.getElementById("thuBell");
   let freshSongs   = new Set();   // bài vừa về, đang gắn nhãn "mới" trong lần xem này
   const askBox     = document.getElementById("askBox");
   const askText    = document.getElementById("askText");
@@ -3407,12 +3439,12 @@
       }));
       if (freshSongs.size) saveProgress();
     }
-    renderAlbum(); renderStories();
+    renderAlbum(); renderStories(); renderThu();
     el.scrollTop = 0;                       // luôn mở ra từ đầu danh sách
     el.classList.add("open");
     el.setAttribute("aria-hidden","false");
     document.body.style.overflow = "hidden";
-    if (el === storyShelf) refreshBells();
+    if (el === storyShelf || el === thuShelf) refreshBells();
   }
   function closeShelf(el){
     if (el === albumShelf) freshSongs = new Set();
@@ -3423,6 +3455,7 @@
   }
   document.getElementById("openAlbum").addEventListener("click", () => openShelf(albumShelf));
   document.getElementById("openStories").addEventListener("click", () => openShelf(storyShelf));
+  document.getElementById("openThu").addEventListener("click", () => openShelf(thuShelf));
   document.querySelectorAll(".back-btn[data-close]").forEach(b => {
     b.addEventListener("click", () => closeShelf(document.getElementById(b.dataset.close)));
   });
@@ -3585,9 +3618,55 @@
       el.classList.toggle("on", n > 0);
     }
   }
+  // ---------------- Ngăn thư ----------------
+  // Mọi lời nhắn đã tới giờ đều nằm đây, theo đúng thứ tự ngày. Minh mở ra đọc
+  // và trả lời lúc nào cũng được — không còn bị khung chat chen ngang nữa.
+  function thuDaToi(){
+    return POPUPS.filter(p => p.at ? (coBaiNgay(p) && daToiLucNhan(p))
+                                   : (progress.pops && progress.pops[popupKey(p)]));
+  }
+  function thuChuaMo(){
+    return thuDaToi().filter(p => !daNoiRoi("hoi-d" + p.day)).length;
+  }
+  const THANG = { "01":"tháng Một","02":"tháng Hai","03":"tháng Ba","04":"tháng Tư",
+    "05":"tháng Năm","06":"tháng Sáu","07":"tháng Bảy","08":"tháng Tám",
+    "09":"tháng Chín","10":"tháng Mười","11":"tháng Mười Một","12":"tháng Mười Hai" };
+  function ngayChu(ng){
+    if (!ng) return "";
+    const t = ng.split("-");
+    return "ngày " + String(+t[2]) + " " + (THANG[t[1]] || t[1]);
+  }
+
+  function renderThu(){
+    if (!thuList) return;
+    thuList.innerHTML = "";
+    const ds = thuDaToi();
+    for (const p of ds){
+      const daMo = daNoiRoi("hoi-d" + p.day);
+      const row = document.createElement("button");
+      row.className = "row nu thu-row" + (daMo ? " daMo" : " unread");
+      row.innerHTML =
+        '<span class="thu-hoi">' + (daMo ? "" : '<i class="heart"></i>') +
+          p.text.replace(/[<>]/g, "") + '</span>' +
+        '<span class="thu-ngay">' + ngayChu(NGAY_MO[p.day]) + '</span>';
+      row.addEventListener("click", () => {
+        closeShelf(thuShelf);
+        setTimeout(() => openPopup(p.text, p.day, true), 420);
+      });
+      thuList.appendChild(row);
+    }
+    if (!ds.length){
+      const tr = document.createElement("div");
+      tr.className = "shelf-empty";
+      tr.textContent = "chưa có lời nhắn nào";
+      thuList.appendChild(tr);
+    }
+  }
+
   function refreshBells(){
     setBell(albumBell, songsUnseen());
     setBell(storyBell, storiesWaiting());
+    setBell(thuBell, thuChuaMo());
   }
 
   // Truyện chỉ nghe một lần — tua tới cuối cũng tính, nên chỉ cần nghe hết là xong.
@@ -4230,6 +4309,8 @@
     if (!progress.noi) progress.noi = {};
     progress.noi[khoa] = true;
     saveProgress();
+    if (typeof renderThu === "function") renderThu();
+    if (typeof refreshBells === "function") refreshBells();
   }
 
   // ---- gửi lời Minh nhắn về cho chị ----
@@ -4288,8 +4369,9 @@
   // `thang`: những lời nhắn hằng ngày CHÍNH LÀ câu hỏi, nên mở thẳng khung chat
   // cho Minh trả lời vào đó, khỏi phải qua hai nút có/không. Nút "kết thúc"
   // vẫn hiện, để bạn ấy biết lúc nào thì mạch này đóng lại.
-  function moNoi(khoa, noi, lines, xong, thang){
-    if (khoa && daNoiRoi(khoa)){ if (xong) xong(); return; }
+  function moNoi(khoa, noi, lines, xong, thang, moLai){
+    // moLai: Minh tự vào Ngăn thư bấm lại một lá đã đọc — lúc ấy đừng chặn.
+    if (!moLai && khoa && daNoiRoi(khoa)){ if (xong) xong(); return; }
     noiDangMo = { khoa, noi, xong };
     popChat.clear();
     popHint.hidden = true; popHint.classList.remove("on");
@@ -4366,7 +4448,7 @@
 
   const HOI_THEM = "anh có muốn nói gì với em không ạ?";
 
-  function openPopup(text, day){
+  function openPopup(text, day, moLai){
     const p = POPUPS.find(x => x.day === day);
     // Lời nào đi kèm truyện thì mạch đóng lại là em mời kể luôn, y như các
     // truyện khác. Đã mời rồi thì thôi, không mời lại.
@@ -4375,7 +4457,7 @@
       : null;
     moNoi(day ? "hoi-d" + day : null,
           day ? "câu hỏi ngày " + day : "lời nhắn",
-          [text], xong, true);          // vào thẳng khung chat
+          [text], xong, true, moLai);   // vào thẳng khung chat
   }
   function closePopup(){ dongNoi(); }
 
@@ -4464,27 +4546,13 @@
     for (const m of document.querySelectorAll("video,audio")) if (!m.paused) return false;
     return true;
   }
-  let hoiMoLuc = 0, nhacLuc = 0;
-  function moiLoiCho(cho){
-    const p = loiConCho();
-    if (!p || document.hidden) return;
-    if (popBox.classList.contains("open")) return;
-    const gio = performance.now();
-    if (!ranhTay()){
-      // Minh đang dở tay. Không chồm lên, nhưng cũng KHÔNG để lời nhắn im ỉm
-      // biến mất: cứ một lúc lại gõ cửa một lần, chạm vào là mở ra trò chuyện.
-      if (gio - nhacLuc < 45000) return;
-      nhacLuc = gio;
-      showToast(p.text, () => openPopup(p.text, p.day));
-      return;
-    }
-    if (gio - hoiMoLuc < 15000) return;         // đừng chồm lên Minh liên tục
-    hoiMoLuc = gio;
-    setTimeout(() => {
-      if (loiConCho() === p && ranhTay() && !popBox.classList.contains("open")){
-        openPopup(p.text, p.day);
-      }
-    }, cho || 0);
+  // Lời nhắn KHÔNG tự mở ra nữa. Nó chỉ gõ cửa một lần — trượt xuống như một
+  // thông báo — rồi về nằm trong Ngăn thư, có huy hiệu đếm. Minh đọc và trả lời
+  // lúc nào tuỳ bạn ấy. Hàm này giữ lại để những chỗ cũ gọi tới vẫn chạy, nhưng
+  // nay nó chỉ còn làm đúng một việc: cập nhật Ngăn thư.
+  function moiLoiCho(){
+    if (typeof renderThu === "function") renderThu();
+    if (typeof refreshBells === "function") refreshBells();
   }
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && window.__popsReady) setTimeout(() => moiLoiCho(900), 600);
@@ -4776,6 +4844,7 @@
   if (alreadyOpen) openApp(false); else showLock();
   maybeAskPush();
   baoLaiMuiGio(true);
+  renderThu();                    // xếp sẵn những lá thư đã tới
   veNhanTroi();                   // đặt đúng vai hai khoảng trời cho máy này
   doNoiCuaToi();                  // mình đang ở đâu — để khai với người kia
   doiMuiGioNam();                 // hỏi xem người kia đang ở đâu
