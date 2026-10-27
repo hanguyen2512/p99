@@ -4189,6 +4189,27 @@
     setBell(albumBell, songsUnseen());
     setBell(storyBell, storiesWaiting());
     setBell(thuBell, thuChuaMo());
+    capNhatHuyHieu();
+  }
+
+  // Con số nhỏ trên biểu tượng app (ngoài màn hình chính): tổng bài hát chưa nghe,
+  // truyện chưa nghe và tin nhắn chưa đọc. Đọc/nghe hết thì số tự biến mất.
+  // Chỉ chạy được khi app đã được thêm vào màn hình chính và đã bật thông báo.
+  function capNhatHuyHieu(){
+    let n = 0;
+    try { n = songsUnseen() + storiesWaiting() + thuChuaMo(); } catch(e){ return; }
+    try {
+      if (n > 0 && navigator.setAppBadge) navigator.setAppBadge(n).catch(() => {});
+      else if (n <= 0 && navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+    } catch(e){}
+    // Cho người đưa thư (service worker) biết số hiện tại, để khi app đóng mà có
+    // thông báo mới thì nó cộng thêm 1 chứ không đếm lại từ đầu.
+    try {
+      if (window.caches){
+        caches.open("badge-wanxia").then(c =>
+          c.put(new URL("./__badge", location.href).href, new Response(String(Math.max(0, n)))));
+      }
+    } catch(e){}
   }
 
   // Truyện chỉ nghe một lần — tua tới cuối cũng tính, nên chỉ cần nghe hết là xong.
