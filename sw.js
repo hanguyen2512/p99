@@ -9,7 +9,7 @@
 //     Hệ quả: muốn SỬA một bài đã gửi đi thì phải ĐẶT TÊN FILE KHÁC, vì máy
 //     Minh nhận ra bài theo đường dẫn, chứ không nhìn vào ruột file.
 // Chị không cần đổi số bên dưới nữa; để đó làm nút bấm cuối cùng thôi.
-const CACHE_VERSION = "v4";
+const CACHE_VERSION = "v5";
 const CACHE_NAME = "wanxia-" + CACHE_VERSION;
 
 // "app shell" — luôn tải sẵn để mở được ngay cả khi mất mạng
@@ -19,6 +19,8 @@ const CORE_ASSETS = [
   "./manifest.json",
   "./assets/icon-192.png",
   "./assets/icon-512.png",
+  "./assets/images/avatar.jpg",
+  "./assets/images/avatar-minh.png",
   "./assets/images/poster-11.jpg"
 ];
 
@@ -76,6 +78,43 @@ function mangTruoc(req, cacheName){
   );
 }
 
+// Bài hát và truyện phải TUA ĐƯỢC.
+//
+// Trình phát không xin cả tệp: nó xin "cho tôi đoạn từ byte này tới byte kia"
+// (header Range), và chờ máy chủ đáp lại bằng mã 206 kèm Content-Range. Trước
+// đây service worker lấy nguyên tệp trong bộ nhớ trả ra một cục mã 200 — nên
+// trình phát coi như đây là dòng chảy không tua được: thanh thời gian kéo
+// không ăn, và đường tiếng chạy song song cũng không nhảy theo được.
+// Giờ nó tự cắt đúng đoạn được hỏi rồi trả về 206.
+async function traMedia(req, cache){
+  const khoa = new Request(req.url);          // tra và cất KHÔNG kèm Range
+  let res = await cache.match(khoa);
+  if (!res){
+    res = await fetch(khoa);
+    if (res && res.ok && res.status === 200) await cache.put(khoa, res.clone());
+  }
+  const xin = req.headers.get("range");
+  if (!xin || !res || res.status !== 200) return res;
+
+  const buf = await res.arrayBuffer();
+  const tong = buf.byteLength;
+  const m = /bytes=(\d*)-(\d*)/i.exec(xin);
+  let tu  = m && m[1] ? parseInt(m[1], 10) : 0;
+  let den = m && m[2] ? parseInt(m[2], 10) : tong - 1;
+  if (!isFinite(tu)  || tu  < 0 || tu  >= tong) tu  = 0;
+  if (!isFinite(den) || den < tu || den >= tong) den = tong - 1;
+  const phan = buf.slice(tu, den + 1);
+  return new Response(phan, {
+    status: 206, statusText: "Partial Content",
+    headers: {
+      "Content-Type": res.headers.get("Content-Type") || "application/octet-stream",
+      "Content-Length": String(phan.byteLength),
+      "Content-Range": "bytes " + tu + "-" + den + "/" + tong,
+      "Accept-Ranges": "bytes"
+    }
+  });
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -93,14 +132,7 @@ self.addEventListener("fetch", (event) => {
   // nên cập nhật nội dung trang không bắt tải lại hàng trăm MB.
   const isMedia = /\/assets\/(songs|stories)\//.test(url.pathname);
   if (isMedia){
-    event.respondWith(
-      caches.open(MEDIA_CACHE).then(cache =>
-        cache.match(req).then(hit => hit || fetch(req).then(res => {
-          if (res.ok && res.status === 200) cache.put(req, res.clone());
-          return res;
-        }))
-      )
-    );
+    event.respondWith(caches.open(MEDIA_CACHE).then(cache => traMedia(req, cache)));
     return;
   }
 
@@ -130,15 +162,21 @@ self.addEventListener("push", (event) => {
   const title = d.title || "Linh Hà";
   const opts = {
     body: d.body || "",
-    icon: "./assets/icon-192.png",
+    icon: d.icon || "./assets/icon-192.png",
     badge: "./assets/icon-192.png",
     tag: d.tag || "wanxia",
     renotify: true,
     // Rung nhẹ hai nhịp, như một tin nhắn tới — không phải chuông báo thức.
     vibrate: [90, 60, 90],
-    data: { url: d.url || "./", text: d.body || "" }
+    data: { url: d.url || "./", text: d.body || "", day: d.day || 0, kieu: d.kieu || "", id: d.id || "" }
   };
-  event.waitUntil(self.registration.showNotification(title, opts));
+  // Luôn hiện thông báo (iOS đòi vậy), và nếu app đang mở thì nhắc nó lấy tin mới ngay.
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(title, opts),
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) c.postMessage({ wanxia: "tin-moi" });
+    })
+  ]));
 });
 
 // Chạm vào thông báo: nếu app đang mở sẵn thì nhảy về đúng cửa sổ ấy
@@ -150,7 +188,8 @@ self.addEventListener("notificationclick", (event) => {
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const c of list){
         if (c.url.indexOf(self.registration.scope) === 0){
-          c.postMessage({ wanxia: "popup", text: data.text || "" });
+          if (data.kieu === "chat") c.postMessage({ wanxia: "chat", id: data.id || "" });
+          else c.postMessage({ wanxia: "popup", text: data.text || "", day: data.day || 0 });
           return c.focus();
         }
       }
