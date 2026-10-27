@@ -653,6 +653,7 @@
     font-family:'Cormorant Garamond',serif; font-size:.92rem; color:#8d8166;
     min-width:4.2em; letter-spacing:.04em; flex:none;
   }
+  .he-dau{ color:#a8906a; opacity:.85; font-size:.88em; }
   .row .name{ flex:1; font-size:1.05rem; font-style:italic; line-height:1.45; }
   .row.nam .name{ color:var(--brass); }
   .row.nu  .name{ color:#9ab4cc; }
@@ -807,6 +808,7 @@
     opacity:0; transition:opacity .7s ease;
   }
   .chat.said .chat-text{ opacity:1; }
+  #popBox .chat-text{ white-space:pre-line; }
   .chat.said .chat-typing{ display:none; }
   .chat.said .chat-bubble{ padding:.72em 1em; }
 
@@ -1107,6 +1109,141 @@
     .shelf-nav button{ font-size:.85rem; }
     .stage{ padding-bottom:13vh; }
   }
+
+  /* ---------- Ngăn thư: hàng "Nhắn với em" ở đầu ---------- */
+  .thu-chat{ border-bottom-color:rgba(200,162,74,.32); margin-bottom:.5em; }
+  .thu-chat .thu-hoi{
+    font-family:'Cormorant Garamond',serif; font-size:1.18rem; letter-spacing:.03em;
+    color:var(--parchment);
+  }
+  .thu-chat.unread .thu-hoi{ color:#f1d98a; }
+  .thu-chat .thu-xem{
+    display:block; margin-top:.28em; font-family:'Work Sans',system-ui,sans-serif;
+    font-size:.78rem; font-weight:300; color:#8d8370;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .thu-chat.unread .thu-xem{ color:#bcb08f; }
+
+  /* ---------- phòng chat chung ---------- */
+  /* Nằm trên các ngăn (11) nhưng dưới khung trò chuyện và khoá (.ask, .lock),
+     để pop-up hay màn nhập mã luôn nổi lên trên nếu đúng lúc chúng tới. */
+  .room{
+    position:fixed; left:0; right:0; top:0; height:100vh; height:100dvh; z-index:12;
+    display:flex; flex-direction:column;
+    background:rgba(7,10,18,.97);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    opacity:0; pointer-events:none; transition:opacity .35s ease;
+  }
+  .room.open{ opacity:1; pointer-events:auto; }
+  .room-head{
+    flex:none; display:flex; align-items:center; gap:.8em;
+    padding:calc(1.6vh + var(--an-toan-tren)) 5vw 1.4vh;
+    border-bottom:1px solid rgba(200,162,74,.14);
+  }
+  .room-back{
+    display:flex; align-items:center; gap:.45em; flex:none;
+    padding:.5em 1em .5em .8em; border-radius:20px; cursor:pointer;
+    background:rgba(11,14,20,.88); border:1px solid rgba(200,162,74,.4);
+    color:#e0d4b0; font-family:'EB Garamond',serif; font-style:italic;
+    font-size:.92rem; letter-spacing:.03em;
+    transition:border-color .3s ease, color .3s ease, transform .18s ease;
+  }
+  .room-back svg{ width:14px; height:14px; flex:none; }
+  .room-back:hover, .room-back:focus-visible{ border-color:var(--brass); color:var(--brass); outline:none; }
+  .room-back:active{ transform:scale(.96); }
+  .room-who{
+    margin-left:auto; display:flex; align-items:center; gap:.6em;
+    font-family:'Cormorant Garamond',serif; font-size:1.2rem; letter-spacing:.04em;
+    color:var(--parchment);
+  }
+  .room-who .chat-avatar{ width:32px; height:32px; }
+
+  .room-flow{
+    flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain; padding:1.1em 5vw .6em;
+  }
+  .room-in{ max-width:540px; margin:0 auto; display:flex; flex-direction:column; gap:.28em; }
+  .room-trong{
+    text-align:center; padding:3em 1em; font-family:'EB Garamond',serif;
+    font-style:italic; color:#8d8370; opacity:.8;
+  }
+  .rm-ngay{
+    align-self:center; margin:1.1em 0 .55em;
+    font-family:'Work Sans',system-ui,sans-serif; font-size:.7rem; letter-spacing:.05em;
+    color:#8d8370;
+  }
+  .rm{ display:flex; align-items:flex-end; gap:.55em; max-width:100%; }
+  .rm.toi{ justify-content:flex-end; }
+  .rm .chat-avatar{ flex:none; }
+  .rm.an-av .chat-avatar{ visibility:hidden; }
+  .rm.cuoi-nhom{ margin-bottom:.45em; }
+  .rm-bong{ display:flex; flex-direction:column; min-width:0; max-width:calc(100% - 46px); }
+  .rm.toi .rm-bong{ align-items:flex-end; max-width:82%; }
+  .rm-hop{
+    background:rgba(236,227,209,.07); border:1px solid rgba(200,162,74,.26);
+    border-radius:16px 16px 16px 4px; padding:.62em .95em;
+    font-family:'Work Sans',system-ui,sans-serif; font-weight:300;
+    font-size:clamp(.92rem, 3.7vw, 1rem); line-height:1.55; color:var(--parchment);
+    white-space:pre-wrap; overflow-wrap:anywhere;
+  }
+  .rm.toi .rm-hop{
+    background:rgba(200,162,74,.16); border-color:rgba(200,162,74,.38);
+    border-radius:16px 16px 4px 16px;
+  }
+  .rm.hoi .rm-hop{ cursor:pointer; }
+  .rm.hoi .rm-hop:active{ filter:brightness(1.15); }
+  .rm.dang-gui .rm-hop{ opacity:.6; }
+  /* thẻ trích: tin này đang đáp lại cái gì */
+  .rm-trich{
+    display:block; margin:0 0 .3em; padding:0 0 0 .65em; text-align:left;
+    background:none; border:none; border-left:2px solid rgba(200,162,74,.5);
+    font-family:'EB Garamond',serif; font-style:italic; font-size:.85rem; line-height:1.4;
+    color:#a99f86; cursor:default; max-width:100%;
+  }
+  .rm-trich.nhay{ cursor:pointer; }
+  .rm-trich.nhay:hover, .rm-trich.nhay:focus-visible{ color:var(--brass); outline:none; }
+  .rm-gio{
+    margin:.2em .3em 0; font-family:'Work Sans',system-ui,sans-serif;
+    font-size:.64rem; letter-spacing:.02em; color:#7c735f;
+  }
+  .rm.chay .rm-hop{ animation:rmChay 1.7s ease; }
+  @keyframes rmChay{
+    0%,100%{ box-shadow:0 0 0 0 rgba(200,162,74,0); }
+    30%{ box-shadow:0 0 0 5px rgba(200,162,74,.38); }
+  }
+  @media (prefers-reduced-motion:reduce){ .rm.chay .rm-hop{ animation:none; } }
+
+  /* đang trả lời một câu */
+  .room-dtl{
+    flex:none; display:flex; align-items:center; gap:.5em;
+    width:calc(100% - 10vw); max-width:calc(540px - 0px); align-self:center;
+    padding:.45em .5em .45em .85em; border-left:2px solid var(--brass);
+    background:rgba(236,227,209,.05); border-radius:4px 10px 10px 4px;
+    font-family:'EB Garamond',serif; font-style:italic; font-size:.88rem; color:#bdb398;
+  }
+  .room-dtl[hidden]{ display:none; }
+  .room-dtl span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .room-dtl button{
+    flex:none; background:none; border:none; color:#8d8166; cursor:pointer;
+    font-size:1.25rem; line-height:1; padding:.1em .45em;
+  }
+  .room-dtl button:hover, .room-dtl button:focus-visible{ color:var(--brass); outline:none; }
+
+  .room-go{
+    flex:none; display:flex; align-items:flex-end; gap:.5em;
+    width:100%; max-width:540px; margin:0 auto;
+    padding:.6em 5vw calc(.9em + var(--an-toan-duoi));
+  }
+  .room-go textarea{
+    flex:1; resize:none; max-height:7.5em;
+    background:rgba(236,227,209,.06);
+    border:1px solid rgba(200,162,74,.35); border-radius:18px;
+    color:var(--parchment); font-family:'Work Sans',system-ui,sans-serif;
+    font-weight:300; font-size:max(16px, clamp(.88rem, 3.6vw, .96rem)); line-height:1.5;
+    padding:.6em .95em;
+  }
+  .room-go textarea::placeholder{ color:#8d8166; font-style:italic; }
+  .room-go textarea:focus{ outline:none; border-color:var(--brass); }
 </style>
 </head>
 <body>
@@ -1482,6 +1619,25 @@
   </div>
 </div>
 
+<div class="room" id="room" role="dialog" aria-modal="true" aria-label="Phòng chat" aria-hidden="true">
+  <div class="room-head">
+    <button class="room-back" id="roomBack" type="button" aria-label="Quay về"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>quay về</button>
+    <div class="room-who"><span id="roomTen"></span><div class="chat-avatar" id="roomAv"></div></div>
+  </div>
+  <div class="room-flow" id="roomFlow"><div class="room-in" id="roomIn"></div></div>
+  <div class="room-dtl" id="roomDtl" hidden><span id="roomDtlText"></span><button type="button" id="roomDtlX" aria-label="Bỏ trả lời">×</button></div>
+  <div class="room-go">
+    <textarea id="roomInput" rows="1" placeholder="nhắn cho em…"
+      autocomplete="off" autocorrect="on" spellcheck="false" aria-label="Nhắn tin"></textarea>
+    <button class="noi-send" id="roomSend" type="button" aria-label="Gửi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline>
+      </svg>
+    </button>
+  </div>
+</div>
+
 <div class="shelf" id="storyShelf" aria-hidden="true">
   <button class="back-btn" data-close="storyShelf" aria-label="Quay về"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>quay về</button>
   <div class="shelf-inner">
@@ -1827,8 +1983,25 @@
   // không hé lộ trước là hôm ấy sẽ có gì.
   const NGAY_MO = {
     1:"2026-10-25", 13:"2026-10-27",  2:"2026-10-29",  3:"2026-10-31",  4:"2026-11-03",
-    5:"2026-11-05",  6:"2026-11-09",  7:"2026-11-11",  8:"2026-11-15",
-    9:"2026-11-17", 10:"2026-11-19", 11:"2026-11-22"
+    5:"2026-11-05",  6:"2026-11-07",  7:"2026-11-11",  8:"2026-11-15",
+    9:"2026-11-17", 10:"2026-11-19", 11:"2026-11-22",
+    // Lời hỏi han hằng ngày, đúng 0:00 lúc sang ngày mới (ngày 21 trở đi)
+    21:"2026-10-28",
+    22:"2026-10-30",
+    23:"2026-11-01",
+    24:"2026-11-02",
+    25:"2026-11-04",
+    26:"2026-11-06",
+    27:"2026-11-08",
+    28:"2026-11-09",
+    29:"2026-11-10",
+    30:"2026-11-12",
+    31:"2026-11-13",
+    32:"2026-11-14",
+    33:"2026-11-16",
+    34:"2026-11-18",
+    35:"2026-11-20",
+    36:"2026-11-21"
   };
   // Khung giờ này thuộc ngày nào, và ngày ấy tới chưa?
   // Khung giờ này mở ra vào đúng khoảnh khắc nào? Lấy mốc là đồng hồ bên nam,
@@ -1925,7 +2098,45 @@
     { day:10, at:[5,5], text:"Nếu một mai mọi thứ anh trân trọng đều biến mất, mà anh lại chỉ có thể biết rằng mình đã mất đi thứ gì đó quan trọng, nhưng anh không thể nhớ ra được đó là thứ gì, thì anh sẽ làm gì?" },
     { day:11, at:[23,11], text:"“You become responsible, forever, for what you have tamed.” – Antoine de Saint-Exupéry, The Little Prince." },
     { day:12, at:null, text:"Vậy thì, anh có câu trả lời cho có gì gắn bó hơn cả “trọn đời” chưa?" },   // sau khi nghe hết tất cả
+    // Lời hỏi han hằng ngày lúc 0:00 — không đi kèm bài hát hay truyện nào ("hangNgay")
+    { day:21, at:[0,0], hangNgay:true,
+      text:"có lúc nào đấy mà anh cảm thấy chán ngán cuộc sống hiện tại của mình quá, mà anh muốn bỏ hết tất cả chỉ để đi đâu đó chưa?\nnếu anh đã từng có những lúc như thế, thì anh muốn đi đâu, và có thể là cùng với ai? rồi anh sẽ làm gì ở đó?" },
+    { day:22, at:[0,0], hangNgay:true,
+      text:"anh đã từng trải qua một biến cố nào trong cuộc đời mà ảnh hưởng tới anh đến mức khiến anh thay đổi góc nhìn hoặc thay đổi bản thân chưa? nếu có rồi thì… anh có muốn kể một chút cho em nghe không?" },
+    { day:23, at:[0,0], hangNgay:true,
+      text:"nếu một ngày tận thế đến, và trong khả năng thì anh chỉ có thể lập tức đến một nơi nào đó (cánh cửa thần kỳ dùng một lần) để cứu được duy nhất một người thôi, thì anh sẽ chọn cứu ai? (biết rằng nếu anh không cứu thì chắc chắn họ sẽ biến mất.)" },
+    { day:24, at:[0,0], hangNgay:true,
+      text:"nếu anh cần một kỹ năng hoặc một năng lực nào đó bất kỳ (thể chất, cảm xúc…) để sinh tồn trong ngày tận thế, anh sẽ lựa chọn gì và tại sao?" },
+    { day:25, at:[0,0], hangNgay:true,
+      text:"trong các loại bánh cổ truyền (như là bánh chưng, bánh trung thu, bánh hỏi…) thì anh thích loại bánh nào (nhất)?\nanh thích ngày lễ cổ truyền nào nhất? và anh muốn làm gì trong ngày lễ đó?\nnếu nói về văn hoá, ở Việt Nam, anh muốn đi trải nghiệm ở đâu nhất?" },
+    { day:26, at:[0,0], hangNgay:true,
+      text:"tưởng tượng rằng, anh bị kẹt lại ở một thời điểm giao thoa giữa hạnh phúc tột độ: gặp lại người mà anh không thể gặp lại nữa và đau khổ vô cùng: mất đi người đó một lần nữa.\ncả quá trình đó, cảm xúc sẽ luôn như lần đầu tiên, nghĩa là không có chuyện trải qua nhiều sẽ chai sạn đâu :p và cái game này sẽ lặp đi lặp lại - một vòng lặp không lối thoát, nhưng có một khả năng vô cùng vô cùng mong manh là anh có thể phá đảo game và cứu được người đó, thì anh có muốn thử không?\nhay anh sẽ lựa chọn là không tham gia vào game ngay từ đầu?\ntại sao anh lại lựa chọn như vậy?" },
+    { day:27, at:[0,0], hangNgay:true,
+      text:"ngày hôm nay của anh thế nào?\nđiều mà anh đang nghĩ đến hiện tại là gì?\nbây giờ anh muốn làm gì?\nkể cho em nghe đi~" },
+    { day:28, at:[0,0], hangNgay:true,
+      text:"điều gì mà anh nghĩ là “không thể tha thứ được” nếu ai đó làm với mình và nếu anh làm với người khác nữa?\nnếu mà điều đó không may đã xảy ra rồi, nhưng sau đó anh phát hiện ra là mình hiểu nhầm mất rồi, thì anh có chủ động quay lại hàn gắn mối quan hệ không?" },
+    { day:29, at:[0,0], hangNgay:true,
+      text:"có chuyện gì đã từng xảy ra mà khiến anh cảm thấy hối tiếc vì lúc đó mình đã không làm hết sức mình không? kể cho em nghe vớiii~" },
+    { day:30, at:[0,0], hangNgay:true,
+      text:"lúc mà anh cảm thấy nhớ một ai đó, thì thường anh sẽ làm gì?" },
+    { day:31, at:[0,0], hangNgay:true,
+      text:"anh thích biển hay thích núi?\nanh thích ngày mưa hay ngày nắng?\nanh thích uống (những) đồ uống gì?\nanh thích hoạt động ngoài trời hay trong nhà?\nanh thích ở một mình hơn hay thích ở cùng bạn bè hơn?\ncó điều gì đối với anh luôn là ngoại lệ?" },
+    { day:32, at:[0,0], hangNgay:true,
+      text:"một ngày hạnh phúc, thảnh thơi đối với anh là như thế nào? kể cho em nghe điii~" },
+    { day:33, at:[0,0], hangNgay:true,
+      text:"có loài sinh vật sống ở biển nào mà anh rất thích không? nếu có thì tại sao anh lại thích sinh vật đó?" },
+    { day:34, at:[0,0], hangNgay:true,
+      text:"đã có lúc nào đó anh không biết mình là ai và không hiểu mình đang làm gì chưa? nếu có rồi thì lúc đó thì anh đã làm gì? và anh có muốn làm gì khác đi không?" },
+    { day:35, at:[0,0], hangNgay:true,
+      text:"tưởng tượng rằng một mai lúc mình già đi rồi, mình sẽ sống một cuộc sống như thế nào?" },
+    { day:36, at:[0,0], hangNgay:true,
+      text:"nói em nghe xem bây giờ anh đang thế nào" }
   ];
+  // Xếp theo ngày để Ngăn thư đọc từ cũ tới mới; lời không theo giờ (ngày 12) nằm cuối.
+  POPUPS.sort((a, b) => {
+    const k = p => (NGAY_MO[p.day] || "9999") + (p.at ? String(p.at[0]).padStart(2, "0") + String(p.at[1]).padStart(2, "0") : "9999");
+    return k(a) < k(b) ? -1 : k(a) > k(b) ? 1 : 0;
+  });
 
 
   // Truyện nào đã thu xong. Để TRỐNG ("") nghĩa là chưa có file: app sẽ lặng
@@ -1973,7 +2184,9 @@
   // Nó mở ra đúng lúc đồng hồ máy Minh bước sang ngày 27/10, và lời nhắn của
   // nó tới cùng giây ấy.
   STORIES[NARITA_ID] = {
-    n: "\u2708",
+    // Số thứ tự thật do danhSoTruyen() điền lúc tải trang: số La Mã, xếp chung
+    // một dãy với các truyện theo cặp bài, theo ngày mở. Chữ này chỉ là tạm.
+    n: "I",
     audio: NARITA_AUDIO,
     title: { vi:"Chuyện ở sân bay Narita tháng tám",
              en:"Chuyện ở sân bay Narita tháng tám",
@@ -2023,6 +2236,255 @@
   }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 
+  // ================= phòng chat: thẻ, sổ tin, hàng đợi, đồng bộ =================
+  // Phòng chat nói chuyện với người đưa thư bằng một "thẻ" riêng của máy này.
+  // Thẻ có được bằng cách đổi mã 6 số lúc gõ mã mở app: người đưa thư kiểm mã
+  // rồi cho thẻ. Mã không bao giờ được ghi vào máy; thẻ thì có, để lần sau
+  // khỏi gõ lại. Ai là chị, ai là Minh cũng do người đưa thư quyết định theo mã.
+  const THE_KEY  = "wanxia-token-v1";
+  const CHAT_KEY = "wanxia-chat-v1";
+
+  function layToken(){ try { return localStorage.getItem(THE_KEY) || ""; } catch(e){ return ""; } }
+  function luuToken(t){
+    try { if (t) localStorage.setItem(THE_KEY, t); else localStorage.removeItem(THE_KEY); } catch(e){}
+  }
+  function vaiCuaToi(){ return mayCuaChi() ? "chi" : "minh"; }
+  function tenNguoiKia(){ return mayCuaChi() ? "Minh" : authorName(); }
+
+  // Sổ tin giữ trong máy để mở phòng chat là có ngay, mất mạng vẫn đọc lại được.
+  //   tin:   các tin đã nhận từ người đưa thư, xếp theo stt (thứ tự trong phòng)
+  //   sau:   stt lớn nhất đã lấy về — lần sau hỏi tiếp từ đó
+  //   daDoc: stt lớn nhất mà người cầm máy đã nhìn thấy trong phòng
+  var phongChat = { tin: [], sau: 0, daDoc: 0 };
+  try {
+    const rc = localStorage.getItem(CHAT_KEY);
+    if (rc){
+      const jc = JSON.parse(rc);
+      if (jc && Array.isArray(jc.tin)) phongChat = { tin: jc.tin, sau: jc.sau | 0, daDoc: jc.daDoc | 0 };
+    }
+  } catch(e){}
+  function chatLuu(){
+    try {
+      // Trong máy chỉ cất 600 tin gần nhất; tin cũ hơn còn trên người đưa thư, xem bằng nút "xem tin cũ hơn".
+      localStorage.setItem(CHAT_KEY, JSON.stringify({
+        tin: phongChat.tin.slice(-600), sau: phongChat.sau, daDoc: phongChat.daDoc }));
+    } catch(e){}
+  }
+
+  // Gọi người đưa thư kèm thẻ. Trả { ok, s: mã trả lời, j: nội dung }.
+  // Người đưa thư từ chối thẻ (401) thì bỏ thẻ đi và đánh dấu: lần sau gõ lại mã.
+  var canNhapLaiMa = false;
+  async function goiThu(duong, tuyChon){
+    if (!PUSH_URL) return { ok: false, s: 0 };
+    const the = layToken();
+    if (!the) return { ok: false, s: 401, khongThe: true };
+    const opt = tuyChon || {};
+    try {
+      const r = await fetch(PUSH_URL + duong, {
+        method: opt.method || "GET", cache: "no-store",
+        headers: Object.assign({ "Authorization": "Bearer " + the },
+                               opt.body ? { "Content-Type": "application/json" } : {}),
+        body: opt.body
+      });
+      let j = null;
+      try { j = await r.json(); } catch(e){}
+      if (r.status === 401){ luuToken(""); canNhapLaiMa = true; }
+      return { ok: r.ok, s: r.status, j };
+    } catch(e){ return { ok: false, s: 0 }; }
+  }
+
+  // ---- đổi mã lấy thẻ ----
+  var maChoThe = "";          // mã vừa gõ, CHỈ nằm trong bộ nhớ; mất mạng thì giữ để thử lại
+  var dangDoiThe = false;
+  async function doiMaLayThe(ma){
+    if (!PUSH_URL || !ma || dangDoiThe) return false;
+    dangDoiThe = true;
+    try {
+      const r = await fetch(PUSH_URL + "/vao", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ma })
+      });
+      if (r.ok){
+        const j = await r.json();
+        luuToken(j.token);
+        canNhapLaiMa = false;
+        maChoThe = "";
+        // Máy này là của ai do MÃ quyết định: mã của chị thì là máy chị.
+        try {
+          if (j.vai === "chi") localStorage.setItem("wanxia-ai-v1", "chi");
+          else localStorage.removeItem("wanxia-ai-v1");
+        } catch(e){}
+        sauKhiCoThe();
+        return true;
+      }
+      if (r.status === 403) maChoThe = "";   // người đưa thư không nhận mã này, thử lại cũng vô ích
+    } catch(e){}
+    finally { dangDoiThe = false; }
+    return false;
+  }
+  function sauKhiCoThe(){
+    if (typeof veNhanTroi === "function") veNhanTroi();
+    if (typeof quietSubscribe === "function") quietSubscribe();
+    if (typeof doiMuiGioNam === "function") doiMuiGioNam();
+    xaHangDoi();
+    dongBoTin();
+    if (typeof renderThu === "function") renderThu();
+    if (typeof refreshBells === "function") refreshBells();
+  }
+  window.addEventListener("online", () => { if (maChoThe) doiMaLayThe(maChoThe); });
+
+  // ---- tin gửi đi: mỗi tin MỘT MÃ riêng ----
+  // Lỗi cũ: sau khi gửi xong, app tìm tin trong hàng đợi để xoá bằng cách so GIỜ,
+  // mà giờ trong hàng đợi bị ghi lại một lần nữa nên không bao giờ khớp. Tin nằm
+  // lại, và bị gửi thêm ở lần mở app hay lần có mạng kế tiếp. Giờ mỗi tin có mã
+  // riêng: xoá theo mã, và người đưa thư gặp mã đã có thì bỏ qua — gửi hai lần
+  // cũng chỉ hiện một lần.
+  function taoIdTin(){
+    const b = crypto.getRandomValues(new Uint8Array(12));
+    return "m" + Array.from(b, x => x.toString(36).padStart(2, "0")).join("").slice(0, 20) +
+           Date.now().toString(36);
+  }
+  function khoaTuNoi(noi){
+    const m = /^câu hỏi ngày (\d{1,2})$/i.exec(noi || "");
+    return m ? "hoi-d" + m[1] : "";
+  }
+  // Một lần cho mỗi máy: lời trong hàng đợi của bản cũ chưa có mã. Đánh dấu "cu"
+  // để người đưa thư bỏ qua những lời nó đã nhận từ trước (lỗi hàng đợi ở trên).
+  function chuanHoaHangDoi(){
+    if (!progress.hangDoi) progress.hangDoi = [];
+    let doi = false;
+    progress.hangDoi = progress.hangDoi.filter(x => x && x.chu).map(x => {
+      if (x.id) return x;
+      doi = true;
+      return { id: taoIdTin(), noi: x.noi || "", khoa: khoaTuNoi(x.noi),
+               chu: x.chu, luc: x.luc || new Date().toISOString(), cu: true };
+    });
+    if (doi) saveProgress();
+  }
+
+  // gộp tin vào sổ, bỏ trùng theo mã
+  function themTin(ds){
+    const co = new Map(phongChat.tin.map(x => [x.id, x]));
+    for (const t of ds){
+      if (!t || !t.id) continue;
+      if (co.has(t.id)) Object.assign(co.get(t.id), t);
+      else { phongChat.tin.push(t); co.set(t.id, t); }
+    }
+    phongChat.tin.sort((a, b) => a.stt - b.stt);
+  }
+
+  // "xong": người đưa thư đã có tin này · "cho": thử lại sau · "bo": tin hỏng, gửi mãi cũng vô ích
+  async function guiMotTin(m){
+    const r = await goiThu("/tin", { method: "POST", body: JSON.stringify({
+      id: m.id, noi: m.noi || "", khoa: m.khoa || "", text: m.chu, cu: !!m.cu
+    }) });
+    if (r.ok){
+      // KHÔNG đẩy mốc `sau` lên theo tin của mình: giữa chừng có thể có tin của người kia
+      // chưa lấy về. Lần hỏi sau sẽ trả lại tin này, và mã tin giúp gộp cho đúng.
+      if (r.j && r.j.tin){ themTin([r.j.tin]); chatLuu(); }
+      return "xong";
+    }
+    if (r.s === 400) return "bo";
+    return "cho";
+  }
+
+  // Chỉ MỘT lượt xả hàng đợi chạy tại một thời điểm: bấm gửi, có mạng lại, mở lại
+  // app cùng gọi tới thì chúng đều nhận về cùng một lượt đang chạy.
+  var xaPromise = null;
+  function xaHangDoi(){
+    if (xaPromise) return xaPromise;
+    if (!progress.hangDoi || !progress.hangDoi.length) return Promise.resolve();
+    if (navigator.onLine === false || !layToken()) return Promise.resolve();
+    const p = (async () => {
+      try {
+        while (progress.hangDoi && progress.hangDoi.length){
+          const m = progress.hangDoi[0];
+          const kq = await guiMotTin(m);
+          if (kq === "cho") break;
+          const i = progress.hangDoi.findIndex(x => x.id === m.id);   // rút ĐÚNG tin này, theo mã
+          if (i >= 0) progress.hangDoi.splice(i, 1);
+          saveProgress();
+        }
+      } catch(e){}
+    })();
+    xaPromise = p;
+    p.then(() => {
+      if (xaPromise === p) xaPromise = null;
+      if (typeof veLaiPhongNeuMo === "function") veLaiPhongNeuMo();
+    });
+    return p;
+  }
+
+  // Gửi một tin vào phòng. `noi`: nhãn cho biết tin này đáp lại gì; `khoa`: chỗ nhảy tới.
+  // Trả về lời hứa: true nếu tin đã tới nơi, false nếu còn nằm trong hàng đợi.
+  function guiTin(noi, khoa, chu){
+    const m = { id: taoIdTin(), noi: noi || "", khoa: khoa || "", chu, luc: new Date().toISOString() };
+    if (!progress.hangDoi) progress.hangDoi = [];
+    progress.hangDoi.push(m);
+    if (progress.hangDoi.length > 200) progress.hangDoi.shift();
+    saveProgress();
+    if (/^hoi-d\d+$/.test(m.khoa) && typeof ghiDaNoi === "function") ghiDaNoi(m.khoa);
+    if (typeof veLaiPhongNeuMo === "function") veLaiPhongNeuMo();
+    return xaHangDoi().then(() => !progress.hangDoi.some(x => x.id === m.id));
+  }
+
+  // ---- lấy tin mới ----
+  var dangDongBo = false;
+  var daDongBoLanDau = false;       // lần đồng bộ đầu tiên của lần mở app này: chỉ báo chấm, không bật thông báo nổi
+  async function dongBoTin(){
+    if (dangDongBo || !layToken()) return;
+    dangDongBo = true;
+    const moiTuNguoiKia = [];
+    try {
+      const toi = vaiCuaToi();
+      for (let vong = 0; vong < 10; vong++){
+        const r = await goiThu("/tin?sau=" + phongChat.sau);
+        if (!r.ok || !r.j || !Array.isArray(r.j.tin)) break;
+        // Kho tin phía người đưa thư bị dựng lại từ đầu: bỏ sổ cũ, lấy lại từ số 0.
+        if (typeof r.j.max === "number" && r.j.max < phongChat.sau){
+          phongChat = { tin: [], sau: 0, daDoc: 0 };
+          continue;
+        }
+        const truoc = new Set(phongChat.tin.map(x => x.id));
+        themTin(r.j.tin);
+        for (const t of r.j.tin){
+          if (!truoc.has(t.id) && t.tu !== toi) moiTuNguoiKia.push(t);
+          if (t.stt > phongChat.sau) phongChat.sau = t.stt;
+        }
+        if (r.j.tin.length < 200) break;
+      }
+    } catch(e){}
+    finally { dangDongBo = false; }
+    chatLuu();
+    if (typeof capNhatSauDongBo === "function") capNhatSauDongBo(moiTuNguoiKia);
+    if (canNhapLaiMa && typeof showLock === "function"){ canNhapLaiMa = false; showLock(true); }
+  }
+
+  // Kéo thêm tin cũ hơn tin cũ nhất đang có. Trả về true nếu còn nữa.
+  var heCu = false, dangLayCu = false;
+  async function layTinCu(){
+    if (dangLayCu || !layToken()) return;
+    dangLayCu = true;
+    try {
+      const dau = phongChat.tin.length ? phongChat.tin[0].stt : 0;
+      const r = await goiThu("/tin?truoc=" + dau);
+      if (r.ok && r.j && Array.isArray(r.j.tin)){
+        themTin(r.j.tin);
+        if (!r.j.conCu || !r.j.tin.length) heCu = true;
+      }
+    } catch(e){}
+    finally { dangLayCu = false; }
+  }
+
+  function chatChuaDoc(){
+    const toi = vaiCuaToi();
+    return phongChat.tin.filter(t => t.tu !== toi && t.stt > phongChat.daDoc).length;
+  }
+  function chatDanhDauDaDoc(){
+    const m = phongChat.tin.reduce((a, t) => Math.max(a, t.stt), 0);
+    if (m > phongChat.daDoc){ phongChat.daDoc = m; chatLuu(); }
+  }
+
   // Công tắc của riêng bạn: hiện lại mọi thứ đã ẩn.
   // Gõ wanxiaReveal(true) trong console để bật, wanxiaReveal(false) để tắt.
   let AUTHOR_REVEAL = false;
@@ -2064,6 +2526,7 @@
       const d = el.duration;
       if (fired || !d || !isFinite(d)) return;
       cov.add(Math.floor(el.currentTime));
+      el.__phu = cov.size;                       // để phép thử nhìn được độ phủ
       if (cov.size / Math.floor(d) < COMPLETE) return;
       fired = true;
       progress.plays[id] = playCount(id) + 1;
@@ -2098,6 +2561,56 @@
     if (!st || !st.audio) return false;              // chưa thu xong thì chưa hiện
     return ngayBenNam(new Date()) >= NARITA_NGAY;
   }
+
+  // ---- đánh số các truyện ở giữa ----
+  // Truyện mở đầu giữ dấu ✦, truyện khép lại giữ ✧. Mọi truyện còn lại nằm
+  // chung MỘT dãy số La Mã, xếp theo ngày chúng mở ra — nên Minh nhìn số là
+  // biết truyện nào tới trước, và truyện cùng hệ nằm liền số nhau.
+  Object.keys(STORIES).forEach(k => { STORIES[k].__id = k; });
+
+  // ---- hệ truyện ----
+  // Số La Mã nói THỨ TỰ, còn dấu này nói HỌ HÀNG: những truyện mang cùng một
+  // dấu là cùng một hệ, đọc nối nhau được. Truyện lẻ thì không mang dấu nào.
+  // Thêm hệ mới chỉ việc thêm một dòng ở đây rồi gắn he cho truyện.
+  const HE_TRUYEN = {
+    "chuyen-di": { dau: "\u2756", ten: "Những chuyến đi" }   // ❖
+  };
+  // Truyện nào thuộc hệ nào — ghi bằng TÊN để chị sửa cho dễ. Thêm một truyện
+  // vào hệ chỉ việc chép tên nó vào danh sách dưới đây.
+  const THUOC_HE = {
+    "chuyen-di": [
+      "Chuyện ở sân bay Narita tháng tám",
+      "Những người không chịu lớn"
+    ]
+  };
+  Object.keys(THUOC_HE).forEach(he => {
+    for (const ten of THUOC_HE[he]){
+      const k = Object.keys(STORIES).find(x =>
+        STORIES[x].title && STORIES[x].title.vi === ten);
+      if (k) STORIES[k].he = he;
+    }
+  });
+
+  function soLaMa(n){
+    const bang = [[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];
+    let ra = "";
+    for (const [v, k] of bang) while (n >= v){ ra += k; n -= v; }
+    return ra;
+  }
+  // Cột đánh dấu của một truyện: dấu hệ (nếu có) rồi tới số.
+  function dauTruyen(st){
+    if (!st) return "";
+    const he = st.he && HE_TRUYEN[st.he];
+    return (he ? '<span class="he-dau" title="' + he.ten + '">' + he.dau + '</span> ' : "") + st.n;
+  }
+
+  function danhSoTruyen(){
+    const ds = PAIRS.map(p => ({ id: p.id, ngay: NGAY_MO[p.day] || "9999" }));
+    ds.push({ id: NARITA_ID, ngay: NARITA_NGAY });
+    ds.sort((a, b) => a.ngay < b.ngay ? -1 : a.ngay > b.ngay ? 1 : 0);
+    ds.forEach((x, i) => { if (STORIES[x.id]) STORIES[x.id].n = soLaMa(i + 1); });
+  }
+  danhSoTruyen();
 
   function storiesWaiting(){
     return PAIRS.filter(p => pairComplete(p) && truyenChuaNghe(p.id)).length
@@ -2805,8 +3318,8 @@
   function doiMuiGioNam(){
     if (!PUSH_URL) return;
     const laChi = mayCuaChi();
-    fetch(PUSH_URL + "/xem", { cache: "no-store" })
-      .then(r => r.json())
+    goiThu("/xem")
+      .then(r => r.j)
       .then(j => {
         if (!j) return;
         let doi = false;
@@ -3530,8 +4043,9 @@
       const moi = !progress.opened[MO_DAU_ID];
       const hang = document.createElement("button");
       hang.className = "row nu" + (moi ? " unread" : "");
+      hang.dataset.truyen = st.__id || "";
       hang.innerHTML =
-        '<span class="hour">' + st.n + '</span>' +
+        '<span class="hour">' + dauTruyen(st) + '</span>' +
         '<span class="name">' + (moi ? '<i class="heart"></i>' : "") +
           (st.title[currentLang] || st.title.vi) + '</span>' +
         '<span class="mark"></span>';
@@ -3549,8 +4063,9 @@
       const moi = !progress.opened[NARITA_ID];
       const hang = document.createElement("button");
       hang.className = "row nu" + (moi ? " unread" : "");
+      hang.dataset.truyen = st.__id || "";
       hang.innerHTML =
-        '<span class="hour">' + st.n + '</span>' +
+        '<span class="hour">' + dauTruyen(st) + '</span>' +
         '<span class="name">' + (moi ? '<i class="heart"></i>' : "") +
           (st.title[currentLang] || st.title.vi) + '</span>' +
         '<span class="mark"></span>';
@@ -3567,8 +4082,9 @@
       const isNew = !progress.opened[p.id];
       const row = document.createElement("button");
       row.className = "row nu" + (isNew ? " unread" : "");
+      row.dataset.truyen = p.id;
       row.innerHTML =
-        '<span class="hour">' + st.n + '</span>' +
+        '<span class="hour">' + dauTruyen(st) + '</span>' +
         '<span class="name">' + (isNew ? '<i class="heart"></i>' : "") +
           (st.title[currentLang] || st.title.vi) + '</span>' +
         '<span class="mark"></span>';
@@ -3585,8 +4101,9 @@
       const moi = !progress.opened[KET_ID];
       const hang = document.createElement("button");
       hang.className = "row nu" + (moi ? " unread" : "");
+      hang.dataset.truyen = st.__id || "";
       hang.innerHTML =
-        '<span class="hour">' + st.n + '</span>' +
+        '<span class="hour">' + dauTruyen(st) + '</span>' +
         '<span class="name">' + (moi ? '<i class="heart"></i>' : "") +
           (st.title[currentLang] || st.title.vi) + '</span>' +
         '<span class="mark"></span>';
@@ -3626,7 +4143,9 @@
                                    : (progress.pops && progress.pops[popupKey(p)]));
   }
   function thuChuaMo(){
-    return thuDaToi().filter(p => !daNoiRoi("hoi-d" + p.day)).length;
+    // chị không "nhận" lá thư nào — chỉ Minh có thư chưa mở
+    const thu = mayCuaChi() ? 0 : thuDaToi().filter(p => !daNoiRoi("hoi-d" + p.day)).length;
+    return thu + chatChuaDoc();
   }
   const THANG = { "01":"tháng Một","02":"tháng Hai","03":"tháng Ba","04":"tháng Tư",
     "05":"tháng Năm","06":"tháng Sáu","07":"tháng Bảy","08":"tháng Tám",
@@ -3640,9 +4159,11 @@
   function renderThu(){
     if (!thuList) return;
     thuList.innerHTML = "";
+    thuList.appendChild(hangChat());
     const ds = thuDaToi();
+    const chi = mayCuaChi();
     for (const p of ds){
-      const daMo = daNoiRoi("hoi-d" + p.day);
+      const daMo = chi || daNoiRoi("hoi-d" + p.day);
       const row = document.createElement("button");
       row.className = "row nu thu-row" + (daMo ? " daMo" : " unread");
       row.innerHTML =
@@ -3650,6 +4171,7 @@
           p.text.replace(/[<>]/g, "") + '</span>' +
         '<span class="thu-ngay">' + ngayChu(NGAY_MO[p.day]) + '</span>';
       row.addEventListener("click", () => {
+        if (chi){ openRoom("hoi-d" + p.day); return; }   // máy chị: mở phòng tại lá này
         closeShelf(thuShelf);
         setTimeout(() => openPopup(p.text, p.day, true), 420);
       });
@@ -3894,11 +4416,14 @@
     lockChatTimers.push(setTimeout(() => el.classList.add("said"), delay + 1500));
   }
 
-  function showLock(){
+  var dangNhapLai = false;   // máy đã mở từ trước nhưng chưa có thẻ: gõ mã một lần nữa
+  function showLock(lai){
+    dangNhapLai = !!lai;
     lockEl.style.display = "";
     lockEl.classList.remove("off");
     lockEl.removeAttribute("aria-hidden");
-    lockInput.value = ""; paintSlots(0); say("");
+    lockInput.value = ""; paintSlots(0);
+    say(lai ? "nhập lại mã một lần để dùng phòng chat nhé" : "");
     document.body.style.overflow = "hidden";
     setTimeout(() => lockInput.focus(), 120);
 
@@ -3913,12 +4438,18 @@
     if (val.length < PIN_LEN) return;
     const bam = await hash(PIN_SALT + val);
     if (bam === PIN_HASH || bam === CHI_HASH){
-      if (bam === CHI_HASH){
-        try { localStorage.setItem(AI_KEY, "chi"); } catch(e){}
-        quietSubscribe();          // báo ngay cho người đưa thư, nếu đã có quyền
-      }
+      // Mã nào thì máy ấy: người đưa thư sẽ xác nhận lại khi đổi mã lấy thẻ.
+      try {
+        if (bam === CHI_HASH) localStorage.setItem(AI_KEY, "chi");
+        else localStorage.removeItem(AI_KEY);
+      } catch(e){}
+      maChoThe = val;
+      doiMaLayThe(val);            // lấy thẻ, rồi báo người đưa thư địa chỉ máy
+      veNhanTroi();
       wrongCount = 0;
-      openApp(true);
+      const lai = dangNhapLai;
+      dangNhapLai = false;
+      openApp(!lai);
       return;
     }
     wrongCount++;
@@ -4272,9 +4803,12 @@
   }
 
   // thanh báo trượt từ trên xuống, đứng lại một lúc rồi tự rút lên
-  function showToast(text, onTap){
+  function showToast(text, onTap, opt){
     toastTimers.forEach(clearTimeout); toastTimers = [];
-    document.getElementById("toastWho").textContent  = authorName();
+    const o = opt || {};
+    document.getElementById("toastWho").textContent  = o.ten || authorName();
+    const tav = toastCard.querySelector(".toast-av img");
+    if (tav) tav.src = o.tu === "minh" ? AV_MINH : AV_CHI;
     document.getElementById("toastText").textContent = text;
     document.getElementById("toastWhen").textContent = "vừa xong";
     toastEl.hidden = false;
@@ -4285,6 +4819,324 @@
       if (e.key === "Enter" || e.key === " "){ e.preventDefault(); toastCard.click(); }
     };
     toastTimers.push(setTimeout(hideToast, 7000));
+  }
+
+  // ================= phòng chat: giao diện =================
+  // Một phòng chung cho hai người. Trong đó có: câu hỏi hằng ngày của chị (tới
+  // giờ thì tự nằm vào), mọi lời Minh trả lời, và mọi lời chị đáp lại.
+  const roomEl    = document.getElementById("room");
+  const roomIn    = document.getElementById("roomIn");
+  const roomFlow  = document.getElementById("roomFlow");
+  const roomTen   = document.getElementById("roomTen");
+  const roomAv    = document.getElementById("roomAv");
+  const roomInput = document.getElementById("roomInput");
+  const roomSend  = document.getElementById("roomSend");
+  const roomDtl   = document.getElementById("roomDtl");
+  const roomDtlText = document.getElementById("roomDtlText");
+  var roomMo = false;          // phòng đang mở?
+  var roomDich = null;         // đang đáp lại gì: { khoa, noi, trich }
+  var roomChuKy = "";          // dấu của lần vẽ trước, để khỏi vẽ lại vô ích
+
+  const AV_CHI  = "assets/images/avatar.jpg";
+  const AV_MINH = "assets/images/avatar-minh.png";
+  function avatarTu(tu){ return tu === "chi" ? AV_CHI : AV_MINH; }
+  function taoAvatar(tu){
+    const d = document.createElement("div");
+    d.className = "chat-avatar";
+    const im = document.createElement("img");
+    im.src = avatarTu(tu); im.alt = "";
+    d.appendChild(im);
+    return d;
+  }
+
+  // Câu hỏi hằng ngày tới lúc nào (mốc tuyệt đối). Giờ ghi trong bảng là giờ Việt Nam.
+  function lucCauHoi(p){
+    if (p.at){
+      const ng = NGAY_MO[p.day];
+      if (ng){
+        const t = ng.split("-");
+        return Date.UTC(+t[0], +t[1] - 1, +t[2], p.at[0] - 7, p.at[1], 0);
+      }
+    }
+    if (!progress.popsLuc) progress.popsLuc = {};
+    const k = popupKey(p);
+    if (!progress.popsLuc[k]){ progress.popsLuc[k] = Date.now(); saveProgress(); }
+    return progress.popsLuc[k];
+  }
+
+  function cacMucPhong(){
+    const ds = [];
+    for (const p of thuDaToi()){
+      ds.push({ k: "hoi", id: "hoi-d" + p.day, tu: "chi", chu: p.text,
+                t: lucCauHoi(p), khoa: "hoi-d" + p.day, noi: "", day: p.day });
+    }
+    const co = new Set();
+    for (const t of phongChat.tin){
+      co.add(t.id);
+      ds.push({ k: "tin", id: t.id, tu: t.tu, chu: t.chu, t: Date.parse(t.luc) || 0,
+                khoa: t.khoa || "", noi: t.noi || "" });
+    }
+    for (const m of (progress.hangDoi || [])){
+      if (co.has(m.id)) continue;
+      ds.push({ k: "tin", id: m.id, tu: vaiCuaToi(), chu: m.chu, t: Date.parse(m.luc) || Date.now(),
+                khoa: m.khoa || "", noi: m.noi || "", cho: true });
+    }
+    return ds.map((x, i) => [x, i]).sort((a, b) => (a[0].t - b[0].t) || (a[1] - b[1])).map(a => a[0]);
+  }
+
+  function gioPhut(ms){
+    const d = new Date(ms);
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function ngayCuaMay(ms){
+    const d = new Date(ms);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function rutGon(s, n){ s = (s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+
+  function veLaiPhongNeuMo(){ if (roomMo) veLaiPhong(); }
+
+  function veLaiPhong(){
+    const toi = vaiCuaToi();
+    const ds = cacMucPhong();
+    const coThemCu = !heCu && phongChat.tin.length > 0 && phongChat.tin[0].stt > 1;
+    const dau = ds.map(x => x.id + (x.cho ? "~" : "")).join("|") + "#" + toi + (coThemCu ? "+" : "-") + (dangLayCu ? "…" : "");
+    if (dau === roomChuKy) return;
+    roomChuKy = dau;
+
+    const gan = roomFlow.scrollHeight - roomFlow.scrollTop - roomFlow.clientHeight < 80;
+    const truocTop = roomFlow.scrollTop;
+    roomIn.textContent = "";
+    if (!ds.length){
+      const tr = document.createElement("div");
+      tr.className = "room-trong";
+      tr.textContent = "chưa có gì ở đây";
+      roomIn.appendChild(tr);
+    }
+    if (coThemCu){
+      const nut = document.createElement("button");
+      nut.type = "button"; nut.className = "rm-trich nhay";
+      nut.style.alignSelf = "center"; nut.style.borderLeft = "none"; nut.style.padding = ".4em 0";
+      nut.textContent = dangLayCu ? "đang lấy…" : "xem tin cũ hơn";
+      nut.addEventListener("click", async () => {
+        const cao = roomFlow.scrollHeight, top = roomFlow.scrollTop;
+        nut.textContent = "đang lấy…";
+        await layTinCu();
+        roomChuKy = ""; veLaiPhong();
+        roomFlow.scrollTop = top + (roomFlow.scrollHeight - cao);   // giữ nguyên chỗ đang đọc
+      });
+      roomIn.appendChild(nut);
+    }
+    const hoi = new Map();
+    for (const x of ds) if (x.k === "hoi") hoi.set(x.khoa, x);
+
+    let ngayTruoc = "";
+    for (let i = 0; i < ds.length; i++){
+      const x = ds[i], truoc = ds[i - 1], sau = ds[i + 1];
+      const ng = ngayCuaMay(x.t);
+      if (ng !== ngayTruoc){
+        ngayTruoc = ng;
+        const s = document.createElement("div");
+        s.className = "rm-ngay";
+        s.textContent = ngayChu(ng);
+        roomIn.appendChild(s);
+      }
+      const cungNgay = y => y && ngayCuaMay(y.t) === ng;
+      const cuoiLuot = !(sau && sau.tu === x.tu && cungNgay(sau) && !(sau.k === "hoi"));
+      const rm = document.createElement("div");
+      rm.className = "rm " + (x.tu === toi ? "toi" : "kia") + (x.k === "hoi" ? " hoi" : "") +
+                     (x.cho ? " dang-gui" : "") + (cuoiLuot ? " cuoi-nhom" : "");
+      if (x.khoa) rm.dataset.khoa = x.k === "hoi" ? x.khoa : "";
+      if (x.tu !== toi){
+        if (!cuoiLuot) rm.classList.add("an-av");
+        rm.appendChild(taoAvatar(x.tu));
+      }
+      const bong = document.createElement("div");
+      bong.className = "rm-bong";
+
+      // thẻ trích: tin này đáp lại cái gì (bỏ nếu ngay trên nó đã là câu hỏi ấy)
+      if (x.k === "tin" && (x.khoa || x.noi)){
+        const q = x.khoa && hoi.get(x.khoa);
+        const lienNgay = truoc && ((q && truoc === q) || (truoc.k === "tin" && truoc.khoa === x.khoa && truoc.noi === x.noi));
+        if (!lienNgay){
+          const c = document.createElement("button");
+          c.type = "button";
+          c.className = "rm-trich" + (q ? " nhay" : "");
+          c.textContent = q ? rutGon(q.chu, 70) : rutGon(x.noi, 70);
+          if (q) c.addEventListener("click", () => nhayToi(x.khoa));
+          bong.appendChild(c);
+        }
+      }
+      const hop = document.createElement("div");
+      hop.className = "rm-hop";
+      hop.textContent = x.chu;
+      if (x.k === "hoi"){
+        hop.title = "chạm để trả lời câu này";
+        hop.addEventListener("click", () => datTrich({ khoa: x.khoa, noi: "câu hỏi ngày " + x.day, trich: rutGon(x.chu, 60) }));
+      }
+      bong.appendChild(hop);
+      if (cuoiLuot){
+        const g = document.createElement("div");
+        g.className = "rm-gio";
+        g.textContent = x.cho ? "đang chờ gửi" : gioPhut(x.t);
+        bong.appendChild(g);
+      }
+      rm.appendChild(bong);
+      roomIn.appendChild(rm);
+    }
+    if (gan || !roomMo) roomFlow.scrollTop = roomFlow.scrollHeight;
+    else roomFlow.scrollTop = truocTop;
+  }
+
+  function nhayToi(khoa){
+    const e = roomIn.querySelector('.rm[data-khoa="' + khoa + '"]');
+    if (!e) return;
+    e.scrollIntoView({ block: "center", behavior: "smooth" });
+    e.classList.remove("chay"); void e.offsetWidth; e.classList.add("chay");
+    setTimeout(() => e.classList.remove("chay"), 1800);
+  }
+
+  function datTrich(d){
+    roomDich = d;
+    if (d){
+      roomDtlText.textContent = "trả lời: " + (d.trich || d.noi);
+      roomDtl.hidden = false;
+    } else {
+      roomDtl.hidden = true;
+    }
+    try { roomInput.focus(); } catch(e){}
+  }
+  document.getElementById("roomDtlX").addEventListener("click", () => datTrich(null));
+
+  function danhDauThuDaXem(){
+    let doi = false;
+    if (!progress.noi) progress.noi = {};
+    for (const p of thuDaToi()){
+      if (!progress.noi["hoi-d" + p.day]){ progress.noi["hoi-d" + p.day] = true; doi = true; }
+    }
+    if (doi) saveProgress();
+  }
+
+  function openRoom(khoa){
+    const chi = mayCuaChi();
+    roomTen.textContent = tenNguoiKia();
+    roomAv.textContent = "";
+    const im = document.createElement("img");
+    im.src = avatarTu(chi ? "minh" : "chi"); im.alt = "";
+    roomAv.appendChild(im);
+    roomInput.placeholder = chi ? "nhắn cho anh…" : "nhắn cho em…";
+    if (typeof hideToast === "function") hideToast();
+    if (!chi) danhDauThuDaXem();
+    roomMo = true;
+    roomChuKy = "";
+    roomEl.classList.add("open");
+    roomEl.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    veLaiPhong();
+    chatDanhDauDaDoc();
+    renderThu(); refreshBells();
+    if (khoa){
+      const q = cacMucPhong().find(x => x.k === "hoi" && x.khoa === khoa);
+      if (q) datTrich({ khoa: q.khoa, noi: "câu hỏi ngày " + q.day, trich: rutGon(q.chu, 60) });
+      setTimeout(() => nhayToi(khoa), 80);
+    } else {
+      roomFlow.scrollTop = roomFlow.scrollHeight;
+    }
+    dongBoTin();
+    ganNhipDongBo();
+  }
+  function closeRoom(){
+    if (!roomMo) return;
+    roomMo = false;
+    roomEl.classList.remove("open");
+    roomEl.setAttribute("aria-hidden", "true");
+    roomEl.style.height = ""; roomEl.style.top = "";
+    datTrich(null);
+    roomInput.blur();
+    if (!document.querySelector(".shelf.open")) document.body.style.overflow = "";
+    chatDanhDauDaDoc();
+    renderThu(); refreshBells();
+  }
+  document.getElementById("roomBack").addEventListener("click", closeRoom);
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && roomMo) closeRoom(); });
+
+  // bàn phím điện thoại bật lên thì phòng co lại theo, ô nhập khỏi bị che
+  if (window.visualViewport){
+    const vv = window.visualViewport;
+    const theoBanPhim = () => {
+      if (!roomMo){ return; }
+      roomEl.style.height = vv.height + "px";
+      roomEl.style.top = vv.offsetTop + "px";
+      roomFlow.scrollTop = roomFlow.scrollHeight;
+    };
+    vv.addEventListener("resize", theoBanPhim);
+    vv.addEventListener("scroll", theoBanPhim);
+  }
+
+  function guiTuPhong(){
+    const chu = roomInput.value.trim();
+    if (!chu) return;
+    roomInput.value = ""; roomInput.style.height = "auto";
+    const d = roomDich || { khoa: "", noi: "" };
+    guiTin(d.noi || "", d.khoa || "", chu);
+    roomFlow.scrollTop = roomFlow.scrollHeight;
+  }
+  roomSend.addEventListener("click", guiTuPhong);
+  roomInput.addEventListener("input", () => {
+    roomInput.style.height = "auto";
+    roomInput.style.height = Math.min(roomInput.scrollHeight, 120) + "px";
+  });
+  roomInput.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); guiTuPhong(); }
+  });
+
+  // sau mỗi lần lấy tin: vẽ lại, báo chấm, và nếu đang xem app thì trượt một thanh báo
+  function capNhatSauDongBo(moi){
+    if (roomMo && !document.hidden){ veLaiPhong(); chatDanhDauDaDoc(); }
+    else if (roomMo){ veLaiPhong(); }
+    renderThu(); refreshBells();
+    if (daDongBoLanDau && moi && moi.length && !roomMo && !document.hidden){
+      const cuoi = moi[moi.length - 1];
+      showToast(cuoi.chu, () => openRoom(), { ten: cuoi.tu === "chi" ? authorName() : "Minh", tu: cuoi.tu });
+    }
+    daDongBoLanDau = true;
+  }
+
+  // nhịp hỏi tin mới: 4 giây khi đang ở trong phòng, 20 giây còn lại; app ẩn thì nghỉ
+  var nhipHen = null;
+  function ganNhipDongBo(){
+    clearTimeout(nhipHen);
+    nhipHen = setTimeout(() => {
+      if (!document.hidden && layToken()){ dongBoTin(); xaHangDoi(); }
+      ganNhipDongBo();
+    }, roomMo ? 4000 : 20000);
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden){ dongBoTin(); xaHangDoi(); }
+  });
+  window.addEventListener("online", () => { xaHangDoi(); dongBoTin(); });
+
+  // dòng đầu Ngăn thư
+  function hangChat(){
+    const chi = mayCuaChi();
+    const ds = cacMucPhong();
+    const cuoi = ds[ds.length - 1];
+    const n = chatChuaDoc();
+    const row = document.createElement("button");
+    row.className = "row nu thu-row thu-chat" + (n ? " unread" : "");
+    const a = document.createElement("span");
+    a.className = "thu-hoi";
+    if (n){ const h = document.createElement("i"); h.className = "heart"; a.appendChild(h); }
+    a.appendChild(document.createTextNode(chi ? "Nhắn với anh" : "Nhắn với em"));
+    row.appendChild(a);
+    if (cuoi){
+      const b = document.createElement("span");
+      b.className = "thu-xem";
+      b.textContent = (cuoi.tu === "chi" ? "em: " : "anh: ") + rutGon(cuoi.chu, 80);
+      row.appendChild(b);
+    }
+    row.addEventListener("click", () => openRoom());
+    return row;
   }
 
   // ================= mạch trả lời =================
@@ -4299,8 +5151,7 @@
   const popEnd   = document.getElementById("popEnd");
   const popCho   = document.getElementById("popCho");
 
-  const MA_NOI = "9vrPzlJtyZbn5shy";   // then cửa, không phải khoá bảo mật
-  let noiDangMo = null;                // { khoa, xong }
+  let noiDangMo = null;                // { khoa, noi, xong }
 
   function daNoiRoi(khoa){
     return !!(progress.noi && progress.noi[khoa]);
@@ -4312,36 +5163,7 @@
     if (typeof renderThu === "function") renderThu();
     if (typeof refreshBells === "function") refreshBells();
   }
-
-  // ---- gửi lời Minh nhắn về cho chị ----
-  // Mất mạng thì xếp hàng trong máy, lần mở app sau tự gửi tiếp.
-  function xepHang(noi, chu){
-    if (!progress.hangDoi) progress.hangDoi = [];
-    progress.hangDoi.push({ noi, chu, luc: new Date().toISOString() });
-    if (progress.hangDoi.length > 200) progress.hangDoi.shift();
-    saveProgress();
-  }
-  async function guiMotLoi(m){
-    if (!PUSH_URL) return false;
-    try {
-      const r = await fetch(PUSH_URL + "/traloi", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ma: MA_NOI, noi: m.noi, text: m.chu })
-      });
-      return r.ok;
-    } catch (e){ return false; }
-  }
-  async function xaHangDoi(){
-    if (!progress.hangDoi || !progress.hangDoi.length) return;
-    if (navigator.onLine === false) return;
-    while (progress.hangDoi.length){
-      const m = progress.hangDoi[0];
-      if (!(await guiMotLoi(m))) return;        // hỏng thì để nguyên, lần sau thử lại
-      progress.hangDoi.shift();
-      saveProgress();
-    }
-  }
-  window.addEventListener("online", xaHangDoi);
+  // (việc gửi lời Minh nhắn về nằm ở phần "phòng chat" phía trên: guiTin / xaHangDoi)
 
   function dongNoi(){
     popChat.stop();
@@ -4371,6 +5193,7 @@
   // vẫn hiện, để bạn ấy biết lúc nào thì mạch này đóng lại.
   function moNoi(khoa, noi, lines, xong, thang, moLai){
     // moLai: Minh tự vào Ngăn thư bấm lại một lá đã đọc — lúc ấy đừng chặn.
+    if (mayCuaChi()){ if (xong) xong(); return; }   // máy chị không phải người trả lời
     if (!moLai && khoa && daNoiRoi(khoa)){ if (xong) xong(); return; }
     noiDangMo = { khoa, noi, xong };
     popChat.clear();
@@ -4422,12 +5245,9 @@
     popInput.value = "";
     popInput.style.height = "auto";
     popChat.sent(chu);
-    const m = { noi: noiDangMo.noi, chu, luc: new Date().toISOString() };
-    xepHang(m.noi, m.chu);
-    guiMotLoi(m).then(ok => {
+    const nd = noiDangMo;
+    guiTin(nd.noi, nd.khoa, chu).then(ok => {
       if (ok){
-        const i = (progress.hangDoi || []).findIndex(x => x.chu === m.chu && x.luc === m.luc);
-        if (i >= 0){ progress.hangDoi.splice(i, 1); saveProgress(); }
         popCho.hidden = true;
       } else {
         popCho.hidden = false;
@@ -4449,6 +5269,7 @@
   const HOI_THEM = "anh có muốn nói gì với em không ạ?";
 
   function openPopup(text, day, moLai){
+    if (mayCuaChi()){ openRoom(day ? "hoi-d" + day : null); return; }
     const p = POPUPS.find(x => x.day === day);
     // Lời nào đi kèm truyện thì mạch đóng lại là em mời kể luôn, y như các
     // truyện khác. Đã mời rồi thì thôi, không mời lại.
@@ -4475,6 +5296,7 @@
 
   // Ngày ấy đã có bài chưa — chưa thu bài thì lời nhắn cũng chưa gõ cửa.
   function coBaiNgay(p){
+    if (p.hangNgay) return true;          // lời hỏi han hằng ngày: không cần bài hay truyện
     // Lời đi kèm một câu chuyện: chưa thu xong truyện thì lời cũng chưa gõ cửa.
     if (p.truyen){
       const st = STORIES[p.truyen];
@@ -4512,7 +5334,7 @@
       // Còn muộn thì được: lỡ giờ, lỡ cả ngày, lời nhắn vẫn nằm chờ.
       progress.pops[popupKey(p)] = true;
       saveProgress();
-      showToast(p.text, () => openPopup(p.text, p.day));
+      if (!mayCuaChi()) showToast(p.text, () => openPopup(p.text, p.day));
       moiLoiCho(2600);                               // rồi tự mở ra trò chuyện
       return;                                        // mỗi lần một lời thôi
     }
@@ -4644,12 +5466,11 @@
                  });
       // Máy Minh ở múi giờ nào thì người đưa thư gửi theo múi giờ ấy.
       const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone) || "";
-      await fetch(PUSH_URL + "/dangky", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sub, tz, noi: noiCuaToi || "",
-                               ai: laMayChi() ? "chi" : "minh" })
-      });
+      // Chưa có thẻ thì chưa đăng ký được; có thẻ rồi sauKhiCoThe() sẽ gọi lại hàm này.
+      if (layToken()){
+        await goiThu("/dangky", { method: "POST",
+          body: JSON.stringify({ sub, tz, noi: noiCuaToi || "" }) });
+      }
       return true;
     } catch(e){ return false; }
   }
@@ -4835,13 +5656,26 @@
   if ("serviceWorker" in navigator){
     navigator.serviceWorker.addEventListener("message", ev => {
       const m = ev.data || {};
+      if (m.wanxia === "tin-moi"){ dongBoTin(); return; }
+      if (m.wanxia === "chat"){ dongBoTin().then(() => openRoom()); return; }
       if (m.wanxia !== "popup" || !m.text) return;
       if (m.day && progress.pops){ progress.pops["d" + m.day] = true; saveProgress(); }
       openPopup(m.text, m.day);
     });
   }
 
-  if (alreadyOpen) openApp(false); else showLock();
+  if (alreadyOpen && PUSH_URL && !layToken()) showLock(true);   // máy cũ chưa có thẻ: gõ mã một lần
+  else if (alreadyOpen) openApp(false);
+  else showLock(false);
+  chuanHoaHangDoi();
+  ganNhipDongBo();
+  dongBoTin();
+  try {
+    if (/[?&]chat=1\b/.test(location.search)){
+      setTimeout(() => openRoom(), 500);
+      history.replaceState(null, "", location.pathname);
+    }
+  } catch(e){}
   maybeAskPush();
   baoLaiMuiGio(true);
   renderThu();                    // xếp sẵn những lá thư đã tới
