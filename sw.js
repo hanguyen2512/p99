@@ -9,7 +9,7 @@
 //     Hệ quả: muốn SỬA một bài đã gửi đi thì phải ĐẶT TÊN FILE KHÁC, vì máy
 //     Minh nhận ra bài theo đường dẫn, chứ không nhìn vào ruột file.
 // Chị không cần đổi số bên dưới nữa; để đó làm nút bấm cuối cùng thôi.
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v6";
 const CACHE_NAME = "wanxia-" + CACHE_VERSION;
 
 // "app shell" — luôn tải sẵn để mở được ngay cả khi mất mạng
@@ -154,6 +154,19 @@ self.addEventListener("fetch", (event) => {
 // Lời nhắn tới máy, kể cả lúc app đang đóng.
 // Người gửi (xem thư mục nguoi-dua-thu) đẩy một gói tin tới đây đúng giờ hẹn.
 // ---------------------------------------------------------------------------
+// Con số trên biểu tượng app: app mở thì tự tính lại đúng (và ghi vào "badge-wanxia");
+// app đóng mà có thông báo mới thì cộng thêm 1 vào số đã ghi.
+async function congHuyHieu() {
+  try {
+    const cache = await caches.open("badge-wanxia");
+    const khoa = new URL("./__badge", self.registration.scope).href;
+    const r = await cache.match(khoa);
+    const n = (r ? parseInt(await r.text(), 10) || 0 : 0) + 1;
+    await cache.put(khoa, new Response(String(n)));
+    if (self.navigator && self.navigator.setAppBadge) await self.navigator.setAppBadge(n);
+  } catch (e) {}
+}
+
 self.addEventListener("push", (event) => {
   let d = {};
   try { d = event.data ? event.data.json() : {}; } catch(e){
@@ -172,6 +185,7 @@ self.addEventListener("push", (event) => {
   };
   // Luôn hiện thông báo (iOS đòi vậy), và nếu app đang mở thì nhắc nó lấy tin mới ngay.
   event.waitUntil(Promise.all([
+    congHuyHieu(),
     self.registration.showNotification(title, opts),
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const c of list) c.postMessage({ wanxia: "tin-moi" });
@@ -189,6 +203,7 @@ self.addEventListener("notificationclick", (event) => {
       for (const c of list){
         if (c.url.indexOf(self.registration.scope) === 0){
           if (data.kieu === "chat") c.postMessage({ wanxia: "chat", id: data.id || "" });
+          else if (data.kieu === "bai") c.postMessage({ wanxia: "tin-moi" });   // chỉ mở app, bài mới nằm trong Ngăn nhạc
           else c.postMessage({ wanxia: "popup", text: data.text || "", day: data.day || 0 });
           return c.focus();
         }
