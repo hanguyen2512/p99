@@ -3881,6 +3881,10 @@
 
     // ---- tên bài trên màn hình khoá / trung tâm điều khiển ----
     video.addEventListener("play", () => datMetaMedia(songTitle(cur.data), "bai", video));
+    // máy tự dừng video lúc khoá màn hình (không phải do Minh bấm): trao tiếng cho thẻ audio
+    video.addEventListener("pause", () => {
+      if (document.hidden && !video.ended && !video.__tuDung) giaoNen(video);
+    });
     ["loadedmetadata", "durationchange", "seeked", "pause", "play", "ratechange"].forEach(ev =>
       video.addEventListener(ev, () => capNhatViTri(video)));
 
@@ -3983,7 +3987,8 @@
   let choHoiSauBai = null;
   function closeSong(){
     ketThucDanhSach();
-    artworksEl.querySelectorAll("video").forEach(v => v.pause());
+    artworksEl.querySelectorAll("video").forEach(v => { v.__tuDung = true; v.pause(); });
+    dungNen();
     // khung bài đã đóng: màn hình khoá không còn điều khiển bài ấy nữa
     mediaCuoi = null;
     try { if ("mediaSession" in navigator) navigator.mediaSession.metadata = null; } catch(e){}
@@ -4048,6 +4053,66 @@
     return b;
   }
 
+  // ---- bài hát chạy tiếp khi tắt màn hình ----
+  // iPhone dừng thẻ <video> ngay khi khoá máy (thẻ audio thì không bị). Nên lúc màn hình
+  // tắt, tiếng được trao cho một thẻ audio phát đúng tệp ấy từ đúng giây đang nghe;
+  // mở màn hình lại thì trả về cho video, hình nhảy tới đúng chỗ.
+  var nenAm = null;
+  function mdc(){ return (nenAm && nenAm.__giao) ? nenAm : mediaCuoi; }
+  function giaoNen(video){
+    try {
+      if (!video || video.ended || nenAm && nenAm.__giao) return;
+      const nguon = video.currentSrc || (video.querySelector("source") || {}).src;
+      if (!nguon) return;
+      if (!nenAm){
+        nenAm = document.createElement("audio");
+        nenAm.preload = "auto";
+        nenAm.setAttribute("playsinline", "");
+        nenAm.addEventListener("timeupdate", () => { if (nenAm.__giao) capNhatViTri(nenAm); });
+        nenAm.addEventListener("ended", () => {
+          const v = nenAm.__video;
+          nenAm.__giao = false;
+          if (!v) return;
+          // báo cho video biết bài đã hết, để danh sách phát / câu hỏi chạy như thường
+          try { if (isFinite(v.duration)) v.currentTime = v.duration; } catch(e){}
+          v.dispatchEvent(new Event("ended"));
+          // bài kế được nạp vào video: nếu máy lại dừng nó thì trao tiếp cho thẻ audio
+          setTimeout(() => { if (document.hidden && v.paused && !v.ended && !v.__tuDung) giaoNen(v); }, 900);
+        });
+      }
+      const t = video.currentTime || 0;
+      nenAm.__giao = true; nenAm.__video = video;
+      nenAm.loop = !!video.loop;
+      nenAm.src = nguon;
+      nenAm.addEventListener("loadedmetadata", () => { try { nenAm.currentTime = t; } catch(e){} }, { once: true });
+      const p = nenAm.play();
+      if (p && p.catch) p.catch(() => { nenAm.__giao = false; });
+      mediaCuoi = video;
+    } catch(e){ if (nenAm) nenAm.__giao = false; }
+  }
+  function traNen(){
+    if (!nenAm || !nenAm.__giao) return;
+    const v = nenAm.__video, t = nenAm.currentTime, dangPhat = !nenAm.paused && !nenAm.ended;
+    nenAm.__giao = false;
+    try { nenAm.pause(); nenAm.removeAttribute("src"); nenAm.load(); } catch(e){}
+    if (!v) return;
+    try { v.currentTime = t; } catch(e){}
+    if (dangPhat) v.play().catch(() => {});
+  }
+  function dungNen(){
+    if (!nenAm) return;
+    nenAm.__giao = false;
+    try { nenAm.pause(); nenAm.removeAttribute("src"); nenAm.load(); } catch(e){}
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden){
+      const v = mediaCuoi;
+      if (v && v.tagName === "VIDEO" && !v.paused && !v.ended) giaoNen(v);
+    } else {
+      traNen();
+    }
+  });
+
   // ---- tên bài, nút dừng và tua trên màn hình khoá ----
   // Thiếu đoạn này thì máy tự lấy tên trang ("P99") làm tên bài.
   var mediaCuoi = null;        // trình phát (video hay audio) vừa được bấm phát
@@ -4082,18 +4147,19 @@
     if (!("mediaSession" in navigator)) return;
     const ms = navigator.mediaSession;
     const lam = (ten, fn) => { try { ms.setActionHandler(ten, fn); } catch(e){} };
-    lam("play",  () => { if (mediaCuoi) mediaCuoi.play().catch(() => {}); });
-    lam("pause", () => { if (mediaCuoi) mediaCuoi.pause(); });
-    lam("seekbackward", d => { if (mediaCuoi) mediaCuoi.currentTime = Math.max(0, mediaCuoi.currentTime - ((d && d.seekOffset) || 10)); });
+    lam("play",  () => { const m = mdc(); if (m) m.play().catch(() => {}); });
+    lam("pause", () => { const m = mdc(); if (m){ m.__tuDung = true; setTimeout(() => { m.__tuDung = false; }, 800); m.pause(); } });
+    lam("seekbackward", d => { const m = mdc(); if (m) m.currentTime = Math.max(0, m.currentTime - ((d && d.seekOffset) || 10)); });
     lam("seekforward",  d => {
-      if (!mediaCuoi) return;
-      const t = mediaCuoi.currentTime + ((d && d.seekOffset) || 10);
-      mediaCuoi.currentTime = isFinite(mediaCuoi.duration) ? Math.min(mediaCuoi.duration, t) : t;
+      const m = mdc(); if (!m) return;
+      const t = m.currentTime + ((d && d.seekOffset) || 10);
+      m.currentTime = isFinite(m.duration) ? Math.min(m.duration, t) : t;
     });
     lam("seekto", d => {
-      if (!mediaCuoi || !d || typeof d.seekTime !== "number") return;
-      if (d.fastSeek && mediaCuoi.fastSeek) mediaCuoi.fastSeek(d.seekTime);
-      else mediaCuoi.currentTime = d.seekTime;
+      const m = mdc();
+      if (!m || !d || typeof d.seekTime !== "number") return;
+      if (d.fastSeek && m.fastSeek) m.fastSeek(d.seekTime);
+      else m.currentTime = d.seekTime;
     });
     capNhatNutTruocSauMedia();
   }
