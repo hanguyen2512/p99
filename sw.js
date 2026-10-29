@@ -9,11 +9,13 @@
 //     Hệ quả: muốn SỬA một bài đã gửi đi thì phải ĐẶT TÊN FILE KHÁC, vì máy
 //     Minh nhận ra bài theo đường dẫn, chứ không nhìn vào ruột file.
 // Chị không cần đổi số bên dưới nữa; để đó làm nút bấm cuối cùng thôi.
-const CACHE_VERSION = "v6";
+const CACHE_VERSION = "v7";
 const CACHE_NAME = "wanxia-" + CACHE_VERSION;
 
 // "app shell" — luôn tải sẵn để mở được ngay cả khi mất mạng
 const CORE_ASSETS = [
+  "assets/fonts/lxgw-wenkai-light-cjk.woff",
+  "assets/fonts/lxgw-wenkai-regular-cjk.woff",
   "./",
   "./index.html",
   "./manifest.json",
