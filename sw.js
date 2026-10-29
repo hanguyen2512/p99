@@ -9,7 +9,7 @@
 //     Hệ quả: muốn SỬA một bài đã gửi đi thì phải ĐẶT TÊN FILE KHÁC, vì máy
 //     Minh nhận ra bài theo đường dẫn, chứ không nhìn vào ruột file.
 // Chị không cần đổi số bên dưới nữa; để đó làm nút bấm cuối cùng thôi.
-const CACHE_VERSION = "v7";
+const CACHE_VERSION = "v8";
 const CACHE_NAME = "wanxia-" + CACHE_VERSION;
 
 // "app shell" — luôn tải sẵn để mở được ngay cả khi mất mạng
@@ -69,7 +69,8 @@ function mangTruoc(req, cacheName){
     cache.match(req).then(daLuu => {
       const choMang = new Promise((xong, hong) => {
         const het = setTimeout(() => hong(new Error("cham qua")), 4000);
-        fetch(req).then(res => { clearTimeout(het); xong(res); },
+        // "no-cache": luôn hỏi lại máy chủ, không tin bản trong bộ nhớ tạm của trình duyệt (GitHub Pages cho giữ tới 10 phút)
+        fetch(new Request(req, { cache: "no-cache" })).then(res => { clearTimeout(het); xong(res); },
                         e   => { clearTimeout(het); hong(e); });
       });
       return choMang.then(res => {
