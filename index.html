@@ -1104,6 +1104,34 @@
   audio.story-player{ width:100%; margin-top:1.8em; display:none; }
   audio.story-player.on{ display:block; }
 
+  /* ---------- nút lặp lại · phát tất cả · trước/sau ---------- */
+  .pl-btn{
+    display:inline-flex; align-items:center; gap:.42em; cursor:pointer;
+    padding:.4em .85em .4em .7em; border-radius:14px;
+    background:rgba(6,9,15,.62); border:1px solid rgba(200,162,74,.38);
+    color:#ddd0ad; font-family:'EB Garamond',serif; font-style:italic;
+    font-size:.82rem; letter-spacing:.02em;
+    transition:border-color .3s ease, color .3s ease, background .3s ease, transform .18s ease;
+  }
+  .pl-btn svg{ width:13px; height:13px; flex:none; }
+  .pl-btn:hover, .pl-btn:focus-visible{ border-color:var(--brass); color:var(--brass); outline:none; }
+  .pl-btn:active{ transform:scale(.95); }
+  .pl-btn.on{ border-color:var(--brass); color:var(--brass); background:rgba(200,162,74,.16); }
+  .pl-nav{ display:none; }
+  .pl .pl-nav{ display:inline-flex; }
+  .pl-btn[hidden]{ display:none; }
+  .song-bar, .pl-bar{
+    display:flex; gap:.6em; justify-content:center; align-items:center; flex-wrap:wrap;
+    margin-top:.9em;
+  }
+  .pl-bar{ display:none; margin-top:.8em; }
+  audio.story-player.on + .pl-bar{ display:flex; }
+  .pl-now{
+    flex-basis:100%; text-align:center; margin:0 0 .1em;
+    font-family:'EB Garamond',serif; font-style:italic; font-size:.88rem; color:#a99f86;
+  }
+  .pl-top{ display:flex; gap:.6em; flex-wrap:wrap; margin:0 0 1.1em; }
+
   @media (max-width:640px){
     .shelf-nav{ gap:1.5em; }
     .shelf-nav button{ font-size:.85rem; }
@@ -1644,6 +1672,12 @@
     <h2 data-i18n="navStories">Ngăn truyện</h2>
     <div id="storyList"></div>
     <audio class="story-player" id="storyAudio" controls preload="none"></audio>
+    <div class="pl-bar" id="storyBar">
+      <p class="pl-now" id="storyNow"></p>
+      <button type="button" class="pl-btn pl-nav" id="storyTruoc"></button>
+      <button type="button" class="pl-btn" id="storyLap"></button>
+      <button type="button" class="pl-btn pl-nav" id="storySau"></button>
+    </div>
   </div>
 </div>
 
@@ -2521,6 +2555,9 @@
   // nên tua tới cuối không ăn gian được. Nghe lại thì đếm lượt mới.
   function trackPlay(el, id, onFull){
     let cov = new Set(), fired = false;
+    // id có thể là một hàm: khung bài đổi bài tại chỗ (phát tất cả) thì id đổi theo bài đang phát
+    const idNow = () => typeof id === "function" ? id() : id;
+    el.addEventListener("loadstart", () => { cov = new Set(); fired = false; });   // bài mới nạp vào: đếm lại từ đầu
     el.addEventListener("play", () => { if (fired){ cov = new Set(); fired = false; } });
     el.addEventListener("timeupdate", () => {
       const d = el.duration;
@@ -2529,9 +2566,10 @@
       el.__phu = cov.size;                       // để phép thử nhìn được độ phủ
       if (cov.size / Math.floor(d) < COMPLETE) return;
       fired = true;
-      progress.plays[id] = playCount(id) + 1;
+      const k = idNow();
+      progress.plays[k] = playCount(k) + 1;
       saveProgress();
-      if (onFull) onFull(playCount(id));
+      if (onFull) onFull(playCount(k));
     });
   }
 
@@ -3737,6 +3775,7 @@
 
     const border = document.createElement("div");
     border.className = "frame-border";
+    let cur = { data, world, hour };       // bài ĐANG nằm trong khung (đổi được khi phát tất cả)
 
     const video = document.createElement("video");
     video.className = "song";
@@ -3774,26 +3813,66 @@
     window.addEventListener("online", thuLai);
     baoMang.addEventListener("click", thuLai);
 
-    if (world && hour !== null && hour !== undefined){
-      trackPlay(video, slotId(world, hour), n => {
+    // Nghe trọn một lần thì ghi lại — theo bài ĐANG phát trong khung.
+    trackPlay(video, () => (cur.world && cur.hour != null) ? slotId(cur.world, cur.hour)
+                                                          : (cur.data === HIDDEN ? "hidden" : ""), n => {
+      if (cur.world && cur.hour != null){
         renderAlbum(); renderStories(); tick();
         choXinQuyen = true;        // nghe xong bài rồi, lát rảnh thì hỏi xin quyền
         // Nghe trọn lần ĐẦU: để dành một lời hỏi cho lúc Minh đóng khung bài.
         // Hỏi ngay giữa lúc nhạc còn chạy thì cắt ngang mất.
-        if (n === 1) choHoiSauBai = { world, hour, song: data };
-      });
-    } else if (data === HIDDEN){
-      // bài thứ 23: nghe xong thì lời hứa hiện ra, và nó ở lại mãi
-      trackPlay(video, "hidden", () => {
+        if (n === 1) choHoiSauBai = { world: cur.world, hour: cur.hour, song: cur.data };
+      } else if (cur.data === HIDDEN){
+        // bài thứ 23: nghe xong thì lời hứa hiện ra, và nó ở lại mãi
         video.pause(); runReveal();
         renderStories();
         // nghe xong bài ẩn thì mời luôn truyện khép lại, nếu đã thu
         if (ketCho() && !progress.asked[KET_ID]){
           setTimeout(() => offerStory({ id: KET_ID }), 4000);
         }
-      });
-      video.addEventListener("ended", runReveal);
-    }
+      }
+    });
+    video.addEventListener("ended", () => {
+      if (cur.data === HIDDEN){ runReveal(); return; }
+      // đang phát tất cả: hết bài này thì sang bài kế (bài lặp lại thì không bao giờ tới đây)
+      if (phatDangMo() && dsPhat.loai === "bai") chuyenMuc(1, true);
+    });
+
+    // ---- nút lặp lại · trước · sau, nằm dưới khung ----
+    const bar = document.createElement("div");
+    bar.className = "song-bar";
+    const nutTruoc = taoNutPhat("trước", BT_TRUOC, "pl-btn pl-nav");
+    const nutLap   = taoNutPhat("lặp lại", BT_LAP, "pl-btn");
+    const nutSau   = taoNutPhat("sau", BT_SAU, "pl-btn pl-nav");
+    nutLap.setAttribute("aria-pressed", "false");
+    // Lần nghe ĐẦU của một bài: không có nút lặp lại, hết bài thì dừng như cũ.
+    const daNgheRoi = () => (cur.world && cur.hour != null) ? heard(slotId(cur.world, cur.hour)) : heard("hidden");
+    nutLap.hidden = !daNgheRoi();
+    const datNutLap = b => { nutLap.classList.toggle("on", b); nutLap.setAttribute("aria-pressed", b ? "true" : "false"); };
+    nutLap.addEventListener("click", () => { video.loop = !video.loop; datNutLap(video.loop); });
+    nutTruoc.addEventListener("click", () => chuyenMuc(-1, false));
+    nutSau.addEventListener("click", () => chuyenMuc(1, false));
+    bar.appendChild(nutTruoc); bar.appendChild(nutLap); bar.appendChild(nutSau);
+    if (phatDangMo() && dsPhat.loai === "bai") panel.classList.add("pl");
+
+    // Đổi sang bài khác NGAY TRONG khung này. Giữ nguyên một trình phát từ đầu tới cuối
+    // là cách duy nhất để máy cho bài tiếp theo tự chạy cả lúc tắt màn hình.
+    video.__napBai = (d, w, h) => {
+      cur = { data: d, world: w, hour: h };
+      video.loop = false; datNutLap(false);
+      nutLap.hidden = !daNgheRoi();
+      video.poster = d.poster || "";
+      source.src = d.video;
+      panel.dataset.title = songTitle(d);
+      if (w) panel.dataset.world = w; else delete panel.dataset.world;
+      frameContainer.setAttribute("aria-label", songTitle(d));
+      video.load();
+    };
+
+    // ---- tên bài trên màn hình khoá / trung tâm điều khiển ----
+    video.addEventListener("play", () => datMetaMedia(songTitle(cur.data), "bai", video));
+    ["loadedmetadata", "durationchange", "seeked", "pause", "play", "ratechange"].forEach(ev =>
+      video.addEventListener(ev, () => capNhatViTri(video)));
 
     // Nút "xem ngang": chỉ gắn cho bài quay ngang, biết được sau khi đọc xong khổ video.
     const rotate = document.createElement("button");
@@ -3813,10 +3892,9 @@
       // Chốt khổ khung theo đúng khổ video. Nếu không, trước lúc phát trình duyệt
       // lấy tạm khổ của ảnh bìa, và khung sẽ nhảy hình khi bắt đầu chạy.
       video.style.aspectRatio = video.videoWidth + " / " + video.videoHeight;
-      if (video.videoWidth > video.videoHeight){
-        panel.classList.add("wide");
-        border.classList.add("wide");
-      }
+      const ngang = video.videoWidth > video.videoHeight;
+      panel.classList.toggle("wide", ngang);
+      border.classList.toggle("wide", ngang);
     });
 
     border.appendChild(video);
@@ -3829,6 +3907,7 @@
     if (world) panel.dataset.world = world;
 
     panel.appendChild(border);
+    panel.appendChild(bar);
     return panel;
   }
 
@@ -3866,10 +3945,11 @@
     if (o && typeof o.unlock === "function"){ try { o.unlock(); } catch(e){} }
   });
 
-  function openSong(world, h){
+  function openSong(world, h, tuDanhSach){
     const song = songLive(world, h);
     if (!song) return;
     if (skyLocked(world)){ showGeoLock(world, h); return; }
+    if (!tuDanhSach) ketThucDanhSach();          // tự chọn một bài thì thôi danh sách phát
     lastFocused = document.activeElement;
     artworksEl.innerHTML = "";
     artworksEl.appendChild(buildPanel(song, world, h));
@@ -3892,7 +3972,11 @@
   // bài vừa nghe trọn lần đầu, đang đợi được hỏi lúc đóng khung
   let choHoiSauBai = null;
   function closeSong(){
+    ketThucDanhSach();
     artworksEl.querySelectorAll("video").forEach(v => v.pause());
+    // khung bài đã đóng: màn hình khoá không còn điều khiển bài ấy nữa
+    mediaCuoi = null;
+    try { if ("mediaSession" in navigator) navigator.mediaSession.metadata = null; } catch(e){}
     portal.classList.remove("open");
     portal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
@@ -3938,6 +4022,210 @@
   const askBox     = document.getElementById("askBox");
   const askText    = document.getElementById("askText");
 
+  // ================= trình phát: màn hình khoá · lặp lại · phát tất cả =================
+  // Biểu tượng nhỏ cho các nút
+  const BT_LAP    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+  const BT_PHAT   = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  const BT_NGAU   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>';
+  const BT_TRUOC  = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>';
+  const BT_SAU    = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>';
+
+  function taoNutPhat(nhan, bieuTuong, lop){
+    const b = document.createElement("button");
+    b.type = "button"; b.className = lop || "pl-btn";
+    b.innerHTML = bieuTuong + "<span></span>";
+    b.lastChild.textContent = nhan;
+    return b;
+  }
+
+  // ---- tên bài, nút dừng và tua trên màn hình khoá ----
+  // Thiếu đoạn này thì máy tự lấy tên trang ("P99") làm tên bài.
+  var mediaCuoi = null;        // trình phát (video hay audio) vừa được bấm phát
+  function datMetaMedia(tieuDe, loai, el){
+    mediaCuoi = el;
+    if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: tieuDe || "",
+        artist: authorName(),
+        album: loai === "bai" ? "Bài hát" : "Truyện",
+        artwork: [
+          { src: "assets/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "assets/icon-512.png", sizes: "512x512", type: "image/png" }
+        ]
+      });
+    } catch(e){}
+    capNhatViTri(el);
+  }
+  function capNhatViTri(el){
+    if (!el || !("mediaSession" in navigator) || !navigator.mediaSession.setPositionState) return;
+    const d = el.duration;
+    if (!d || !isFinite(d)) return;
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: d, playbackRate: el.playbackRate || 1,
+        position: Math.max(0, Math.min(el.currentTime || 0, d))
+      });
+    } catch(e){}
+  }
+  function datTayMedia(){
+    if (!("mediaSession" in navigator)) return;
+    const ms = navigator.mediaSession;
+    const lam = (ten, fn) => { try { ms.setActionHandler(ten, fn); } catch(e){} };
+    lam("play",  () => { if (mediaCuoi) mediaCuoi.play().catch(() => {}); });
+    lam("pause", () => { if (mediaCuoi) mediaCuoi.pause(); });
+    lam("seekbackward", d => { if (mediaCuoi) mediaCuoi.currentTime = Math.max(0, mediaCuoi.currentTime - ((d && d.seekOffset) || 10)); });
+    lam("seekforward",  d => {
+      if (!mediaCuoi) return;
+      const t = mediaCuoi.currentTime + ((d && d.seekOffset) || 10);
+      mediaCuoi.currentTime = isFinite(mediaCuoi.duration) ? Math.min(mediaCuoi.duration, t) : t;
+    });
+    lam("seekto", d => {
+      if (!mediaCuoi || !d || typeof d.seekTime !== "number") return;
+      if (d.fastSeek && mediaCuoi.fastSeek) mediaCuoi.fastSeek(d.seekTime);
+      else mediaCuoi.currentTime = d.seekTime;
+    });
+    capNhatNutTruocSauMedia();
+  }
+  // Nút "bài trước / bài sau" trên màn hình khoá chỉ có khi đang phát tất cả.
+  function capNhatNutTruocSauMedia(){
+    if (!("mediaSession" in navigator)) return;
+    const co = phatDangMo();
+    try { navigator.mediaSession.setActionHandler("previoustrack", co ? () => chuyenMuc(-1, false) : null); } catch(e){}
+    try { navigator.mediaSession.setActionHandler("nexttrack",     co ? () => chuyenMuc(1, false)  : null); } catch(e){}
+  }
+
+  // ---- danh sách phát ----
+  //   loai: "bai" | "truyen" | ""   ds: các bài/truyện sẽ phát   i: đang ở mục nào
+  var dsPhat = { loai: "", ds: [], i: 0, ngauNhien: false };
+  var loiLienTiep = 0;
+  function phatDangMo(){ return dsPhat.loai !== ""; }
+
+  function xaoTron(a){
+    const r = a.slice();
+    for (let i = r.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = r[i]; r[i] = r[j]; r[j] = t;
+    }
+    return r;
+  }
+
+  // Các bài ĐÃ NGHE trong Ngăn nhạc, theo đúng thứ tự trên màn hình.
+  // Lần nghe đầu tiên của mỗi bài vẫn như cũ: hết bài thì dừng, rồi tới câu hỏi.
+  function dsBaiHienCo(){
+    const ds = [];
+    ["nam", "nu"].forEach(world => {
+      ODD_HOURS.forEach(h => {
+        if (!songAt(world, h)) return;
+        if (!heard(slotId(world, h))) return;        // bài chưa nghe lần nào: nghe như cũ, không đưa vào danh sách
+        if (!songLive(world, h)) return;
+        ds.push({ world, h });
+      });
+    });
+    return ds.filter(x => !skyLocked(x.world));       // khoảng trời còn khoá thì không phát
+  }
+  // Các truyện ĐÃ NGHE trong Ngăn truyện, đúng thứ tự trên màn hình.
+  function dsTruyenHienCo(){
+    return Array.prototype.map.call(
+      storyList.querySelectorAll("button.row[data-truyen]"), r => r.dataset.truyen
+    ).filter(id => STORIES[id] && STORIES[id].audio && progress.stories[id]);   // chỉ truyện đã nghe
+  }
+
+  function batDauDanhSach(loai, ngau){
+    const ds = loai === "bai" ? dsBaiHienCo() : dsTruyenHienCo();
+    if (!ds.length) return;
+    dsPhat = { loai, ds: ngau ? xaoTron(ds) : ds, i: 0, ngauNhien: !!ngau };
+    loiLienTiep = 0;
+    capNhatNutDanhSach();
+    if (loai === "bai" && !portal.classList.contains("open")){
+      songOrigin = albumShelf; closeShelf(albumShelf);
+    }
+    phatMuc();
+  }
+  function ketThucDanhSach(){
+    if (!phatDangMo()) return;
+    dsPhat = { loai: "", ds: [], i: 0, ngauNhien: false };
+    capNhatNutDanhSach();
+  }
+
+  function phatMuc(){
+    const it = dsPhat.ds[dsPhat.i];
+    if (!it) return;
+    if (dsPhat.loai === "truyen"){ playStory(it, true); return; }
+    const song = songLive(it.world, it.h);
+    if (!song){                                        // mục này mở không được: sang mục kế
+      if (++loiLienTiep < dsPhat.ds.length) chuyenMuc(1, true); else ketThucDanhSach();
+      return;
+    }
+    loiLienTiep = 0;
+    const v = portal.classList.contains("open") ? artworksEl.querySelector("video") : null;
+    if (v && v.__napBai){
+      v.__napBai(song, it.world, it.h);
+      v.play().catch(() => {});
+    } else {
+      openSong(it.world, it.h, true);
+      const v2 = artworksEl.querySelector("video");
+      if (v2) v2.play().catch(() => {});
+    }
+    capNhatNutDanhSach();
+  }
+  // delta +1 / -1. tuDong: do hết bài tự sang (tới cuối thì dừng); bấm tay thì quay vòng.
+  function chuyenMuc(delta, tuDong){
+    if (!phatDangMo()) return;
+    const n = dsPhat.ds.length;
+    let i = dsPhat.i + delta;
+    if (i >= n){ if (tuDong){ ketThucDanhSach(); return; } i = 0; }
+    if (i < 0) i = n - 1;
+    dsPhat.i = i;
+    phatMuc();
+  }
+
+  function capNhatNutDanhSach(){
+    const pl = phatDangMo();
+    document.querySelectorAll(".panel").forEach(p => p.classList.toggle("pl", pl && dsPhat.loai === "bai"));
+    const sb = document.getElementById("storyBar");
+    if (sb) sb.classList.toggle("pl", pl && dsPhat.loai === "truyen");
+    document.querySelectorAll(".pl-top button[data-pl]").forEach(b =>
+      b.classList.toggle("on", pl && b.dataset.loai === dsPhat.loai && b.dataset.pl === (dsPhat.ngauNhien ? "ngau" : "tat")));
+    capNhatNutTruocSauMedia();
+  }
+
+  // hai nút ở đầu Ngăn nhạc / Ngăn truyện
+  function hangDieuKhien(loai){
+    const w = document.createElement("div");
+    w.className = "pl-top";
+    const a = taoNutPhat("phát tất cả", BT_PHAT, "pl-btn");
+    const b = taoNutPhat("ngẫu nhiên", BT_NGAU, "pl-btn");
+    a.dataset.pl = "tat";  a.dataset.loai = loai;
+    b.dataset.pl = "ngau"; b.dataset.loai = loai;
+    a.addEventListener("click", () => batDauDanhSach(loai, false));
+    b.addEventListener("click", () => batDauDanhSach(loai, true));
+    w.appendChild(a); w.appendChild(b);
+    return w;
+  }
+
+  // ---- trình phát truyện: nút lặp lại, trước, sau, tên truyện, màn hình khoá ----
+  const storyLap = document.getElementById("storyLap");
+  const storyNow = document.getElementById("storyNow");
+  (function(){
+    const tr = document.getElementById("storyTruoc"), sa = document.getElementById("storySau");
+    tr.innerHTML = BT_TRUOC + "<span>trước</span>";
+    sa.innerHTML = BT_SAU + "<span>sau</span>";
+    storyLap.innerHTML = BT_LAP + "<span>lặp lại</span>";
+    storyLap.setAttribute("aria-pressed", "false");
+    storyLap.addEventListener("click", () => {
+      storyAudio.loop = !storyAudio.loop;
+      storyLap.classList.toggle("on", storyAudio.loop);
+      storyLap.setAttribute("aria-pressed", storyAudio.loop ? "true" : "false");
+    });
+    tr.addEventListener("click", () => chuyenMuc(-1, false));
+    sa.addEventListener("click", () => chuyenMuc(1, false));
+    storyAudio.addEventListener("play", () => datMetaMedia(storyAudio.__tieuDe || "", "truyen", storyAudio));
+    ["loadedmetadata", "durationchange", "seeked", "pause", "play", "ratechange"].forEach(ev =>
+      storyAudio.addEventListener(ev, () => capNhatViTri(storyAudio)));
+    datTayMedia();
+  })();
+
   function openShelf(el){
     if (el === albumShelf){
       // ghi lại những bài vừa về để gắn nhãn "mới" cho lần xem này,
@@ -3964,7 +4252,7 @@
     el.classList.remove("open");
     el.setAttribute("aria-hidden","true");
     document.body.style.overflow = "";
-    if (el === storyShelf){ storyAudio.pause(); }
+    if (el === storyShelf){ ketThucDanhSach(); storyAudio.pause(); }
   }
   document.getElementById("openAlbum").addEventListener("click", () => openShelf(albumShelf));
   document.getElementById("openStories").addEventListener("click", () => openShelf(storyShelf));
@@ -4027,6 +4315,8 @@
       here++;
     }
 
+    if (dsBaiHienCo().length >= 2) albumList.insertBefore(hangDieuKhien("bai"), albumList.firstChild);
+    capNhatNutDanhSach();
     refreshBells();
   }
 
@@ -4111,6 +4401,10 @@
       storyList.appendChild(hang);
     }
 
+    if (dsTruyenHienCo().length >= 2){
+      storyList.insertBefore(hangDieuKhien("truyen"), storyList.firstChild);
+    }
+    capNhatNutDanhSach();
     refreshBells();
   }
 
@@ -4213,14 +4507,21 @@
   }
 
   // Truyện chỉ nghe một lần — tua tới cuối cũng tính, nên chỉ cần nghe hết là xong.
-  function playStory(pid){
+  function playStory(pid, tuDanhSach){
     const st = STORIES[pid];
+    if (!tuDanhSach) ketThucDanhSach();            // tự chọn một truyện thì thôi danh sách phát
     if (!progress.opened[pid]){          // đã mở ra rồi thì thôi không còn là chuyện mới
       progress.opened[pid] = true;
       saveProgress();
       renderStories();
     }
     if (!st.audio) return;                        // không bao giờ nên tới đây
+    storyAudio.loop = false;                      // truyện mới: nút lặp lại về tắt
+    storyLap.classList.remove("on"); storyLap.setAttribute("aria-pressed", "false");
+    storyLap.hidden = !progress.stories[pid];     // lần nghe đầu: không có nút lặp lại
+    const tieuDe = st.title[currentLang] || st.title.vi;
+    storyAudio.__tieuDe = tieuDe;
+    storyNow.textContent = tieuDe;
     storyAudio.src = st.audio;
     storyAudio.classList.add("on");
     // Lưới đỡ cuối: đường dẫn có khai nhưng tệp hỏng hoặc chưa đẩy lên. Thà
@@ -4233,15 +4534,27 @@
       }
     };
     const xong = () => {
-      if (progress.stories[pid]) return;
-      progress.stories[pid] = true; saveProgress();
+      const lanDau = !progress.stories[pid];
+      if (lanDau){ progress.stories[pid] = true; saveProgress(); }
+      // đang nghe lặp lại: truyện cứ chạy tiếp, chỉ ghi nhận là đã nghe
+      if (storyAudio.loop){ if (lanDau) renderStories(); return; }
+      // đang phát tất cả: hết truyện này thì sang truyện kế
+      if (phatDangMo() && dsPhat.loai === "truyen" && dsPhat.i < dsPhat.ds.length - 1){
+        if (lanDau) renderStories();
+        chuyenMuc(1, true);
+        return;
+      }
+      if (!lanDau){ ketThucDanhSach(); return; }   // nghe lại: để trình phát nằm đó như cũ
+      const trongDanhSach = phatDangMo();
+      ketThucDanhSach();
       storyAudio.pause();
       storyAudio.classList.remove("on");
       storyAudio.removeAttribute("src");
       storyAudio.ontimeupdate = null;
       renderStories();
       // Nghe xong một câu chuyện cũng là một khoảnh khắc đáng hỏi.
-      if (!AUTHOR_REVEAL){
+      // (Đang phát tất cả thì thôi, đừng cắt ngang.)
+      if (!AUTHOR_REVEAL && !trongDanhSach){
         setTimeout(() => moNoi("truyen-" + pid,
           "truyện " + (st.title[currentLang] || st.title.vi),
           [HOI_THEM], null), 1400);
@@ -4361,6 +4674,7 @@
     progress.hidden = true; saveProgress(); renderAlbum();
   }
   function openHidden(){
+    ketThucDanhSach();
     lastFocused = document.activeElement;
     artworksEl.innerHTML = "";
     artworksEl.appendChild(buildPanel(HIDDEN, null, null));
