@@ -3843,6 +3843,8 @@
       }
     });
     video.addEventListener("ended", () => {
+      if (video.__dangKet) return;             // tiếng và hình cùng báo hết bài: chỉ nhận một lần
+      video.__dangKet = true; setTimeout(() => { video.__dangKet = false; }, 1500);
       if (cur.data === HIDDEN){ runReveal(); return; }
       // đang phát tất cả: hết bài này thì sang bài kế (bài lặp lại thì không bao giờ tới đây)
       if (phatDangMo() && dsPhat.loai === "bai") chuyenMuc(1, true);
@@ -3859,7 +3861,7 @@
     const daNgheRoi = () => (cur.world && cur.hour != null) ? heard(slotId(cur.world, cur.hour)) : heard("hidden");
     nutLap.hidden = !daNgheRoi();
     const datNutLap = b => { nutLap.classList.toggle("on", b); nutLap.setAttribute("aria-pressed", b ? "true" : "false"); };
-    nutLap.addEventListener("click", () => { video.loop = !video.loop; datNutLap(video.loop); });
+    nutLap.addEventListener("click", () => { video.loop = !video.loop; datNutLap(video.loop); if (nenAm && nenAm.__video === video) nenAm.loop = video.loop; });
     nutTruoc.addEventListener("click", () => chuyenMuc(-1, false));
     nutSau.addEventListener("click", () => chuyenMuc(1, false));
     bar.appendChild(nutTruoc); bar.appendChild(nutLap); bar.appendChild(nutSau);
@@ -3877,13 +3879,27 @@
       if (w) panel.dataset.world = w; else delete panel.dataset.world;
       frameContainer.setAttribute("aria-label", songTitle(d));
       video.load();
+      // đổi bài thì tiếng đổi theo NGAY (cả lúc tắt màn hình, khi video không còn tự chạy được)
+      if (nenAm && nenAm.__giao){
+        nenPhatTu(video, new URL(d.video, location.href).href, 0);
+        datMetaMedia(songTitle(d), "bai", nenAm);
+      }
     };
 
     // ---- tên bài trên màn hình khoá / trung tâm điều khiển ----
-    video.addEventListener("play", () => datMetaMedia(songTitle(cur.data), "bai", video));
-    // máy tự dừng video lúc khoá màn hình (không phải do Minh bấm): trao tiếng cho thẻ audio
+    video.addEventListener("play", () => {
+      nenPhatTu(video);
+      datMetaMedia(songTitle(cur.data), "bai", nenAm && nenAm.__giao ? nenAm : video);
+    });
+    // Bấm dừng (hay hết bài) thì dừng cả tiếng. Còn máy tự dừng video lúc khoá màn hình thì kệ: tiếng vẫn chạy.
     video.addEventListener("pause", () => {
-      if (document.hidden && !video.ended && !video.__tuDung) giaoNen(video);
+      if (document.hidden && !video.ended) return;
+      if (nenAm && nenAm.__giao && nenAm.__video === video) nenAm.pause();
+    });
+    // kéo thanh thời gian trên khung video thì tiếng nhảy theo
+    video.addEventListener("seeked", () => {
+      if (document.hidden || !nenAm || !nenAm.__giao || nenAm.__video !== video) return;
+      if (Math.abs(nenAm.currentTime - video.currentTime) > 0.5){ try { nenAm.currentTime = video.currentTime; } catch(e){} }
     });
     ["loadedmetadata", "durationchange", "seeked", "pause", "play", "ratechange"].forEach(ev =>
       video.addEventListener(ev, () => capNhatViTri(video)));
@@ -3987,7 +4003,7 @@
   let choHoiSauBai = null;
   function closeSong(){
     ketThucDanhSach();
-    artworksEl.querySelectorAll("video").forEach(v => { v.__tuDung = true; v.pause(); });
+    artworksEl.querySelectorAll("video").forEach(v => v.pause());
     dungNen();
     // khung bài đã đóng: màn hình khoá không còn điều khiển bài ấy nữa
     mediaCuoi = null;
@@ -4054,63 +4070,84 @@
   }
 
   // ---- bài hát chạy tiếp khi tắt màn hình ----
-  // iPhone dừng thẻ <video> ngay khi khoá máy (thẻ audio thì không bị). Nên lúc màn hình
-  // tắt, tiếng được trao cho một thẻ audio phát đúng tệp ấy từ đúng giây đang nghe;
-  // mở màn hình lại thì trả về cho video, hình nhảy tới đúng chỗ.
+  // iPhone dừng thẻ <video> ngay khi khoá máy, và nếu bấm play từ màn hình khoá thì hình
+  // chạy mà KHÔNG có tiếng. Thẻ audio thì được chạy nền (truyện vẫn êm). Nên với bài hát:
+  // tiếng đi bằng MỘT thẻ audio phát đúng tệp ấy, video chỉ còn là hình (tắt tiếng) bám theo.
+  // Màn hình khoá điều khiển thẻ audio; mở máy lại thì hình nhảy tới đúng chỗ.
   var nenAm = null;
-  function mdc(){ return (nenAm && nenAm.__giao) ? nenAm : mediaCuoi; }
-  function giaoNen(video){
-    try {
-      if (!video || video.ended || nenAm && nenAm.__giao) return;
-      const nguon = video.currentSrc || (video.querySelector("source") || {}).src;
-      if (!nguon) return;
-      if (!nenAm){
-        nenAm = document.createElement("audio");
-        nenAm.preload = "auto";
-        nenAm.setAttribute("playsinline", "");
-        nenAm.addEventListener("timeupdate", () => { if (nenAm.__giao) capNhatViTri(nenAm); });
-        nenAm.addEventListener("ended", () => {
-          const v = nenAm.__video;
-          nenAm.__giao = false;
-          if (!v) return;
-          // báo cho video biết bài đã hết, để danh sách phát / câu hỏi chạy như thường
-          try { if (isFinite(v.duration)) v.currentTime = v.duration; } catch(e){}
-          v.dispatchEvent(new Event("ended"));
-          // bài kế được nạp vào video: nếu máy lại dừng nó thì trao tiếp cho thẻ audio
-          setTimeout(() => { if (document.hidden && v.paused && !v.ended && !v.__tuDung) giaoNen(v); }, 900);
-        });
+  var AM_IM = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAABErAAABAAgAZGF0YQAAAAA=";
+  function mdc(){ return mediaCuoi; }
+  function layNen(){
+    if (nenAm) return nenAm;
+    const n = nenAm = document.createElement("audio");
+    n.preload = "auto";
+    n.addEventListener("timeupdate", () => {
+      const v = n.__video;
+      if (!n.__giao || !v) return;
+      capNhatViTri(n);
+      // hình theo tiếng: lúc khoá máy thì luôn kéo theo (để bài vẫn được tính là nghe trọn)
+      if (document.hidden || Math.abs(v.currentTime - n.currentTime) > 0.4){
+        try { v.currentTime = n.currentTime; } catch(e){}
       }
-      const t = video.currentTime || 0;
-      nenAm.__giao = true; nenAm.__video = video;
-      nenAm.loop = !!video.loop;
-      nenAm.src = nguon;
-      nenAm.addEventListener("loadedmetadata", () => { try { nenAm.currentTime = t; } catch(e){} }, { once: true });
-      const p = nenAm.play();
-      if (p && p.catch) p.catch(() => { nenAm.__giao = false; });
-      mediaCuoi = video;
-    } catch(e){ if (nenAm) nenAm.__giao = false; }
+    });
+    n.addEventListener("ended", () => {
+      const v = n.__video;
+      if (!n.__giao || !v) return;
+      try { if (isFinite(v.duration)) v.currentTime = v.duration; } catch(e){}
+      // báo bài đã hết (nếu video chưa tự báo), để danh sách phát / câu hỏi chạy như thường
+      if (!v.__dangKet) v.dispatchEvent(new Event("ended"));
+    });
+    n.addEventListener("pause", () => {
+      const v = n.__video;
+      if (n.__giao && v && !v.paused && !n.ended) v.pause();
+    });
+    return n;
   }
-  function traNen(){
-    if (!nenAm || !nenAm.__giao) return;
-    const v = nenAm.__video, t = nenAm.currentTime, dangPhat = !nenAm.paused && !nenAm.ended;
-    nenAm.__giao = false;
-    try { nenAm.pause(); nenAm.removeAttribute("src"); nenAm.load(); } catch(e){}
-    if (!v) return;
-    try { v.currentTime = t; } catch(e){}
-    if (dangPhat) v.play().catch(() => {});
+  // cho thẻ audio phát tệp của video này, từ giây `tu` (bỏ trống = giây video đang ở)
+  function nenPhatTu(video, nguonTuy, tu){
+    const n = layNen();
+    const nguon = nguonTuy || video.currentSrc || (video.querySelector("source") || {}).src;
+    if (!nguon) return;
+    const t = (typeof tu === "number") ? tu : (video.currentTime || 0);
+    n.__video = video; n.__giao = true; n.loop = !!video.loop;
+    video.muted = true;
+    if (n.__nguon !== nguon){
+      n.__nguon = nguon;
+      n.src = nguon;
+      if (t > 0.05) n.addEventListener("loadedmetadata", () => { try { n.currentTime = t; } catch(e){} }, { once: true });
+    } else if (Math.abs(n.currentTime - t) > 0.5){
+      try { n.currentTime = t; } catch(e){}
+    }
+    const p = n.play();
+    // thẻ audio không được phép chạy: trả tiếng lại cho video như cũ
+    if (p && p.catch) p.catch(() => { n.__giao = false; video.muted = false; });
   }
   function dungNen(){
     if (!nenAm) return;
-    nenAm.__giao = false;
+    nenAm.__giao = false; nenAm.__nguon = "";
     try { nenAm.pause(); nenAm.removeAttribute("src"); nenAm.load(); } catch(e){}
   }
+  // iPhone chỉ cho thẻ audio tự chạy sau khi nó đã được chạm vào một lần: "mở khoá" ở lần chạm đầu tiên
+  (function(){
+    let xong = false;
+    const mo = () => {
+      if (xong) return; xong = true;
+      try {
+        const n = layNen();
+        if (n.__giao) return;
+        n.src = AM_IM; n.__nguon = "";
+        const p = n.play();
+        if (p && p.then) p.then(() => { if (!n.__giao) n.pause(); }).catch(() => {});
+      } catch(e){}
+    };
+    ["touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, mo, { capture: true, once: true, passive: true }));
+  })();
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden){
-      const v = mediaCuoi;
-      if (v && v.tagName === "VIDEO" && !v.paused && !v.ended) giaoNen(v);
-    } else {
-      traNen();
-    }
+    if (document.hidden || !nenAm || !nenAm.__giao) return;
+    const v = nenAm.__video;
+    if (!v) return;
+    try { v.currentTime = nenAm.currentTime; } catch(e){}
+    if (!nenAm.paused && !nenAm.ended) v.play().catch(() => {});
   });
 
   // ---- tên bài, nút dừng và tua trên màn hình khoá ----
@@ -4296,7 +4333,7 @@
     });
     tr.addEventListener("click", () => chuyenMuc(-1, false));
     sa.addEventListener("click", () => chuyenMuc(1, false));
-    storyAudio.addEventListener("play", () => datMetaMedia(storyAudio.__tieuDe || "", "truyen", storyAudio));
+    storyAudio.addEventListener("play", () => { dungNen(); datMetaMedia(storyAudio.__tieuDe || "", "truyen", storyAudio); });
     ["loadedmetadata", "durationchange", "seeked", "pause", "play", "ratechange"].forEach(ev =>
       storyAudio.addEventListener(ev, () => capNhatViTri(storyAudio)));
     datTayMedia();
