@@ -290,6 +290,23 @@
   }
   @media (prefers-reduced-motion: reduce){ .chi-dan.on{ animation:none; } }
 
+  /* Dòng nhắc nhỏ dưới đồng hồ khi chị có tin nhắn Minh chưa đọc. Chạm vào là vào phòng chat. */
+  .tin-moi{
+    margin-top:.9em; max-width:84%;
+    padding:.42em 1em; border-radius:14px; cursor:pointer;
+    background:rgba(16,22,38,.88);
+    border:1px solid rgba(200,162,74,.42);
+    box-shadow:0 5px 18px rgba(0,0,0,.42);
+    color:#e8dcba; font-family:'EB Garamond',serif; font-style:italic;
+    font-size:.95rem; line-height:1.3; text-align:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tin-moi[hidden]{ display:none; }
+  .tin-moi .tim-chu{
+    display:inline-block; width:.85em; height:.8em; vertical-align:-.05em; margin-right:.35em;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 20.7 4.1 12.8a5.2 5.2 0 1 1 7.35-7.35L12 6.1l.55-.65A5.2 5.2 0 1 1 19.9 12.8z' fill='%23b0442f' stroke='%230e1526' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center/100% 100%;
+  }
+
   .numeral{
     font-family:'Cormorant Garamond', serif;
     /* Cormorant Garamond vốn là bộ chữ trưng bày: thân chữ thấp, nét mảnh, nên
@@ -1244,6 +1261,7 @@
     margin:.2em .3em 0; font-family:'Work Sans',system-ui,sans-serif;
     font-size:.64rem; letter-spacing:.02em; color:#7c735f;
   }
+  .rm-xem{ margin-top:.05em; color:#9a8f72; }
   .rm.chay .rm-hop{ animation:rmChay 1.7s ease; }
   @keyframes rmChay{
     0%,100%{ box-shadow:0 0 0 0 rgba(200,162,74,0); }
@@ -1636,6 +1654,7 @@
   </div>
 
   <p class="chi-dan" id="chiDan" hidden>chạm vào chữ số có <i class="tim-chu"></i> để nghe nhé</p>
+  <button class="tin-moi" id="tinMoi" type="button" hidden></button>
 </main>
 
 <div class="oops" id="oops" hidden>
@@ -2359,19 +2378,19 @@
   //   tin:   các tin đã nhận từ người đưa thư, xếp theo stt (thứ tự trong phòng)
   //   sau:   stt lớn nhất đã lấy về — lần sau hỏi tiếp từ đó
   //   daDoc: stt lớn nhất mà người cầm máy đã nhìn thấy trong phòng
-  var phongChat = { tin: [], sau: 0, daDoc: 0 };
+  var phongChat = { tin: [], sau: 0, daDoc: 0, kiaDoc: 0 };
   try {
     const rc = localStorage.getItem(CHAT_KEY);
     if (rc){
       const jc = JSON.parse(rc);
-      if (jc && Array.isArray(jc.tin)) phongChat = { tin: jc.tin, sau: jc.sau | 0, daDoc: jc.daDoc | 0 };
+      if (jc && Array.isArray(jc.tin)) phongChat = { tin: jc.tin, sau: jc.sau | 0, daDoc: jc.daDoc | 0, kiaDoc: jc.kiaDoc | 0 };
     }
   } catch(e){}
   function chatLuu(){
     try {
       // Trong máy chỉ cất 600 tin gần nhất; tin cũ hơn còn trên người đưa thư, xem bằng nút "xem tin cũ hơn".
       localStorage.setItem(CHAT_KEY, JSON.stringify({
-        tin: phongChat.tin.slice(-600), sau: phongChat.sau, daDoc: phongChat.daDoc }));
+        tin: phongChat.tin.slice(-600), sau: phongChat.sau, daDoc: phongChat.daDoc, kiaDoc: phongChat.kiaDoc | 0 }));
     } catch(e){}
   }
 
@@ -2546,9 +2565,10 @@
         if (!r.ok || !r.j || !Array.isArray(r.j.tin)) break;
         // Kho tin phía người đưa thư bị dựng lại từ đầu: bỏ sổ cũ, lấy lại từ số 0.
         if (typeof r.j.max === "number" && r.j.max < phongChat.sau){
-          phongChat = { tin: [], sau: 0, daDoc: 0 };
+          phongChat = { tin: [], sau: 0, daDoc: 0, kiaDoc: 0 };
           continue;
         }
+        if (typeof r.j.kiaDoc === "number" && r.j.kiaDoc > (phongChat.kiaDoc | 0)) phongChat.kiaDoc = r.j.kiaDoc;
         const truoc = new Set(phongChat.tin.map(x => x.id));
         themTin(r.j.tin);
         for (const t of r.j.tin){
@@ -2584,9 +2604,39 @@
     const toi = vaiCuaToi();
     return phongChat.tin.filter(t => t.tu !== toi && t.stt > phongChat.daDoc).length;
   }
-  function chatDanhDauDaDoc(){
-    const m = phongChat.tin.reduce((a, t) => Math.max(a, t.stt), 0);
-    if (m > phongChat.daDoc){ phongChat.daDoc = m; chatLuu(); }
+  // "Đã đọc" = tin ấy thực sự hiện trên màn hình phòng chat (xem kiemTraDaThay).
+  // Mốc daDoc chỉ nhích qua từng tin của người kia theo thứ tự, tin nào chưa hiện thì dừng lại ở đó.
+  var daThay = new Set();
+  function chatDanhDauDaDoc(){ kiemTraDaThay(); }
+  function kiemTraDaThay(){
+    if (!roomMo || document.hidden || !roomFlow) return;
+    const khung = roomFlow.getBoundingClientRect();
+    roomIn.querySelectorAll(".rm[data-stt]").forEach(e => {
+      const r = e.getBoundingClientRect();
+      const phan = Math.min(r.bottom, khung.bottom) - Math.max(r.top, khung.top);
+      if (phan >= Math.min(r.height * 0.6, 60)) daThay.add(+e.dataset.stt);
+    });
+    const toi = vaiCuaToi();
+    let moc = phongChat.daDoc;
+    const kia = phongChat.tin.filter(t => t.tu !== toi && t.stt > moc).sort((a, b) => a.stt - b.stt);
+    for (const t of kia){ if (daThay.has(t.stt)) moc = t.stt; else break; }
+    if (moc > phongChat.daDoc){
+      phongChat.daDoc = moc; chatLuu();
+      renderThu(); refreshBells();
+      baoDaXem();
+    }
+  }
+  // Máy Minh báo cho người đưa thư "em đã đọc tới tin số N" để máy chị hiện "đã xem". Chỉ tăng.
+  var daBaoXem = 0, dangBaoXem = false;
+  async function baoDaXem(){
+    if (mayCuaChi() || dangBaoXem || !layToken() || phongChat.daDoc <= daBaoXem) return;
+    dangBaoXem = true;
+    try {
+      const den = phongChat.daDoc;
+      const r = await goiThu("/da-xem", { method: "POST", body: JSON.stringify({ den }) });
+      if (r.ok) daBaoXem = Math.max(daBaoXem, den);
+    } catch(e){}
+    finally { dangBaoXem = false; }
   }
 
   // Công tắc của riêng bạn: hiện lại mọi thứ đã ẩn.
@@ -4549,10 +4599,29 @@
     }
   }
 
+  // Dòng nhắc dưới đồng hồ: chỉ máy Minh, chỉ khi có tin của chị chưa đọc trong "Nhắn với em".
+  function capNhatTinMoi(){
+    const el = document.getElementById("tinMoi");
+    if (!el) return;
+    let n = 0;
+    try { n = mayCuaChi() ? 0 : chatChuaDoc(); } catch(e){}
+    if (n > 0){
+      el.textContent = "";
+      const i = document.createElement("i"); i.className = "tim-chu";
+      el.appendChild(i);
+      el.appendChild(document.createTextNode("Nhắn với em · " + n + " tin chưa đọc"));
+      el.hidden = false;
+    } else {
+      el.hidden = true;
+    }
+  }
+  document.getElementById("tinMoi").addEventListener("click", () => openRoom());
+
   function refreshBells(){
     setBell(albumBell, songsUnseen());
     setBell(storyBell, storiesWaiting());
     setBell(thuBell, thuChuaMo());
+    capNhatTinMoi();
     capNhatHuyHieu();
   }
 
@@ -5279,7 +5348,7 @@
     for (const t of phongChat.tin){
       co.add(t.id);
       ds.push({ k: "tin", id: t.id, tu: t.tu, chu: t.chu, t: Date.parse(t.luc) || 0,
-                khoa: t.khoa || "", noi: t.noi || "" });
+                khoa: t.khoa || "", noi: t.noi || "", stt: t.stt || 0 });
     }
     for (const m of (progress.hangDoi || [])){
       if (co.has(m.id)) continue;
@@ -5305,7 +5374,14 @@
     const toi = vaiCuaToi();
     const ds = cacMucPhong();
     const coThemCu = !heCu && phongChat.tin.length > 0 && phongChat.tin[0].stt > 1;
-    const dau = ds.map(x => x.id + (x.cho ? "~" : "")).join("|") + "#" + toi + (coThemCu ? "+" : "-") + (dangLayCu ? "…" : "");
+    // "đã xem": chỉ máy chị, dưới tin CUỐI của chị mà Minh đã đọc tới
+    let xemId = "";
+    if (toi === "chi"){
+      for (let i = ds.length - 1; i >= 0; i--){
+        if (ds[i].k === "tin" && ds[i].tu === toi && ds[i].stt && ds[i].stt <= (phongChat.kiaDoc | 0)){ xemId = ds[i].id; break; }
+      }
+    }
+    const dau = ds.map(x => x.id + (x.cho ? "~" : "")).join("|") + "#" + toi + (coThemCu ? "+" : "-") + (dangLayCu ? "…" : "") + "!" + xemId;
     if (dau === roomChuKy) return;
     roomChuKy = dau;
 
@@ -5352,6 +5428,7 @@
       rm.className = "rm " + (x.tu === toi ? "toi" : "kia") + (x.k === "hoi" ? " hoi" : "") +
                      (x.cho ? " dang-gui" : "") + (cuoiLuot ? " cuoi-nhom" : "");
       if (x.khoa) rm.dataset.khoa = x.k === "hoi" ? x.khoa : "";
+      if (x.stt) rm.dataset.stt = x.stt;
       if (x.tu !== toi){
         if (!cuoiLuot) rm.classList.add("an-av");
         rm.appendChild(taoAvatar(x.tu));
@@ -5386,12 +5463,28 @@
         g.textContent = x.cho ? "đang chờ gửi" : gioPhut(x.t);
         bong.appendChild(g);
       }
+      if (x.id === xemId){
+        const xm = document.createElement("div");
+        xm.className = "rm-gio rm-xem";
+        xm.textContent = "đã xem";
+        bong.appendChild(xm);
+      }
       rm.appendChild(bong);
       roomIn.appendChild(rm);
     }
     if (gan || !roomMo) roomFlow.scrollTop = roomFlow.scrollHeight;
     else roomFlow.scrollTop = truocTop;
+    if (roomMo) requestAnimationFrame(kiemTraDaThay);
   }
+  // kéo phòng chat tới đâu thì tin hiện ra tới đó được tính là đã đọc
+  (function(){
+    let cho = false;
+    roomFlow.addEventListener("scroll", () => {
+      if (cho) return; cho = true;
+      requestAnimationFrame(() => { cho = false; kiemTraDaThay(); });
+    }, { passive: true });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(kiemTraDaThay, 150); });
+  })();
 
   function nhayToi(khoa){
     const e = roomIn.querySelector('.rm[data-khoa="' + khoa + '"]');
@@ -5437,16 +5530,24 @@
     roomEl.classList.add("open");
     roomEl.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+    const daDocCu = phongChat.daDoc;           // mốc "đã đọc" TRƯỚC khi mở: để kéo tới tin chưa đọc đầu tiên
     veLaiPhong();
-    chatDanhDauDaDoc();
     renderThu(); refreshBells();
     if (khoa){
       const q = cacMucPhong().find(x => x.k === "hoi" && x.khoa === khoa);
       if (q) datTrich({ khoa: q.khoa, noi: "câu hỏi ngày " + q.day, trich: rutGon(q.chu, 60) });
       setTimeout(() => nhayToi(khoa), 80);
     } else {
-      roomFlow.scrollTop = roomFlow.scrollHeight;
+      // Có tin của người kia chưa đọc thì kéo tới tin chưa đọc ĐẦU TIÊN (chừa một chút phía trên cho thấy tin trước nó).
+      const dau = Array.prototype.find.call(roomIn.querySelectorAll(".rm.kia[data-stt]"), e => +e.dataset.stt > daDocCu);
+      if (dau){
+        roomFlow.scrollTop += dau.getBoundingClientRect().top - roomFlow.getBoundingClientRect().top - 70;
+      } else {
+        roomFlow.scrollTop = roomFlow.scrollHeight;
+      }
     }
+    kiemTraDaThay();
+    setTimeout(kiemTraDaThay, 120);
     dongBoTin();
     ganNhipDongBo();
   }
@@ -5459,7 +5560,6 @@
     datTrich(null);
     roomInput.blur();
     if (!document.querySelector(".shelf.open")) document.body.style.overflow = "";
-    chatDanhDauDaDoc();
     renderThu(); refreshBells();
   }
   document.getElementById("roomBack").addEventListener("click", closeRoom);
@@ -5497,9 +5597,9 @@
 
   // sau mỗi lần lấy tin: vẽ lại, báo chấm, và nếu đang xem app thì trượt một thanh báo
   function capNhatSauDongBo(moi){
-    if (roomMo && !document.hidden){ veLaiPhong(); chatDanhDauDaDoc(); }
-    else if (roomMo){ veLaiPhong(); }
+    if (roomMo){ veLaiPhong(); kiemTraDaThay(); }
     renderThu(); refreshBells();
+    baoDaXem();
     if (daDongBoLanDau && moi && moi.length && !roomMo && !document.hidden){
       const cuoi = moi[moi.length - 1];
       showToast(cuoi.chu, () => openRoom(), { ten: cuoi.tu === "chi" ? authorName() : "Minh", tu: cuoi.tu });
