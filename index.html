@@ -4504,16 +4504,18 @@
       if (!st.audio) return;                      // chưa thu xong — chưa hiện ra
       if (storyGone(p.id)) return;
       if (!pairComplete(p)){
-        // Minh đã nghe bài bên nam của cặp này mà bài bên nữ chưa nghe: hiện truyện dưới dạng đang khoá,
-        // chạm vào thì được nhắc nhẹ phải nghe bài ở khung trời bên chị trước.
-        if (heard(slotId("nam", p.nam)) && !heard(slotId("nu", p.nu))){
+        // Minh mới nghe MỘT trong hai bài của cặp này: hiện truyện dưới dạng đang khoá,
+        // chạm vào thì được nhắc nhẹ phải nghe đủ cả hai bài trước.
+        const daNam = heard(slotId("nam", p.nam)), daNu = heard(slotId("nu", p.nu));
+        if (daNam !== daNu){      // mới nghe MỘT trong hai bài (bên nào cũng vậy): truyện hiện ra nhưng còn khoá
           const kh = document.createElement("button");
           kh.className = "row nu khoa";
           kh.innerHTML =
             '<span class="hour">' + dauTruyen(st) + '</span>' +
             '<span class="name">' + (st.title[currentLang] || st.title.vi) + '</span>' +
             '<span class="mark"><svg class="o-khoa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
-          kh.addEventListener("click", () => showTruyenKhoa(!!songLive("nu", p.nu)));
+          // bài còn lại (bài Minh CHƯA nghe) đã có để nghe chưa? có thì nhắc nghe, chưa thì nói phải đợi
+          kh.addEventListener("click", () => showTruyenKhoa(!!(daNam ? songLive("nu", p.nu) : songLive("nam", p.nam))));
           storyList.appendChild(kh);
         }
         return;
