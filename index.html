@@ -1255,6 +1255,18 @@
     font-family:'EB Garamond',serif; font-style:italic; font-size:.85rem; line-height:1.4;
     color:#a99f86; cursor:default; max-width:100%;
   }
+  .rm-trich .tl-ai{ font-style:normal; font-family:'Work Sans',system-ui,sans-serif; font-weight:400; font-size:.74rem; letter-spacing:.02em; color:#b8a977; margin-right:.4em; }
+  /* chạm vào một tin thì hiện nút "trả lời" ngay dưới nó */
+  .rm-tl{
+    display:none; align-items:center; gap:.35em; margin:.28em .2em 0; padding:.28em .8em;
+    background:rgba(16,22,38,.92); border:1px solid rgba(200,162,74,.42); border-radius:999px;
+    color:#e8dcba; font-family:'Work Sans',system-ui,sans-serif; font-weight:400; font-size:.76rem; cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .rm-tl svg{ width:.95em; height:.95em; }
+  .rm.tl-hien .rm-tl{ display:inline-flex; }
+  .rm.toi .rm-tl{ align-self:flex-end; }
+  .rm .rm-hop{ cursor:pointer; }
   .rm-trich.nhay{ cursor:pointer; }
   .rm-trich.nhay:hover, .rm-trich.nhay:focus-visible{ color:var(--brass); outline:none; }
   .rm-gio{
@@ -5410,6 +5422,9 @@
     }
     const hoi = new Map();
     for (const x of ds) if (x.k === "hoi") hoi.set(x.khoa, x);
+    const tinTheoId = new Map();
+    for (const x of ds) if (x.k === "tin") tinTheoId.set(x.id, x);
+    const nhanAi = tu => tu === "chi" ? "em" : "anh";
 
     let ngayTruoc = "";
     for (let i = 0; i < ds.length; i++){
@@ -5429,6 +5444,7 @@
                      (x.cho ? " dang-gui" : "") + (cuoiLuot ? " cuoi-nhom" : "");
       if (x.khoa) rm.dataset.khoa = x.k === "hoi" ? x.khoa : "";
       if (x.stt) rm.dataset.stt = x.stt;
+      if (x.k === "tin") rm.dataset.mid = x.id;
       if (x.tu !== toi){
         if (!cuoiLuot) rm.classList.add("an-av");
         rm.appendChild(taoAvatar(x.tu));
@@ -5437,7 +5453,16 @@
       bong.className = "rm-bong";
 
       // thẻ trích: tin này đáp lại cái gì (bỏ nếu ngay trên nó đã là câu hỏi ấy)
-      if (x.k === "tin" && (x.khoa || x.noi)){
+      const trichTin = (x.k === "tin" && /^re-/.test(x.khoa || "")) ? tinTheoId.get(x.khoa.slice(3)) : null;
+      if (trichTin){
+        // trích dẫn một tin cụ thể: luôn hiện, chạm vào thì nhảy tới tin ấy
+        const c = document.createElement("button");
+        c.type = "button"; c.className = "rm-trich nhay";
+        const ai = document.createElement("span"); ai.className = "tl-ai"; ai.textContent = nhanAi(trichTin.tu);
+        c.appendChild(ai); c.appendChild(document.createTextNode(rutGon(trichTin.chu, 70)));
+        c.addEventListener("click", () => nhayToiTin(trichTin.id));
+        bong.appendChild(c);
+      } else if (x.k === "tin" && (x.khoa || x.noi)){
         const q = x.khoa && hoi.get(x.khoa);
         const lienNgay = truoc && ((q && truoc === q) || (truoc.k === "tin" && truoc.khoa === x.khoa && truoc.noi === x.noi));
         if (!lienNgay){
@@ -5457,6 +5482,28 @@
         hop.addEventListener("click", () => datTrich({ khoa: x.khoa, noi: "câu hỏi ngày " + x.day, trich: rutGon(x.chu, 60) }));
       }
       bong.appendChild(hop);
+      if (x.k === "tin"){
+        // chạm vào tin → hiện nút "trả lời"; chạm nút → trích tin này vào ô nhập
+        hop.addEventListener("click", () => {
+          if (window.getSelection && String(window.getSelection()).length) return;   // đang bôi chữ thì thôi
+          const dang = rm.classList.contains("tl-hien");
+          roomIn.querySelectorAll(".rm.tl-hien").forEach(e => e.classList.remove("tl-hien"));
+          if (!dang) rm.classList.add("tl-hien");
+        });
+        const tl = document.createElement("button");
+        tl.type = "button"; tl.className = "rm-tl";
+        tl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span>trả lời</span>';
+        tl.addEventListener("click", e => {
+          e.stopPropagation();
+          rm.classList.remove("tl-hien");
+          datTrich({
+            khoa: x.id.length <= 60 ? "re-" + x.id : "",
+            noi: rutGon(x.chu, 150),
+            trich: nhanAi(x.tu) + ": " + rutGon(x.chu, 60)
+          });
+        });
+        bong.appendChild(tl);
+      }
       if (cuoiLuot){
         const g = document.createElement("div");
         g.className = "rm-gio";
@@ -5488,6 +5535,14 @@
 
   function nhayToi(khoa){
     const e = roomIn.querySelector('.rm[data-khoa="' + khoa + '"]');
+    if (!e) return;
+    e.scrollIntoView({ block: "center", behavior: "smooth" });
+    e.classList.remove("chay"); void e.offsetWidth; e.classList.add("chay");
+    setTimeout(() => e.classList.remove("chay"), 1800);
+  }
+
+  function nhayToiTin(id){
+    const e = roomIn.querySelector('.rm[data-mid="' + String(id).replace(/[^A-Za-z0-9_-]/g, "") + '"]');
     if (!e) return;
     e.scrollIntoView({ block: "center", behavior: "smooth" });
     e.classList.remove("chay"); void e.offsetWidth; e.classList.add("chay");
@@ -5584,6 +5639,8 @@
     roomInput.value = ""; roomInput.style.height = "auto";
     const d = roomDich || { khoa: "", noi: "" };
     guiTin(d.noi || "", d.khoa || "", chu);
+    // trích một tin cụ thể thì dùng một lần rồi thôi (khác với trả lời một câu hỏi theo ngày)
+    if (/^re-/.test(d.khoa || "") || (d.noi && !d.khoa && d.trich)) datTrich(null);
     roomFlow.scrollTop = roomFlow.scrollHeight;
   }
   roomSend.addEventListener("click", guiTuPhong);
