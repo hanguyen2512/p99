@@ -1264,6 +1264,9 @@
     -webkit-tap-highlight-color:transparent;
   }
   .rm-tl svg{ width:.95em; height:.95em; }
+  /* truyện đang khoá: mờ đi, có ổ khoá nhỏ ở cuối hàng */
+  #storyList .row.khoa{ opacity:.55; }
+  #storyList .row.khoa .o-khoa{ width:1em; height:1em; vertical-align:-.12em; color:#a99f86; }
   .rm.tl-hien .rm-tl{ display:inline-flex; }
   .rm.toi .rm-tl{ align-self:flex-end; }
   .rm .rm-hop{ cursor:pointer; }
@@ -4499,7 +4502,22 @@
       if (p.day >= 2) veNarita();
       const st = STORIES[p.id];
       if (!st.audio) return;                      // chưa thu xong — chưa hiện ra
-      if (storyGone(p.id) || !pairComplete(p)) return;
+      if (storyGone(p.id)) return;
+      if (!pairComplete(p)){
+        // Minh đã nghe bài bên nam của cặp này mà bài bên nữ chưa nghe: hiện truyện dưới dạng đang khoá,
+        // chạm vào thì được nhắc nhẹ phải nghe bài ở khung trời bên chị trước.
+        if (heard(slotId("nam", p.nam)) && !heard(slotId("nu", p.nu))){
+          const kh = document.createElement("button");
+          kh.className = "row nu khoa";
+          kh.innerHTML =
+            '<span class="hour">' + dauTruyen(st) + '</span>' +
+            '<span class="name">' + (st.title[currentLang] || st.title.vi) + '</span>' +
+            '<span class="mark"><svg class="o-khoa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
+          kh.addEventListener("click", () => showTruyenKhoa(!!songLive("nu", p.nu)));
+          storyList.appendChild(kh);
+        }
+        return;
+      }
       waiting++;
       const isNew = !progress.opened[p.id];
       const row = document.createElement("button");
@@ -5184,6 +5202,27 @@
   const NU_CHO_ANH = [
     "để nghe được bài hát này thì em chờ ảnh của anh"
   ];
+  // Chạm vào truyện đang khoá (đã nghe bài bên nam, chưa nghe bài bên nữ của cặp ấy).
+  //   coBai = true : bài bên chị đã có, chỉ là Minh chưa nghe
+  //   coBai = false: bài bên chị chưa tới, còn phải đợi
+  const TRUYEN_NGHE_TRUOC = [
+    "anh hãy nghe hai bài hát trước rồi em kể chuyện cho anh nghe nhé"
+  ];
+  const TRUYEN_CHO_BAI = [
+    "để nghe câu chuyện này thì anh cần mở khoá cả hai bài hát nha"
+  ];
+  function showTruyenKhoa(coBai){
+    geoWanted = null;
+    geoChat.clear();
+    geoBtns.hidden = true;
+    geoBtns.classList.remove("on");
+    geoBox.classList.add("open");
+    geoBox.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    geoChat.say(coBai ? TRUYEN_NGHE_TRUOC : TRUYEN_CHO_BAI, null, () => {
+      geoBox.addEventListener("click", () => closeGeoLock(), { once: true });
+    });
+  }
   // Khung giờ này đang đợi: đã tới ngày của nó, có tên bài, mà chưa có video.
   function nuChoBai(world, h){
     if (world !== "nu") return false;
