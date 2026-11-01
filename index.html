@@ -625,6 +625,10 @@
   .row.nu .heart{
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 20.7 4.1 12.8a5.2 5.2 0 1 1 7.35-7.35L12 6.1l.55-.65A5.2 5.2 0 1 1 19.9 12.8z' fill='%23a066c8' stroke='%230e1526' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
+  /* Trái tim tím RỖNG: bài hát đang khoá, chưa nghe được. */
+  .heart.rong, .row.nu .heart.rong{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 20.7 4.1 12.8a5.2 5.2 0 1 1 7.35-7.35L12 6.1l.55-.65A5.2 5.2 0 1 1 19.9 12.8z' fill='none' stroke='%23a066c8' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
   .shelf-empty{
     font-family:'EB Garamond',serif; font-style:italic; opacity:.6;
     color:#d8cdb4; padding:1.4em .2em; text-align:center;
@@ -1265,8 +1269,8 @@
   }
   .rm-tl svg{ width:.95em; height:.95em; }
   /* truyện đang khoá: mờ đi, có ổ khoá nhỏ ở cuối hàng */
-  #storyList .row.khoa{ opacity:.55; }
-  #storyList .row.khoa .o-khoa{ width:1em; height:1em; vertical-align:-.12em; color:#a99f86; }
+  #storyList .row.khoa, #albumList .row.khoa{ opacity:.55; }
+  #storyList .row.khoa .o-khoa, #albumList .row.khoa .o-khoa{ width:1em; height:1em; vertical-align:-.12em; color:#a99f86; }
   .rm.tl-hien .rm-tl{ display:inline-flex; }
   .rm.toi .rm-tl{ align-self:flex-end; }
   .rm .rm-hop{ cursor:pointer; }
@@ -2083,7 +2087,7 @@
       23:{ video:"", poster:"", title:{ vi:"晚霞的蓝线 - Đường màu xanh của ráng chiều đỏ", en:"晚霞的蓝线 - Đường màu xanh của ráng chiều đỏ", zh:"晚霞的蓝线 - Đường màu xanh của ráng chiều đỏ" } },   // assets/songs/duongmauxanh.mp4
     },
     nu: {
-      1:{ video:"", poster:"", title:{ vi:"Cây mộc qua đã hoá thành hạt bụi", en:"Cây mộc qua đã hoá thành hạt bụi", zh:"Cây mộc qua đã hoá thành hạt bụi" } },   // assets/songs/caymocqua.mp4
+      1:{ video:"", poster:"", title:{ vi:"Cây Mộc Qua đã hoá thành hạt bụi", en:"Cây Mộc Qua đã hoá thành hạt bụi", zh:"Cây Mộc Qua đã hoá thành hạt bụi" } },   // assets/songs/caymocqua.mp4
       3:{ video:"assets/songs/suongdotriennon.mp4", poster:"", title:{ vi:"Sương đổ triền non ta đợi nàng", en:"Sương đổ triền non ta đợi nàng", zh:"Sương đổ triền non ta đợi nàng" } },   // assets/songs/suongdotriennon.mp4
       5:{ video:"", poster:"", title:{ vi:"Hưởng - 响", en:"Hưởng - 响", zh:"Hưởng - 响" } },   // assets/songs/huong.mp4
       7:{ video:"", poster:"", title:{ vi:"无限流 - Vô Hạn Lưu", en:"无限流 - Vô Hạn Lưu", zh:"无限流 - Vô Hạn Lưu" } },   // assets/songs/vohanluu.mp4
@@ -4408,12 +4412,24 @@
     albumList.innerHTML = "";
     let here = 0, choNghe = 0;
     ["nam","nu"].forEach(world => {
-      const doi = [], daNghe = [];
+      const doi = [], daNghe = [], khoa = [];
       ODD_HOURS.forEach(h => {
         const song = songAt(world, h);
         if (!song) return;
         const id = slotId(world, h);
         if (songGone(id)) return;                 // không còn xảy ra: bài ở lại mãi
+        // Bài bên khoảng trời của chị đã tới ngày mà chưa có video: hiện tên, đang khoá.
+        if (world === "nu" && !songReady(song) && daToiLuot(world, h)){
+          const kh = document.createElement("button");
+          kh.className = "row nu khoa";
+          kh.innerHTML =
+            '<span class="hour">' + HOUR_LABEL(h) + '</span>' +
+            '<span class="name"><i class="heart rong"></i>' + songTitle(song) + '</span>' +
+            '<span class="mark"><svg class="o-khoa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
+          kh.addEventListener("click", () => showLoiKhoa(BAI_CHO_ANH));
+          khoa.push(kh);
+          return;
+        }
         const dangDoi = baiDangDoi(world, h);
         if (!dangDoi && !heard(id)) return;       // chưa tới ngày của nó
         here++;
@@ -4428,7 +4444,7 @@
         row.addEventListener("click", () => { songOrigin = albumShelf; closeShelf(albumShelf); openSong(world, h); });
         (dangDoi ? doi : daNghe).push(row);
       });
-      const rows = doi.concat(daNghe);            // bài chưa nghe đứng trước
+      const rows = doi.concat(daNghe, khoa);      // bài chưa nghe đứng trước, bài đang khoá đứng cuối
       if (!rows.length) return;
       const lab = document.createElement("p");
       lab.className = "group-label";
@@ -5213,7 +5229,11 @@
   const TRUYEN_CHO_BAI = [
     "để nghe câu chuyện này thì anh cần mở khoá cả hai bài hát nha"
   ];
-  function showTruyenKhoa(coBai){
+  // Chạm vào bài hát đang khoá trong Ngăn nhạc (đã tới ngày mà chưa có video bên khoảng trời của chị).
+  const BAI_CHO_ANH = [ "để mở khoá bài hát này thì em chờ ảnh của anh" ];
+  function showTruyenKhoa(coBai){ showLoiKhoa(coBai ? TRUYEN_NGHE_TRUOC : TRUYEN_CHO_BAI); }
+  // Một lời nhắn của chị hiện giữa màn hình (dùng cho truyện đang khoá, bài hát chưa có video…)
+  function showLoiKhoa(dong){
     geoWanted = null;
     geoChat.clear();
     geoBtns.hidden = true;
@@ -5221,7 +5241,7 @@
     geoBox.classList.add("open");
     geoBox.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
-    geoChat.say(coBai ? TRUYEN_NGHE_TRUOC : TRUYEN_CHO_BAI, null, () => {
+    geoChat.say(dong, null, () => {
       geoBox.addEventListener("click", () => closeGeoLock(), { once: true });
     });
   }
