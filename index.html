@@ -4412,7 +4412,14 @@
     albumList.innerHTML = "";
     let here = 0, choNghe = 0;
     ["nam","nu"].forEach(world => {
-      const doi = [], daNghe = [], khoa = [];
+      const dsHang = [];
+      // Thứ tự theo GIỜ CỦA MINH: bài bên chị xếp theo giờ của bài đi cặp với nó bên Minh,
+      // nên hàng thứ k ở khoảng trời này luôn là cặp của hàng thứ k ở khoảng trời kia.
+      const gioMinh = h => {
+        if (world === "nam") return h;
+        const d = DAY_LIST.find(x => x.nu === h);
+        return d ? d.nam : h;
+      };
       ODD_HOURS.forEach(h => {
         const song = songAt(world, h);
         if (!song) return;
@@ -4427,7 +4434,7 @@
             '<span class="name"><i class="heart rong"></i>' + songTitle(song) + '</span>' +
             '<span class="mark"><svg class="o-khoa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
           kh.addEventListener("click", () => showLoiKhoa(BAI_CHO_ANH));
-          khoa.push(kh);
+          dsHang.push({ k: gioMinh(h), row: kh });
           return;
         }
         const dangDoi = baiDangDoi(world, h);
@@ -4442,9 +4449,9 @@
           '<span class="name">' + (isNew ? '<i class="heart"></i>' : "") + songTitle(song) + '</span>' +
           '<span class="mark">\u266a</span>';
         row.addEventListener("click", () => { songOrigin = albumShelf; closeShelf(albumShelf); openSong(world, h); });
-        (dangDoi ? doi : daNghe).push(row);
+        dsHang.push({ k: gioMinh(h), row });
       });
-      const rows = doi.concat(daNghe, khoa);      // bài chưa nghe đứng trước, bài đang khoá đứng cuối
+      const rows = dsHang.sort((a, b) => a.k - b.k).map(x => x.row);
       if (!rows.length) return;
       const lab = document.createElement("p");
       lab.className = "group-label";
