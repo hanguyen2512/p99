@@ -2310,6 +2310,11 @@
   const NARITA_ID = "narita";
   const NARITA_AUDIO = "assets/stories/sanbaynarita.mp3";
   const NARITA_NGAY = "2026-10-27";
+  // Truyện đầu tiên của hệ "Tiếng động": mở lúc 06:00 ngày 2/11 theo đồng hồ bên nam.
+  const CAI_AM_ID = "cai-am";
+  const CAI_AM_AUDIO = "assets/stories/tiengdong1.mp3";
+  const CAI_AM_NGAY = "2026-11-02";
+  const CAI_AM_GIO = 6;
   const KET_AUDIO = "";             // → "assets/stories/thegioidabienmat.m4a" khi thu xong
 
   // 11 truyện audio, mỗi truyện gắn với một cặp
@@ -2336,6 +2341,14 @@
     ask:   { vi:"em kể anh nghe chuyện ở sân bay Narita nhé",
              en:"let me tell you about Narita airport",
              zh:"让我给你讲成田机场的故事" }
+  };
+  STORIES[CAI_AM_ID] = {
+    n: "I",
+    audio: CAI_AM_AUDIO,
+    title: { vi:"Tiếng động - Cái am", en:"Tiếng động - Cái am", zh:"Tiếng động - Cái am" },
+    ask:   { vi:"để em kể cho anh nghe một câu chuyện này",
+             en:"let me tell you a story",
+             zh:"让我给你讲个故事" }
   };
   STORIES[KET_ID] = {
     n: "\u2727",
@@ -2738,6 +2751,15 @@
     if (!st || !st.audio) return false;              // chưa thu xong thì chưa hiện
     return ngayBenNam(new Date()) >= NARITA_NGAY;
   }
+  // Truyện "Cái am": mở từ 06:00 ngày 2/11 theo đồng hồ bên nam, rồi ở lại mãi.
+  function caiAmCho(){
+    const st = STORIES[CAI_AM_ID];
+    if (!st || !st.audio) return false;
+    const ng = ngayBenNam(new Date());
+    if (ng > CAI_AM_NGAY) return true;
+    if (ng < CAI_AM_NGAY) return false;
+    return worldParts("nam", new Date()).h >= CAI_AM_GIO;
+  }
 
   // ---- đánh số các truyện ở giữa ----
   // Truyện mở đầu giữ dấu ✦, truyện khép lại giữ ✧. Mọi truyện còn lại nằm
@@ -2750,7 +2772,8 @@
   // dấu là cùng một hệ, đọc nối nhau được. Truyện lẻ thì không mang dấu nào.
   // Thêm hệ mới chỉ việc thêm một dòng ở đây rồi gắn he cho truyện.
   const HE_TRUYEN = {
-    "chuyen-di": { dau: "\u2756", ten: "Những chuyến đi" }   // ❖
+    "chuyen-di": { dau: "\u2756", ten: "Những chuyến đi" },  // ❖
+    "tieng-dong": { dau: "\u25C8", ten: "Tiếng động" }       // ◈
   };
   // Truyện nào thuộc hệ nào — ghi bằng TÊN để chị sửa cho dễ. Thêm một truyện
   // vào hệ chỉ việc chép tên nó vào danh sách dưới đây.
@@ -2758,6 +2781,9 @@
     "chuyen-di": [
       "Chuyện ở sân bay Narita tháng tám",
       "Những người không chịu lớn"
+    ],
+    "tieng-dong": [
+      "Tiếng động - Cái am"
     ]
   };
   Object.keys(THUOC_HE).forEach(he => {
@@ -2784,6 +2810,7 @@
   function danhSoTruyen(){
     const ds = PAIRS.map(p => ({ id: p.id, ngay: NGAY_MO[p.day] || "9999" }));
     ds.push({ id: NARITA_ID, ngay: NARITA_NGAY });
+    ds.push({ id: CAI_AM_ID, ngay: CAI_AM_NGAY });
     ds.sort((a, b) => a.ngay < b.ngay ? -1 : a.ngay > b.ngay ? 1 : 0);
     ds.forEach((x, i) => { if (STORIES[x.id]) STORIES[x.id].n = soLaMa(i + 1); });
   }
@@ -2793,6 +2820,7 @@
     return PAIRS.filter(p => pairComplete(p) && truyenChuaNghe(p.id)).length
          + (moDauCho()  && truyenChuaNghe(MO_DAU_ID) ? 1 : 0)
          + (naritaCho() && truyenChuaNghe(NARITA_ID) ? 1 : 0)
+         + (caiAmCho()  && truyenChuaNghe(CAI_AM_ID) ? 1 : 0)
          + (ketCho()    && truyenChuaNghe(KET_ID)    ? 1 : 0);
   }
 
@@ -4521,8 +4549,29 @@
       storyList.appendChild(hang);
     };
 
+    // Truyện "Cái am" của ngày 2/11 nằm giữa truyện ngày 3 và ngày 4.
+    let daVeCaiAm = false;
+    const veCaiAm = () => {
+      if (daVeCaiAm || !caiAmCho()) return;
+      daVeCaiAm = true;
+      const st = STORIES[CAI_AM_ID];
+      waiting++;
+      const moi = !progress.opened[CAI_AM_ID];
+      const hang = document.createElement("button");
+      hang.className = "row nu" + (moi ? " unread" : "");
+      hang.dataset.truyen = st.__id || "";
+      hang.innerHTML =
+        '<span class="hour">' + dauTruyen(st) + '</span>' +
+        '<span class="name">' + (moi ? '<i class="heart"></i>' : "") +
+          (st.title[currentLang] || st.title.vi) + '</span>' +
+        '<span class="mark"></span>';
+      hang.addEventListener("click", () => playStory(CAI_AM_ID));
+      storyList.appendChild(hang);
+    };
+
     PAIRS.forEach(p => {
       if (p.day >= 2) veNarita();
+      if (p.day >= 4) veCaiAm();
       const st = STORIES[p.id];
       if (!st.audio) return;                      // chưa thu xong — chưa hiện ra
       if (storyGone(p.id)) return;
@@ -4558,6 +4607,7 @@
     });
 
     veNarita();          // phòng khi chưa có cặp nào từ ngày 2 trở đi hiện ra
+    veCaiAm();
 
     // Truyện khép lại đứng cuối hàng, sau tất cả.
     if (ketCho()){
