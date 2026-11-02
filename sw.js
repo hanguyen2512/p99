@@ -9,7 +9,7 @@
 //     Hệ quả: muốn SỬA một bài đã gửi đi thì phải ĐẶT TÊN FILE KHÁC, vì máy
 //     Minh nhận ra bài theo đường dẫn, chứ không nhìn vào ruột file.
 // Chị không cần đổi số bên dưới nữa; để đó làm nút bấm cuối cùng thôi.
-const CACHE_VERSION = "v8";
+const CACHE_VERSION = "v9";
 const CACHE_NAME = "wanxia-" + CACHE_VERSION;
 
 // "app shell" — luôn tải sẵn để mở được ngay cả khi mất mạng
@@ -118,6 +118,72 @@ async function traMedia(req, cache){
   });
 }
 
+// Bài ẩn Friday Night nặng cả chục MB (video chất lượng cao). Khác các bài khác:
+//  · tải trọn vào máy MỘT lần, đọc dòng tải để báo cho trang biết đã về bao nhiêu phần trăm;
+//  · từ đó trở đi lấy trong máy, cắt từng đoạn mà không đọc cả tệp vào bộ nhớ.
+const MEDIA_LON = /\/assets\/songs\/fridaynight\.mp4$/;
+const dangTaiLon = new Map();                 // địa chỉ → lời hứa "đã về máy", để không tải hai lần
+function baoTai(url, got, tong){
+  self.clients.matchAll({ includeUncontrolled: true }).then(cs => {
+    cs.forEach(c => c.postMessage({ loai: "tai-media", url, got, tong }));
+  }).catch(() => {});
+}
+function taiTronVaoMay(khoa, cache){
+  if (dangTaiLon.has(khoa.url)) return dangTaiLon.get(khoa.url);
+  const p = (async () => {
+    const res = await fetch(khoa, { cache: "no-store" });
+    if (!res || !res.ok || res.status !== 200 || !res.body) throw new Error("tải không được");
+    const tong = parseInt(res.headers.get("Content-Length") || "0", 10);
+    const [nhanh, dem] = res.body.tee();
+    const luu = cache.put(khoa, new Response(nhanh, {
+      status: 200, headers: { "Content-Type": res.headers.get("Content-Type") || "video/mp4" }
+    }));
+    const doc = dem.getReader();
+    let got = 0, lan = 0;
+    for (;;){
+      const r = await doc.read();
+      if (r.done) break;
+      got += r.value.length;
+      const nay = Date.now();
+      if (nay - lan > 400){ lan = nay; baoTai(khoa.url, got, tong); }
+    }
+    await luu;
+    baoTai(khoa.url, got, got);
+  })();
+  const xoa = () => { dangTaiLon.delete(khoa.url); };
+  p.then(xoa, xoa);
+  dangTaiLon.set(khoa.url, p);
+  return p;
+}
+async function traMediaLon(req, cache){
+  const khoa = new Request(req.url);
+  const xin = req.headers.get("range");
+  let res = await cache.match(khoa);
+  if (!res){
+    try { await taiTronVaoMay(khoa, cache); } catch(e){ return fetch(req); }   // hỏng thì phát thẳng từ mạng
+    res = await cache.match(khoa);
+    if (!res) return fetch(req);
+  }
+  const blob = await res.blob();
+  const tong = blob.size;
+  const ct = res.headers.get("Content-Type") || "video/mp4";
+  if (!xin) return new Response(blob, { status: 200, headers: { "Content-Type": ct, "Content-Length": String(tong), "Accept-Ranges": "bytes" } });
+  const m = /bytes=(\d*)-(\d*)/i.exec(xin);
+  let tu  = m && m[1] ? parseInt(m[1], 10) : 0;
+  let den = m && m[2] ? parseInt(m[2], 10) : tong - 1;
+  if (!isFinite(tu)  || tu  < 0 || tu  >= tong) tu  = 0;
+  if (!isFinite(den) || den < tu || den >= tong) den = tong - 1;
+  return new Response(blob.slice(tu, den + 1), {
+    status: 206, statusText: "Partial Content",
+    headers: {
+      "Content-Type": ct,
+      "Content-Length": String(den - tu + 1),
+      "Content-Range": "bytes " + tu + "-" + den + "/" + tong,
+      "Accept-Ranges": "bytes"
+    }
+  });
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -135,7 +201,8 @@ self.addEventListener("fetch", (event) => {
   // nên cập nhật nội dung trang không bắt tải lại hàng trăm MB.
   const isMedia = /\/assets\/(songs|stories)\//.test(url.pathname);
   if (isMedia){
-    event.respondWith(caches.open(MEDIA_CACHE).then(cache => traMedia(req, cache)));
+    event.respondWith(caches.open(MEDIA_CACHE).then(cache =>
+      MEDIA_LON.test(url.pathname) ? traMediaLon(req, cache) : traMedia(req, cache)));
     return;
   }
 
