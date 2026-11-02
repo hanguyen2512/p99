@@ -2403,6 +2403,11 @@
   const CAI_AM_AUDIO = "assets/stories/tiengdong1.mp3";
   const CAI_AM_NGAY = "2026-11-02";
   const CAI_AM_GIO = 6;
+  // Truyện thứ hai của hệ "Tiếng động": mở lúc 07:00 ngày 3/11 theo đồng hồ bên nam.
+  const XE_WAVE_ID = "xe-wave";
+  const XE_WAVE_AUDIO = "assets/stories/tiengdong2.mp3";
+  const XE_WAVE_NGAY = "2026-11-03";
+  const XE_WAVE_GIO = 7;
   const KET_AUDIO = "assets/stories/thegioidabienmat.mp3";
 
   // 11 truyện audio, mỗi truyện gắn với một cặp
@@ -2434,6 +2439,14 @@
     n: "I",
     audio: CAI_AM_AUDIO,
     title: { vi:"Tiếng động - Cái am", en:"Tiếng động - Cái am", zh:"Tiếng động - Cái am" },
+    ask:   { vi:"để em kể cho anh nghe một câu chuyện này",
+             en:"let me tell you a story",
+             zh:"让我给你讲个故事" }
+  };
+  STORIES[XE_WAVE_ID] = {
+    n: "I",
+    audio: XE_WAVE_AUDIO,
+    title: { vi:"Tiếng động - Xe Wave đỏ, rượu, và thuốc", en:"Tiếng động - Xe Wave đỏ, rượu, và thuốc", zh:"Tiếng động - Xe Wave đỏ, rượu, và thuốc" },
     ask:   { vi:"để em kể cho anh nghe một câu chuyện này",
              en:"let me tell you a story",
              zh:"让我给你讲个故事" }
@@ -2865,6 +2878,16 @@
     return worldParts("nam", new Date()).h >= CAI_AM_GIO;
   }
 
+  // Truyện "Xe Wave đỏ": mở từ 07:00 ngày 3/11 theo đồng hồ bên nam, rồi ở lại mãi.
+  function xeWaveCho(){
+    const st = STORIES[XE_WAVE_ID];
+    if (!st || !st.audio) return false;
+    const ng = ngayBenNam(new Date());
+    if (ng > XE_WAVE_NGAY) return true;
+    if (ng < XE_WAVE_NGAY) return false;
+    return worldParts("nam", new Date()).h >= XE_WAVE_GIO;
+  }
+
   // ---- đánh số các truyện ở giữa ----
   // Truyện mở đầu giữ dấu ✦, truyện khép lại giữ ✧. Mọi truyện còn lại nằm
   // chung MỘT dãy số La Mã, xếp theo ngày chúng mở ra — nên Minh nhìn số là
@@ -2887,7 +2910,8 @@
       "Những người không chịu lớn"
     ],
     "tieng-dong": [
-      "Tiếng động - Cái am"
+      "Tiếng động - Cái am",
+      "Tiếng động - Xe Wave đỏ, rượu, và thuốc"
     ]
   };
   Object.keys(THUOC_HE).forEach(he => {
@@ -2915,6 +2939,7 @@
     const ds = PAIRS.map(p => ({ id: p.id, ngay: NGAY_MO[p.day] || "9999" }));
     ds.push({ id: NARITA_ID, ngay: NARITA_NGAY });
     ds.push({ id: CAI_AM_ID, ngay: CAI_AM_NGAY });
+    ds.push({ id: XE_WAVE_ID, ngay: XE_WAVE_NGAY });
     ds.sort((a, b) => a.ngay < b.ngay ? -1 : a.ngay > b.ngay ? 1 : 0);
     ds.forEach((x, i) => { if (STORIES[x.id]) STORIES[x.id].n = soLaMa(i + 1); });
   }
@@ -2925,6 +2950,7 @@
          + (moDauCho()  && truyenChuaNghe(MO_DAU_ID) ? 1 : 0)
          + (naritaCho() && truyenChuaNghe(NARITA_ID) ? 1 : 0)
          + (caiAmCho()  && truyenChuaNghe(CAI_AM_ID) ? 1 : 0)
+         + (xeWaveCho() && truyenChuaNghe(XE_WAVE_ID) ? 1 : 0)
          + (ketCho()    && truyenChuaNghe(KET_ID)    ? 1 : 0);
   }
 
@@ -4709,9 +4735,29 @@
       storyList.appendChild(hang);
     };
 
+    // Truyện "Xe Wave đỏ" của ngày 3/11 nằm ngay sau "Cái am".
+    let daVeXeWave = false;
+    const veXeWave = () => {
+      if (daVeXeWave || !xeWaveCho()) return;
+      daVeXeWave = true;
+      const st = STORIES[XE_WAVE_ID];
+      waiting++;
+      const moi = !progress.opened[XE_WAVE_ID];
+      const hang = document.createElement("button");
+      hang.className = "row nu" + (moi ? " unread" : "");
+      hang.dataset.truyen = st.__id || "";
+      hang.innerHTML =
+        '<span class="hour">' + dauTruyen(st) + '</span>' +
+        '<span class="name">' + (moi ? '<i class="heart"></i>' : "") +
+          (st.title[currentLang] || st.title.vi) + '</span>' +
+        '<span class="mark"></span>';
+      hang.addEventListener("click", () => playStory(XE_WAVE_ID));
+      storyList.appendChild(hang);
+    };
+
     PAIRS.forEach(p => {
       if (p.day >= 2) veNarita();
-      if (p.day >= 4) veCaiAm();
+      if (p.day >= 4){ veCaiAm(); veXeWave(); }
       const st = STORIES[p.id];
       if (!st.audio) return;                      // chưa thu xong — chưa hiện ra
       if (storyGone(p.id)) return;
@@ -4748,6 +4794,7 @@
 
     veNarita();          // phòng khi chưa có cặp nào từ ngày 2 trở đi hiện ra
     veCaiAm();
+    veXeWave();
 
     // Truyện khép lại đứng cuối hàng, sau tất cả.
     if (ketCho()){
