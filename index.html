@@ -601,6 +601,16 @@
     text-shadow:0 1px 6px rgba(0,0,0,.9);
   }
   .can-mang.on{ display:flex; }
+  /* bài còn đang về máy: nói một câu và cho thấy nó đã về được bao nhiêu */
+  .dang-tai{
+    position:absolute; left:0; right:0; bottom:22%; z-index:2; pointer-events:none;
+    display:none; flex-direction:column; align-items:center; gap:.7em;
+    font-family:'EB Garamond',serif; font-style:italic; font-size:.98rem; color:#e6dcc4;
+    text-shadow:0 1px 6px rgba(0,0,0,.9);
+  }
+  .dang-tai.on{ display:flex; }
+  .dang-tai .dt-vach{ display:block; width:46%; max-width:170px; height:2px; border-radius:2px; background:rgba(230,220,196,.22); overflow:hidden; }
+  .dang-tai .dt-vach b{ display:block; height:100%; width:0; background:#d9bd78; transition:width .6s ease; }
 
   /* Một lá thư trong Ngăn thư: câu hỏi ở trên, ngày tháng ở dưới. */
   .thu-row{ display:block; text-align:left; }
@@ -951,6 +961,69 @@
   }
 
   /* ---------- lời nhắn trượt xuống, kiểu thông báo Facebook ---------- */
+  /* ---------- bài ẩn hiện ra: sao băng, rồi một ngôi sao nở ---------- */
+  .bai-an{
+    position:fixed; inset:0; z-index:60;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:9vh 8vw; text-align:center; overflow:hidden;
+    background:rgba(4,7,12,0); opacity:0; pointer-events:none;
+    transition:background 2.4s ease, opacity .9s ease;
+  }
+  .bai-an[hidden]{ display:none; }
+  .bai-an.on{ background:rgba(4,7,12,.95); opacity:1; pointer-events:auto; }
+  .ba-glow{
+    position:absolute; left:50%; top:46%; width:130vmin; height:130vmin; margin:-65vmin 0 0 -65vmin;
+    pointer-events:none; opacity:0; transition:opacity 2.8s ease;
+    background:radial-gradient(circle, rgba(214,176,92,.22) 0%, rgba(150,110,190,.10) 30%, transparent 62%);
+  }
+  .bai-an.s2 .ba-glow{ opacity:1; animation:baTho 5.5s ease-in-out infinite; }
+  @keyframes baTho{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.07); } }
+  .ba-sao{
+    position:absolute; top:10%; left:100%; width:170px; height:2px; border-radius:2px;
+    background:linear-gradient(90deg, rgba(255,246,220,.98), rgba(236,196,110,.45) 45%, rgba(236,196,110,0));
+    box-shadow:0 0 10px rgba(255,236,180,.55);
+    opacity:0; transform:rotate(-34deg); pointer-events:none;
+  }
+  .bai-an.s1 .ba-sao{ animation:baSao 2.1s cubic-bezier(.3,.1,.5,1) forwards; }
+  @keyframes baSao{
+    0%{ opacity:0; transform:translate(0,0) rotate(-34deg); }
+    12%{ opacity:1; }
+    80%{ opacity:.9; }
+    100%{ opacity:0; transform:translate(-125vw, 42vh) rotate(-34deg); }
+  }
+  .ba-diem{
+    width:58px; height:58px; margin-bottom:26px;
+    opacity:0; transform:scale(.2) rotate(-40deg);
+    transition:opacity 1.6s ease, transform 2.2s cubic-bezier(.2,.8,.2,1);
+    filter:drop-shadow(0 0 14px rgba(238,200,120,.75));
+  }
+  .ba-diem svg{ width:100%; height:100%; display:block; }
+  .bai-an.s2 .ba-diem{ opacity:1; transform:scale(1) rotate(0); animation:baLap 3.8s ease-in-out 2.2s infinite; }
+  @keyframes baLap{ 0%,100%{ filter:drop-shadow(0 0 12px rgba(238,200,120,.6)); } 50%{ filter:drop-shadow(0 0 22px rgba(255,226,150,.95)); } }
+  .ba-nho, .ba-nghe, .ba-sau{ opacity:0; transition:opacity 1.8s ease, transform 1.8s ease; transform:translateY(8px); }
+  .ba-nho{
+    margin:0; font-family:'Cormorant Garamond', serif; font-style:italic; font-weight:400;
+    font-size:30px; line-height:1.3; letter-spacing:.04em; color:#f1e3bd;
+    text-shadow:0 0 22px rgba(214,176,92,.45);
+  }
+  .ba-cum{ white-space:nowrap; }
+  .ba-nghe, .ba-sau{
+    background:none; border:0; font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .ba-nghe{ margin-top:34px; padding:12px 26px; font-size:15px; letter-spacing:.12em; color:#e9d9aa;
+    border:1px solid rgba(214,176,92,.45); border-radius:999px; }
+  .ba-sau{ margin-top:18px; padding:8px 16px; font-size:13px; letter-spacing:.1em; color:rgba(236,227,209,.5); }
+  .bai-an.s3 .ba-nho{ opacity:1; transform:none; }
+  .bai-an.s4 .ba-nghe{ opacity:1; transform:none; animation:baTho 4.5s ease-in-out infinite; }
+  .bai-an.s4 .ba-sau{ opacity:1; transform:none; }
+  /* hàng bài ẩn trong Ngăn nhạc: tên lấp lánh nhè nhẹ cho tới khi Minh nghe */
+  .row.bi-an .name{ animation:baLong 4.2s ease-in-out infinite; }
+  @keyframes baLong{ 0%,100%{ text-shadow:0 0 0 rgba(214,176,92,0); } 50%{ text-shadow:0 0 12px rgba(236,200,120,.65); } }
+  @media (prefers-reduced-motion: reduce){
+    .bai-an, .ba-glow, .ba-diem, .ba-nho, .ba-nghe, .ba-sau{ transition-duration:.3s; }
+    .bai-an.s1 .ba-sao, .bai-an.s2 .ba-glow, .bai-an.s2 .ba-diem, .bai-an.s4 .ba-nghe, .row.bi-an .name{ animation:none; }
+  }
+
   .toast{
     position:fixed; top:0; left:0; right:0; z-index:70;
     padding:calc(var(--an-toan-tren) + 10px) 10px 0;
@@ -1238,6 +1311,9 @@
   .rm.cuoi-nhom{ margin-bottom:.45em; }
   .rm-bong{ display:flex; flex-direction:column; min-width:0; max-width:calc(100% - 46px); }
   .rm.toi .rm-bong{ align-items:flex-end; max-width:82%; }
+  .rm-fwd{ width:min(280px, 100%); }
+  .rm-ve{ width:min(290px, 100%); }
+  .rm-ve .ticket{ box-shadow:0 8px 22px rgba(0,0,0,.45); font-size:.92em; }
   .rm-hop{
     background:rgba(236,227,209,.07); border:1px solid rgba(200,162,74,.26);
     border-radius:16px 16px 16px 4px; padding:.62em .95em;
@@ -1789,6 +1865,18 @@
   </div>
 </div>
 
+<div class="bai-an" id="baiAn" hidden aria-hidden="true">
+  <div class="ba-glow"></div>
+  <i class="ba-sao"></i>
+  <div class="ba-diem" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><defs><radialGradient id="baSaoMau" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#fff6dc"/><stop offset=".6" stop-color="#e8c878"/><stop offset="1" stop-color="#b98fd0"/></radialGradient></defs>
+      <path fill="url(#baSaoMau)" d="M12 0C12.7 7.8 16.2 11.3 24 12C16.2 12.7 12.7 16.2 12 24C11.3 16.2 7.8 12.7 0 12C7.8 11.3 11.3 7.8 12 0Z"/></svg>
+  </div>
+  <p class="ba-nho">You have unlocked <span class="ba-cum">a new song</span></p>
+  <button class="ba-nghe" id="baNghe" type="button">chạm để nghe</button>
+  <button class="ba-sau" id="baSau" type="button">để sau</button>
+</div>
+
 <div class="reveal" id="reveal" aria-hidden="true">
   <div class="reveal-glow"></div>
   <div class="reveal-stage">
@@ -2185,7 +2273,7 @@
 
   // 隐藏款 — không nằm trên mặt số. Mở khi đã nghe hết 22 bài (rồi giải mê cung).
   const HIDDEN = {
-    video:"", poster:"assets/images/poster-11.jpg",   // assets/songs/fridaynight.mp4
+    video:"assets/songs/fridaynight.mp4", poster:"assets/images/poster-11.jpg",
     title:{ vi:"Friday Night", en:"Friday Night", zh:"Friday Night" }
   };
 
@@ -2315,7 +2403,7 @@
   const CAI_AM_AUDIO = "assets/stories/tiengdong1.mp3";
   const CAI_AM_NGAY = "2026-11-02";
   const CAI_AM_GIO = 6;
-  const KET_AUDIO = "";             // → "assets/stories/thegioidabienmat.m4a" khi thu xong
+  const KET_AUDIO = "assets/stories/thegioidabienmat.mp3";
 
   // 11 truyện audio, mỗi truyện gắn với một cặp
   const STORIES = {};
@@ -2632,9 +2720,13 @@
     finally { dangLayCu = false; }
   }
 
+  // Chuỗi của bài ẩn (đoạn chat + hai vé) nằm trong phòng ngay khi Friday Night chạy hết.
+  // Minh chưa xem tới thì nó là những tin chưa đọc như mọi tin của chị.
+  const SO_TIN_AN = 6;
+  function anChuaDoc(){ return !!(progress.anLuc && !progress.anDoc && !mayCuaChi()); }
   function chatChuaDoc(){
     const toi = vaiCuaToi();
-    return phongChat.tin.filter(t => t.tu !== toi && t.stt > phongChat.daDoc).length;
+    return phongChat.tin.filter(t => t.tu !== toi && t.stt > phongChat.daDoc).length + (anChuaDoc() ? SO_TIN_AN : 0);
   }
   // "Đã đọc" = tin ấy thực sự hiện trên màn hình phòng chat (xem kiemTraDaThay).
   // Mốc daDoc chỉ nhích qua từng tin của người kia theo thứ tự, tin nào chưa hiện thì dừng lại ở đó.
@@ -2648,6 +2740,18 @@
       const phan = Math.min(r.bottom, khung.bottom) - Math.max(r.top, khung.top);
       if (phan >= Math.min(r.height * 0.6, 60)) daThay.add(+e.dataset.stt);
     });
+    // chuỗi bài ẩn: kéo tới tin cuối của nó là coi như đã đọc
+    if (anChuaDoc()){
+      const cuoi = roomIn.querySelector('.rm[data-an="an-' + SO_TIN_AN + '"]');
+      if (cuoi){
+        const r = cuoi.getBoundingClientRect();
+        const phan = Math.min(r.bottom, khung.bottom) - Math.max(r.top, khung.top);
+        if (phan >= Math.min(r.height * 0.6, 40)){
+          progress.anDoc = true; saveProgress();
+          renderThu(); refreshBells(); capNhatTinMoi();
+        }
+      }
+    }
     const toi = vaiCuaToi();
     let moc = phongChat.daDoc;
     const kia = phongChat.tin.filter(t => t.tu !== toi && t.stt > moc).sort((a, b) => a.stt - b.stt);
@@ -3990,17 +4094,13 @@
         // Hỏi ngay giữa lúc nhạc còn chạy thì cắt ngang mất.
         if (n === 1) choHoiSauBai = { world: cur.world, hour: cur.hour, song: cur.data };
       } else if (cur.data === HIDDEN){
-        // bài thứ 23: nghe xong thì lời hứa hiện ra, và nó ở lại mãi
-        video.pause(); runReveal();
+        // bài ẩn chạy hết: truyện khép lại hiện ra trong Ngăn truyện, rồi tới chuỗi tin nhắn
         renderStories();
-        // nghe xong bài ẩn thì mời luôn truyện khép lại, nếu đã thu
-        if (ketCho() && !progress.asked[KET_ID]){
-          setTimeout(() => offerStory({ id: KET_ID }), 4000);
-        }
+        if (!progress.anXong){ video.pause(); chuoiBaiAn(); }
       }
     });
     video.addEventListener("ended", () => {
-      if (cur.data === HIDDEN){ runReveal(); return; }
+      if (cur.data === HIDDEN){ if (!progress.anXong) chuoiBaiAn(); return; }
       // đang phát tất cả: hết bài này thì sang bài kế (bài lặp lại thì không bao giờ tới đây)
       if (phatDangMo() && dsPhat.loai === "bai") chuyenMuc(1, true);
     });
@@ -4064,7 +4164,46 @@
       border.classList.toggle("wide", ngang);
     });
 
+    // Bài lớn (như bài ẩn) về máy mất một lúc: nói cho Minh biết nó đang về, và về được bao nhiêu.
+    const dangTai = document.createElement("div");
+    dangTai.className = "dang-tai";
+    dangTai.innerHTML = '<span class="dt-chu"></span><i class="dt-vach"><b></b></i>';
+    const dtChu = dangTai.querySelector(".dt-chu"), dtVach = dangTai.querySelector(".dt-vach b");
+    let dtHen = null, dtNhip = null;
+    const daVe = () => {
+      const sw = window.__taiMedia && window.__taiMedia[new URL(data.video, location.href).href];
+      if (sw && sw.tong) return Math.min(100, Math.floor(sw.got / sw.tong * 100));
+      const d = video.duration;
+      if (!d || !isFinite(d)) return 0;
+      const t0 = video.currentTime, br = video.buffered;
+      for (let i = 0; i < br.length; i++){
+        if (t0 >= br.start(i) - 0.5 && t0 <= br.end(i) + 0.5) return Math.min(100, Math.round(br.end(i) / d * 100));
+      }
+      return 0;
+    };
+    const dtCapNhat = () => {
+      const p = daVe();
+      dtVach.style.width = p + "%";
+      dtChu.textContent = "bài đang về máy" + (p ? " · " + p + "%" : "…");
+    };
+    const dtBat = () => {
+      if (dtHen) return;
+      dtHen = setTimeout(() => {
+        dtHen = null;
+        if (video.readyState < 3 && !baoMang.classList.contains("on")){
+          dtCapNhat(); dangTai.classList.add("on");
+          clearInterval(dtNhip); dtNhip = setInterval(dtCapNhat, 500);   // số phần trăm cứ nhích dù trình phát chưa báo gì
+        }
+      }, 700);
+    };
+    const dtTat = () => { clearTimeout(dtHen); dtHen = null; clearInterval(dtNhip); dtNhip = null; dangTai.classList.remove("on"); };
+    ["waiting", "stalled"].forEach(e => video.addEventListener(e, dtBat));
+    video.addEventListener("play", () => { if (video.readyState < 3) dtBat(); });
+    ["playing", "canplay", "pause", "error"].forEach(e => video.addEventListener(e, dtTat));
+    ["progress", "timeupdate"].forEach(e => video.addEventListener(e, () => { if (dangTai.classList.contains("on")) dtCapNhat(); }));
+
     border.appendChild(video);
+    border.appendChild(dangTai);
     border.appendChild(baoMang);     // nằm đè lên khung bài, chỉ hiện khi cần
 
     // Tên bài không bày ra nữa — Minh vừa chạm vào đúng giờ ấy nên đã biết
@@ -4493,8 +4632,9 @@
       lab.className = "group-label";
       lab.textContent = "\u9690\u85cf\u6b3e";
       const row = document.createElement("button");
-      row.className = "row nam";
-      row.innerHTML = '<span class="hour">\u2014</span><span class="name">' + songTitle(HIDDEN) +
+      const chuaNgheAn = !heard("hidden");
+      row.className = "row nam" + (chuaNgheAn ? " unread bi-an" : "");
+      row.innerHTML = '<span class="hour">\u2014</span><span class="name">' + (chuaNgheAn ? '<i class="heart"></i>' : "") + songTitle(HIDDEN) +
                       '</span><span class="mark">\u266a</span>';
       row.addEventListener("click", () => { songOrigin = albumShelf; closeShelf(albumShelf); openHidden(); });
       albumList.appendChild(lab); albumList.appendChild(row);
@@ -4906,16 +5046,110 @@
   function maybeOffer(){
     const p = PAIRS.find(pp => pairComplete(pp) && !progress.asked[pp.id]);
     if (p) setTimeout(() => offerStory(p), 3000);
-    if (allSongsHeard() && !progress.hidden) setTimeout(openMaze, 3000);
+    if (khungCuoiDaNghe() && !progress.anBao) setTimeout(hienBaiAn, 3000);
   }
 
-  // ---- 隐藏款: nghe đủ 22 bài rồi mới tới mê cung 5 chặng ----
-  function openMaze(){
-    // TODO: nối vào mê cung 5 chặng ở đây. Giải xong thì gọi unlockHidden().
-    console.log("đã nghe đủ 22 bài — mê cung có thể mở");
+  // ---- 隐藏款 (bài ẩn Friday Night) ----
+  // Mở khi Minh đã nghe hết HAI bài của khung giờ cuối cùng (ngày 11: "Đường màu
+  // xanh của ráng chiều đỏ" và "Hiểu ta"), không cần nghe đủ các bài trước nữa.
+  function khungCuoiDaNghe(){
+    const p = PAIRS.find(x => x.day === 11);
+    return !!p && pairComplete(p);
   }
   function unlockHidden(){
     progress.hidden = true; saveProgress(); renderAlbum();
+  }
+  // Sao băng vụt qua, một ngôi sao nở ra, rồi tên bài hiện lên. Mời nghe luôn,
+  // hoặc để sau — bài đã nằm sẵn trong Ngăn nhạc.
+  // Dịch vụ nền báo bài ẩn đã về máy được bao nhiêu (để hiện "bài đang về máy · 37%").
+  window.__taiMedia = {};
+  if ("serviceWorker" in navigator){
+    navigator.serviceWorker.addEventListener("message", e => {
+      const m = e.data;
+      if (m && m.loai === "tai-media") window.__taiMedia[m.url] = { got: m.got, tong: m.tong };
+    });
+  }
+  // Tải sẵn bài ẩn về máy ngay khi nó mở khoá, để lúc Minh chạm vào là có ngay.
+  function taiTruocBaiAn(){
+    try {
+      if (!HIDDEN.video || !navigator.serviceWorker || !navigator.serviceWorker.controller) return;
+      if (navigator.connection && navigator.connection.saveData) return;
+      fetch(HIDDEN.video).then(r => { try { r.body && r.body.cancel(); } catch(e){} }).catch(() => {});
+    } catch(e){}
+  }
+  const baiAnEl = document.getElementById("baiAn");
+  let baiAnHen = [];
+  // progress.anBao: Minh đã nhìn thấy dòng "You have unlocked a new song" rồi.
+  // Chưa thấy (thoát app giữa chừng, đang bận) thì lần sau mở app sẽ hiện lại.
+  function hienBaiAn(){
+    if (progress.anBao) return;
+    if (!HIDDEN.video) return;                       // chưa có file thì chưa hiện
+    // đang có khung hỏi / khung bài mở thì chờ, đừng chen ngang
+    if (askBox.classList.contains("open") || portal.classList.contains("open") ||
+        roomEl.classList.contains("open") || popBox.classList.contains("open") ||
+        (typeof revealStage !== "undefined" && revealStage)){
+      setTimeout(hienBaiAn, 2500); return;
+    }
+    if (!progress.hidden) unlockHidden();
+    taiTruocBaiAn();
+    baiAnEl.hidden = false;
+    baiAnEl.setAttribute("aria-hidden", "false");
+    baiAnHen.forEach(clearTimeout); baiAnHen = [];
+    const buoc = (cls, ms) => baiAnHen.push(setTimeout(() => baiAnEl.classList.add(cls), ms));
+    requestAnimationFrame(() => baiAnEl.classList.add("on"));
+    buoc("s1", 1500);      // sao băng
+    buoc("s2", 3200);      // ngôi sao nở
+    buoc("s3", 5200);      // dòng chữ
+    buoc("s4", 7600);      // nút
+  }
+  function dongBaiAn(moBai){
+    baiAnHen.forEach(clearTimeout); baiAnHen = [];
+    progress.anBao = true; saveProgress();
+    baiAnEl.classList.remove("on");
+    baiAnEl.setAttribute("aria-hidden", "true");
+    setTimeout(() => { baiAnEl.classList.remove("s1","s2","s3","s4"); baiAnEl.hidden = true; }, 1000);
+    if (moBai) setTimeout(() => { songOrigin = null; openHidden(); }, 500);
+  }
+  document.getElementById("baNghe").addEventListener("click", () => dongBaiAn(true));
+  document.getElementById("baSau").addEventListener("click", () => dongBaiAn(false));
+  // chạm bất kỳ chỗ nào khi nút đã hiện cũng như bấm "chạm để nghe"
+  baiAnEl.addEventListener("click", e => {
+    if (baiAnEl.classList.contains("s4") && e.target === baiAnEl) dongBaiAn(true);
+  });
+
+  // ---- sau khi Friday Night chạy hết (lần đầu) ----
+  // 1) khung tin nhắn giữa màn hình: "Vậy thì, anh có câu trả lời…"
+  // 2) khép lại thì tới đoạn chat + vé máy bay (runReveal)
+  // 3) xem hết rồi, mà chưa vào Ngăn truyện: "You have unlocked a new story."
+  // progress.anXong: đã xem trọn chuỗi này. Giữa chừng thoát app thì lần nghe sau chạy lại.
+  function chuoiBaiAn(){
+    if (progress.anXong || revealStage) return;
+    const p = POPUPS.find(x => !x.at);
+    const sangReveal = () => { progress.anLuc = Date.now(); saveProgress(); runReveal(); };
+    // Bài vừa hết: đoạn chat và hai vé vào phòng NGAY (chưa đọc), phòng khi Minh thoát giữa chừng.
+    const t0 = Date.now();
+    progress.anLuc = t0 + 1; progress.anDoc = false;
+    if (p){
+      if (!progress.pops) progress.pops = {};
+      if (!progress.popsLuc) progress.popsLuc = {};
+      progress.pops[popupKey(p)] = true;                    // lá thư này nằm vào Ngăn thư
+      progress.popsLuc[popupKey(p)] = t0;                   // và nằm đúng chỗ trong phòng chat
+      saveProgress();
+      try { refreshBells(); capNhatTinMoi(); } catch(e){}
+      moNoi("hoi-d" + p.day, "câu hỏi ngày " + p.day, [p.text], sangReveal, true, false, true);
+    } else sangReveal();
+  }
+  function sauReveal(){
+    progress.anXong = true; progress.anDoc = true; saveProgress();     // xem trọn rồi thì cũng là đã đọc
+    try { refreshBells(); capNhatTinMoi(); } catch(e){}
+    if (typeof veLaiPhongNeuMo === "function") veLaiPhongNeuMo();   // đoạn chat + vé nằm vào "Nhắn với em / anh"
+    // xem hết rồi thì khép khung bài ẩn lại, về màn hình chính
+    if (portal.classList.contains("open")){ songOrigin = null; closeSong(); }
+    // vừa xem hết mà chưa chạm vào Ngăn truyện: nhắc nhẹ
+    setTimeout(() => {
+      if (!ketCho() || !truyenChuaNghe(KET_ID) || storyShelf.classList.contains("open")) return;
+      showToast("You have unlocked a new story.", () => openShelf(storyShelf));
+    }, 1600);
   }
   function openHidden(){
     ketThucDanhSach();
@@ -5474,6 +5708,18 @@
       ds.push({ k: "hoi", id: "hoi-d" + p.day, tu: "chi", chu: p.text,
                 t: lucCauHoi(p), khoa: "hoi-d" + p.day, noi: "", day: p.day });
     }
+    // Sau khi Minh xem hết chuỗi của bài ẩn: đoạn chat và hai tấm vé ở lại trong phòng, trên cả hai máy.
+    if (progress.anLuc){
+      const AN = [
+        { loai: "chu", chu: "Minh ơi Minh à..." },
+        { loai: "fwd" },
+        { loai: "ve", i: 0 },
+        { loai: "ve", i: 1 },
+        { loai: "chu", chu: "em tới chơi với Minh nè" },
+        { loai: "chu", chu: "*xoè váy nhún nhảy*" }
+      ];
+      AN.forEach((a, i) => ds.push(Object.assign({ k: "an", id: "an-" + (i + 1), tu: "chi", t: progress.anLuc + i }, a)));
+    }
     const co = new Set();
     for (const t of phongChat.tin){
       co.add(t.id);
@@ -5499,6 +5745,25 @@
   function rutGon(s, n){ s = (s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
 
   function veLaiPhongNeuMo(){ if (roomMo) veLaiPhong(); }
+
+  // Ảnh chuyển tiếp và hai tấm vé của chuỗi bài ẩn, vẽ lại cho nằm trong phòng chat.
+  function taoMucAn(x){
+    const w = document.createElement("div");
+    if (x.loai === "fwd"){
+      w.className = "rm-fwd";
+      w.innerHTML = '<p class="fwd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg>đã chuyển tiếp một tin nhắn</p>' +
+                    '<div class="fwd-frame"><img src="assets/images/promise.jpg" alt=""></div>';
+    } else {
+      w.className = "rm-ve";
+      const goc = document.getElementById("tk" + (x.i + 1));
+      if (goc){
+        const b = goc.cloneNode(true);
+        b.removeAttribute("id"); b.classList.add("in");
+        w.appendChild(b);
+      }
+    }
+    return w;
+  }
 
   function veLaiPhong(){
     const toi = vaiCuaToi();
@@ -5563,6 +5828,7 @@
       if (x.khoa) rm.dataset.khoa = x.k === "hoi" ? x.khoa : "";
       if (x.stt) rm.dataset.stt = x.stt;
       if (x.k === "tin") rm.dataset.mid = x.id;
+      if (x.k === "an") rm.dataset.an = x.id;
       if (x.tu !== toi){
         if (!cuoiLuot) rm.classList.add("an-av");
         rm.appendChild(taoAvatar(x.tu));
@@ -5595,11 +5861,13 @@
       const hop = document.createElement("div");
       hop.className = "rm-hop";
       hop.textContent = x.chu;
-      if (x.k === "hoi"){
+      if (x.k === "an" && x.loai !== "chu"){
+        bong.appendChild(taoMucAn(x));
+      } else if (x.k === "hoi"){
         hop.title = "chạm để trả lời câu này";
         hop.addEventListener("click", () => datTrich({ khoa: x.khoa, noi: "câu hỏi ngày " + x.day, trich: rutGon(x.chu, 60) }));
       }
-      bong.appendChild(hop);
+      if (!(x.k === "an" && x.loai !== "chu")) bong.appendChild(hop);
       if (x.k === "tin"){
         // chạm vào tin → hiện nút "trả lời"; chạm nút → trích tin này vào ô nhập
         hop.addEventListener("click", () => {
@@ -5712,7 +5980,9 @@
       setTimeout(() => nhayToi(khoa), 80);
     } else {
       // Có tin của người kia chưa đọc thì kéo tới tin chưa đọc ĐẦU TIÊN (chừa một chút phía trên cho thấy tin trước nó).
-      const dau = Array.prototype.find.call(roomIn.querySelectorAll(".rm.kia[data-stt]"), e => +e.dataset.stt > daDocCu);
+      const anCho = anChuaDoc();
+      const dau = Array.prototype.find.call(roomIn.querySelectorAll(".rm.kia"),
+        e => (e.dataset.stt && +e.dataset.stt > daDocCu) || (anCho && e.dataset.an));
       if (dau){
         roomFlow.scrollTop += dau.getBoundingClientRect().top - roomFlow.getBoundingClientRect().top - 70;
       } else {
@@ -5871,11 +6141,12 @@
   // `thang`: những lời nhắn hằng ngày CHÍNH LÀ câu hỏi, nên mở thẳng khung chat
   // cho Minh trả lời vào đó, khỏi phải qua hai nút có/không. Nút "kết thúc"
   // vẫn hiện, để bạn ấy biết lúc nào thì mạch này đóng lại.
-  function moNoi(khoa, noi, lines, xong, thang, moLai){
+  function moNoi(khoa, noi, lines, xong, thang, moLai, chiXem){
     // moLai: Minh tự vào Ngăn thư bấm lại một lá đã đọc — lúc ấy đừng chặn.
-    if (mayCuaChi()){ if (xong) xong(); return; }   // máy chị không phải người trả lời
-    if (!moLai && khoa && daNoiRoi(khoa)){ if (xong) xong(); return; }
-    noiDangMo = { khoa, noi, xong };
+    // chiXem: cho máy chị xem y như Minh thấy, nhưng không có ô trả lời.
+    if (mayCuaChi() && !chiXem){ if (xong) xong(); return; }   // máy chị không phải người trả lời
+    if (!chiXem && !moLai && khoa && daNoiRoi(khoa)){ if (xong) xong(); return; }
+    noiDangMo = { khoa: chiXem && mayCuaChi() ? null : khoa, noi, xong };
     popChat.clear();
     popHint.hidden = true; popHint.classList.remove("on");
     popBtns.hidden = true; popBtns.classList.remove("on");
@@ -5887,6 +6158,7 @@
     document.body.style.overflow = "hidden";
     if (typeof hideToast === "function") hideToast();   // khỏi chồng lên nhau
     popChat.say(lines, null, () => {
+      if (chiXem && mayCuaChi()){ popEnd.hidden = false; return; }
       if (thang){ moKhungNhap(); return; }
       popBtns.hidden = false;
       requestAnimationFrame(() => { popBtns.classList.add("on"); popChat.scroll(); });
@@ -6068,6 +6340,11 @@
     saveProgress();
     showToast(p.text, () => openPopup(p.text, p.day));
   }
+  // để xem thử trên máy chị (gõ trong console):
+  //   wanxiaBaiAn()      dòng "You have unlocked a new song"
+  //   wanxiaBaiAnXong()  khung tin nhắn giữa màn hình, rồi chat + vé máy bay, rồi "new story"
+  window.wanxiaBaiAn = () => { progress.anBao = false; hienBaiAn(); return "đang hiện"; };
+  window.wanxiaBaiAnXong = () => { progress.anXong = false; chuoiBaiAn(); return "đang hiện"; };
   window.wanxiaPopup = i => {           // để thử: wanxiaPopup(1)
     const p = POPUPS.find(x => x.day === i) || POPUPS[0];
     showToast(p.text, () => openPopup(p.text, p.day));
@@ -6076,6 +6353,9 @@
   // Từ đây trở đi mới được phép nhắn. Trước dòng này mọi thứ ở trên còn dở dang.
   window.__popsReady = true;
   checkPopups();
+  // nghe xong khung giờ cuối mà chưa kịp thấy dòng "unlocked a new song" (thoát app giữa chừng)
+  if (khungCuoiDaNghe() && !progress.anBao) setTimeout(hienBaiAn, 4000);
+  else if (progress.hidden && !heard("hidden")) setTimeout(taiTruocBaiAn, 6000);
 
   // ---------- xin phép nhắn tới máy, kể cả lúc app đóng ----------
   // PUSH_URL để trống thì app bỏ qua hẳn phần này — an toàn để đưa lên mạng
@@ -6427,6 +6707,7 @@
       revealEl.classList.remove("on");
       revealEl.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
+      sauReveal();
       later(() => {
         revealEl.classList.remove("s1","s2","s3","s4");
         chat1.classList.remove("in","said");
