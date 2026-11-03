@@ -4050,6 +4050,16 @@
     await animateTraveler(toSky === "nam");
     activeSky = toSky;
     tick();
+    // Bấm sang khoảng trời của chị đúng trong một giờ bị bẻ: kim xoáy một lần từ
+    // giờ thật sang giờ đã bị bẻ, để Minh thấy được khoảnh khắc ấy dù không đứng đó từ đầu.
+    if (toSky === "nu" && !beCongDang){
+      const c = dangBeCong(new Date());
+      if (c){
+        const p = worldParts("nu", new Date());
+        const gocGio = ((p.h % 12) + p.m/60) * 30;
+        quetBeCong(gocGio - c.lech * 30, gocGio);
+      }
+    }
     setTimeout(() => clockWrapEl.classList.remove("traveling"), 240);
 
   }
