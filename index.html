@@ -2300,7 +2300,7 @@
     "Những người không chịu lớn",   // nhungnguoikhonglon
     "Con Cá và Cái Cây",            // concavacaicay
     "Tiếng động - Đoạn đường cuối", // tiengdong
-    "Hồ Trăng Non",                 // hotrangnon
+    "Hồ Trăng Non - Nàng",           // hotrangnon (phần hai)
     "Trò chơi vô hạn lưu",          // gamevohanluu
     "Chuyện trong giang hồ",        // kiemhiep
     "Cậu ấy",                       // cauay
@@ -2413,6 +2413,11 @@
   const TD3_AUDIO = "assets/stories/tiengdong3.mp3";
   const TD3_NGAY = "2026-11-05";
   const TD3_GIO = 7;
+  // Hồ Trăng Non - Chiếc bánh nướng (phần một): mở lúc 01:00 ngày 8/11 theo đồng hồ bên nam.
+  const HN1_ID = "ho-trang-non-1";
+  const HN1_AUDIO = "assets/stories/hotrangnon1.mp3";
+  const HN1_NGAY = "2026-11-08";
+  const HN1_GIO = 1;
   const KET_AUDIO = "assets/stories/thegioidabienmat.mp3";
 
   // 11 truyện audio, mỗi truyện gắn với một cặp
@@ -2464,6 +2469,14 @@
              en:"let me tell you a story",
              zh:"让我给你讲个故事" }
   };
+  STORIES[HN1_ID] = {
+    n: "I",
+    audio: HN1_AUDIO,
+    title: { vi:"Hồ Trăng Non - Chiếc bánh nướng", en:"Hồ Trăng Non - Chiếc bánh nướng", zh:"Hồ Trăng Non - Chiếc bánh nướng" },
+    ask:   { vi:"để em kể cho anh nghe một câu chuyện này",
+             en:"let me tell you a story",
+             zh:"让我给你讲个故事" }
+  };
   STORIES[KET_ID] = {
     n: "\u2727",
     audio: KET_AUDIO,
@@ -2472,8 +2485,12 @@
              en:"one last story — will you hear it?",
              zh:"还有最后一个故事，听吗?" }
   };
+  // Hai truyện đã bỏ hẳn, không viết nữa (ngày 11/11 "kiemhiep" và ngày 22/11 "nguoinghegiacmo"):
+  // không hiện tên, không khoá, không tính số thứ tự. Lời nhắn pop-up của ngày đó vẫn giữ.
+  const TRUYEN_DA_BO = [7, 11];
   PAIRS.forEach((p, i) => {
     STORIES[p.id] = {
+      bo: TRUYEN_DA_BO.includes(i + 1),
       n: i + 1,
       audio: TRUYEN[i + 1] || "",
       title: { vi: STORY_NAMES[i], en: STORY_NAMES[i], zh: STORY_NAMES[i] },
@@ -2911,6 +2928,16 @@
     return worldParts("nam", new Date()).h >= TD3_GIO;
   }
 
+  // Hồ Trăng Non - Chiếc bánh nướng: mở từ 01:00 ngày 8/11 theo đồng hồ bên nam, rồi ở lại mãi.
+  function hn1Cho(){
+    const st = STORIES[HN1_ID];
+    if (!st || !st.audio) return false;
+    const ng = ngayBenNam(new Date());
+    if (ng > HN1_NGAY) return true;
+    if (ng < HN1_NGAY) return false;
+    return worldParts("nam", new Date()).h >= HN1_GIO;
+  }
+
   // ---- đánh số các truyện ở giữa ----
   // Truyện mở đầu giữ dấu ✦, truyện khép lại giữ ✧. Mọi truyện còn lại nằm
   // chung MỘT dãy số La Mã, xếp theo ngày chúng mở ra — nên Minh nhìn số là
@@ -2923,7 +2950,8 @@
   // Thêm hệ mới chỉ việc thêm một dòng ở đây rồi gắn he cho truyện.
   const HE_TRUYEN = {
     "chuyen-di": { dau: "\u2756", ten: "Những chuyến đi" },  // ❖
-    "tieng-dong": { dau: "\u25C8", ten: "Tiếng động" }       // ◈
+    "tieng-dong": { dau: "\u25C8", ten: "Tiếng động" },      // ◈
+    "ho-trang-non": { dau: "\u263E", ten: "Hồ Trăng Non" }   // ☾
   };
   // Truyện nào thuộc hệ nào — ghi bằng TÊN để chị sửa cho dễ. Thêm một truyện
   // vào hệ chỉ việc chép tên nó vào danh sách dưới đây.
@@ -2937,6 +2965,10 @@
       "Tiếng động - Xe Wave đỏ, rượu, và thuốc lá",
       "Tiếng động - Cú đánh, đường rừng, và căn nhà yên tĩnh",
       "Tiếng động - Đoạn đường cuối"
+    ],
+    "ho-trang-non": [
+      "Hồ Trăng Non - Chiếc bánh nướng",
+      "Hồ Trăng Non - Nàng"
     ]
   };
   Object.keys(THUOC_HE).forEach(he => {
@@ -2961,10 +2993,11 @@
   }
 
   function danhSoTruyen(){
-    const ds = PAIRS.map(p => ({ id: p.id, ngay: NGAY_MO[p.day] || "9999" }));
+    const ds = PAIRS.filter(p => !STORIES[p.id].bo).map(p => ({ id: p.id, ngay: NGAY_MO[p.day] || "9999" }));
     ds.push({ id: NARITA_ID, ngay: NARITA_NGAY });
     ds.push({ id: CAI_AM_ID, ngay: CAI_AM_NGAY });
     ds.push({ id: XE_WAVE_ID, ngay: XE_WAVE_NGAY });
+    ds.push({ id: HN1_ID, ngay: "2026-11-06~" });   // phần một đứng trước phần hai (truyện cặp bài ngày 7/11)
     ds.push({ id: TD3_ID, ngay: "2026-11-04~" });   // đứng trước truyện cặp bài cùng ngày (phần cuối)
     ds.sort((a, b) => a.ngay < b.ngay ? -1 : a.ngay > b.ngay ? 1 : 0);
     ds.forEach((x, i) => { if (STORIES[x.id]) STORIES[x.id].n = soLaMa(i + 1); });
@@ -2978,6 +3011,7 @@
          + (caiAmCho()  && truyenChuaNghe(CAI_AM_ID) ? 1 : 0)
          + (xeWaveCho() && truyenChuaNghe(XE_WAVE_ID) ? 1 : 0)
          + (td3Cho() && truyenChuaNghe(TD3_ID) ? 1 : 0)
+         + (hn1Cho() && truyenChuaNghe(HN1_ID) ? 1 : 0)
          + (ketCho()    && truyenChuaNghe(KET_ID)    ? 1 : 0);
   }
 
@@ -4816,10 +4850,32 @@
       storyList.appendChild(hang);
     };
 
+    // Hồ Trăng Non - Chiếc bánh nướng (8/11, 01:00) đứng trước phần hai (truyện cặp bài ngày 7/11).
+    let daVeHn1 = false;
+    const veHn1 = () => {
+      if (daVeHn1 || !hn1Cho()) return;
+      daVeHn1 = true;
+      const st = STORIES[HN1_ID];
+      waiting++;
+      const moi = !progress.opened[HN1_ID];
+      const hang = document.createElement("button");
+      hang.className = "row nu" + (moi ? " unread" : "");
+      hang.dataset.truyen = st.__id || "";
+      hang.innerHTML =
+        '<span class="hour">' + dauTruyen(st) + '</span>' +
+        '<span class="name">' + (moi ? '<i class="heart"></i>' : "") +
+          (st.title[currentLang] || st.title.vi) + '</span>' +
+        '<span class="mark"></span>';
+      hang.addEventListener("click", () => playStory(HN1_ID));
+      storyList.appendChild(hang);
+    };
+
     PAIRS.forEach(p => {
       if (p.day >= 2) veNarita();
       if (p.day >= 4){ veCaiAm(); veXeWave(); veTd3(); }
+      if (p.day >= 5) veHn1();
       const st = STORIES[p.id];
+      if (st.bo) return;                          // truyện đã bỏ hẳn
       if (!st.audio){
         // Chưa thu xong: tới ngày của cặp bài thì tên truyện vẫn hiện ra trước, đang khoá,
         // chạm vào thì được nhắc phải mở khoá cả hai bài hát. Chưa tới ngày thì chưa hiện.
@@ -4872,6 +4928,7 @@
     veCaiAm();
     veXeWave();
     veTd3();
+    veHn1();
 
     // Truyện khép lại đứng cuối hàng, sau tất cả.
     if (ketCho()){
