@@ -2186,7 +2186,7 @@
       17:{ video:"", poster:"", title:{ vi:"Ta lạc bước giữa chốn nhân gian", en:"Ta lạc bước giữa chốn nhân gian", zh:"Ta lạc bước giữa chốn nhân gian" } },   // assets/songs/talacbuoc.mp4
       19:{ video:"", poster:"", title:{ vi:"Ráng mây chiều rực rỡ - 霞明", en:"Ráng mây chiều rực rỡ - 霞明", zh:"Ráng mây chiều rực rỡ - 霞明" } },   // assets/songs/rangmaychieu.mp4
       21:{ video:"", poster:"", title:{ vi:"Chờ cậu đặt tên", en:"Chờ cậu đặt tên", zh:"Chờ cậu đặt tên" } },   // assets/songs/chocaudatten.mp4
-      23:{ video:"assets/songs/hieuta.mp4", poster:"", title:{ vi:"知我 - Hiểu ta", en:"知我 - Hiểu ta", zh:"知我 - Hiểu ta" } },   // assets/songs/hieuta.mp4
+      23:{ video:"assets/songs/hieuta.mp4", poster:"", title:{ vi:"知我 - Hiểu ta\n(Để người đợi đến kiếp này)", en:"知我 - Hiểu ta\n(Để người đợi đến kiếp này)", zh:"知我 - Hiểu ta\n(Để người đợi đến kiếp này)" } },   // assets/songs/hieuta.mp4
     }
   };
 
@@ -2981,10 +2981,14 @@
          + (ketCho()    && truyenChuaNghe(KET_ID)    ? 1 : 0);
   }
 
-  function songTitle(data){
+  // Tên bài có thể có "\n" để xuống dòng trong danh sách; ở những chỗ khác (đọc to, thông tin phát nhạc)
+  // thì "\n" được đổi thành dấu cách.
+  function songTitleRaw(data){
     if (!data || !data.title) return "";
     return data.title[currentLang] || data.title.vi || data.title.en || data.title.zh || "";
   }
+  function songTitle(data){ return songTitleRaw(data).replace(/\n/g, " "); }
+  function songTitleHtml(data){ return songTitleRaw(data).replace(/\n/g, "<br>"); }
 
   const AUTHOR_NAME = { vi: "Linh Hà", en: "Linh Hà", zh: "玲河" };
   function authorName(){
@@ -4661,7 +4665,7 @@
           kh.className = "row nu khoa";
           kh.innerHTML =
             '<span class="hour">' + HOUR_LABEL(h) + '</span>' +
-            '<span class="name"><i class="heart rong"></i>' + songTitle(song) + '</span>' +
+            '<span class="name"><i class="heart rong"></i>' + songTitleHtml(song) + '</span>' +
             '<span class="mark"><svg class="o-khoa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
           kh.addEventListener("click", () => showLoiKhoa(BAI_CHO_ANH));
           dsHang.push({ k: gioMinh(h), row: kh });
@@ -4676,7 +4680,7 @@
         row.className = "row " + world + (isNew ? " unread" : "");
         row.innerHTML =
           '<span class="hour">' + HOUR_LABEL(h) + '</span>' +
-          '<span class="name">' + (isNew ? '<i class="heart"></i>' : "") + songTitle(song) + '</span>' +
+          '<span class="name">' + (isNew ? '<i class="heart"></i>' : "") + songTitleHtml(song) + '</span>' +
           '<span class="mark">\u266a</span>';
         row.addEventListener("click", () => { songOrigin = albumShelf; closeShelf(albumShelf); openSong(world, h); });
         dsHang.push({ k: gioMinh(h), row });
