@@ -2300,7 +2300,7 @@
     "Những người không chịu lớn",   // nhungnguoikhonglon
     "Con Cá và Cái Cây",            // concavacaicay
     "Tiếng động - Đoạn đường cuối", // tiengdong
-    "Hồ Trăng Non - Nàng",           // hotrangnon (phần hai)
+    "Hồ Trăng Non - Ba người bạn",           // hotrangnon (phần hai)
     "Trò chơi vô hạn lưu",          // gamevohanluu
     "Chuyện trong giang hồ",        // kiemhiep
     "Cậu ấy",                       // cauay
@@ -2327,7 +2327,7 @@
     { day:9, at:[1,1], text:"Nếu anh được đưa cho một chiếc hộp có tất cả những điều anh đã từng đánh mất, thì thứ đầu tiên mà anh tìm kiếm là gì?" },
     { day:10, at:[5,5], text:"Nếu một mai mọi thứ anh trân trọng đều biến mất, mà anh lại chỉ có thể biết rằng mình đã mất đi thứ gì đó quan trọng, nhưng anh không thể nhớ ra được đó là thứ gì, thì anh sẽ làm gì?" },
     { day:11, at:[23,11], text:"“You become responsible, forever, for what you have tamed.” – Antoine de Saint-Exupéry, The Little Prince." },
-    { day:12, at:null, text:"Vậy thì, anh có câu trả lời cho có gì gắn bó hơn cả “trọn đời” chưa?" },   // sau khi nghe hết tất cả
+    { day:12, at:null, text:"vậy giờ thì, anh nghĩ P99 có ý nghĩa gì? nói cho em nghe thử được khôngg" },   // sau khi nghe hết tất cả
     // Lời hỏi han hằng ngày lúc 0:00 — không đi kèm bài hát hay truyện nào ("hangNgay")
     { day:21, at:[0,0], hangNgay:true,
       text:"có lúc nào đấy mà anh cảm thấy chán ngán cuộc sống hiện tại của mình quá, mà anh muốn bỏ hết tất cả chỉ để đi đâu đó chưa?\nnếu anh đã từng có những lúc như thế, thì anh muốn đi đâu, và có thể là cùng với ai? rồi anh sẽ làm gì ở đó?" },
@@ -2377,7 +2377,7 @@
     2:"assets/stories/nhungnguoikhonglon.mp3",
     3:"assets/stories/concavacaicay.mp3",
     4:"",    // assets/stories/tiengdong.m4a
-    5:"",    // assets/stories/hotrangnon.m4a
+    5:"assets/stories/hotrangnon2.mp3",    // Hồ Trăng Non - Ba người bạn
     6:"",    // assets/stories/gamevohanluu.m4a
     7:"",    // assets/stories/kiemhiep.m4a
     8:"",    // assets/stories/cauay.m4a
@@ -2968,7 +2968,7 @@
     ],
     "ho-trang-non": [
       "Hồ Trăng Non - Chiếc bánh nướng",
-      "Hồ Trăng Non - Nàng"
+      "Hồ Trăng Non - Ba người bạn"
     ]
   };
   Object.keys(THUOC_HE).forEach(he => {
@@ -5299,7 +5299,7 @@
   });
 
   // ---- sau khi Friday Night chạy hết (lần đầu) ----
-  // 1) khung tin nhắn giữa màn hình: "Vậy thì, anh có câu trả lời…"
+  // 1) khung tin nhắn giữa màn hình: "vậy giờ thì, anh nghĩ P99 có ý nghĩa gì?…"
   // 2) khép lại thì tới đoạn chat + vé máy bay (runReveal)
   // 3) xem hết rồi, mà chưa vào Ngăn truyện: "You have unlocked a new story."
   // progress.anXong: đã xem trọn chuỗi này. Giữa chừng thoát app thì lần nghe sau chạy lại.
