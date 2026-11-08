@@ -6018,6 +6018,9 @@
     }
     const hoi = new Map();
     for (const x of ds) if (x.k === "hoi") hoi.set(x.khoa, x);
+    // Minh đã trả lời một pop-up thì chắc chắn đã xem nó, kể cả khi máy cậu ấy chưa kịp báo.
+    const daTraLoi = new Set();
+    for (const x of ds) if (x.k === "tin" && x.tu !== toi && /^hoi-d\d{1,2}$/.test(x.khoa || "")) daTraLoi.add(x.khoa);
     const tinTheoId = new Map();
     for (const x of ds) if (x.k === "tin") tinTheoId.set(x.id, x);
     const nhanAi = tu => tu === "chi" ? "em" : "anh";
@@ -6109,7 +6112,7 @@
         g.textContent = x.cho ? "đang chờ gửi" : gioPhut(x.t);
         bong.appendChild(g);
       }
-      if (toi === "chi" && x.k === "hoi" && (phongChat.hoiXem || []).indexOf(x.khoa) >= 0){
+      if (toi === "chi" && x.k === "hoi" && ((phongChat.hoiXem || []).indexOf(x.khoa) >= 0 || daTraLoi.has(x.khoa))){
         const xh = document.createElement("div");
         xh.className = "rm-gio rm-xem";
         xh.textContent = "đã xem";
