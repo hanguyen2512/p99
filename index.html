@@ -2546,14 +2546,14 @@
     const rc = localStorage.getItem(CHAT_KEY);
     if (rc){
       const jc = JSON.parse(rc);
-      if (jc && Array.isArray(jc.tin)) phongChat = { tin: jc.tin, sau: jc.sau | 0, daDoc: jc.daDoc | 0, kiaDoc: jc.kiaDoc | 0 };
+      if (jc && Array.isArray(jc.tin)) phongChat = { tin: jc.tin, sau: jc.sau | 0, daDoc: jc.daDoc | 0, kiaDoc: jc.kiaDoc | 0, hoiXem: Array.isArray(jc.hoiXem) ? jc.hoiXem : [] };
     }
   } catch(e){}
   function chatLuu(){
     try {
       // Trong máy chỉ cất 600 tin gần nhất; tin cũ hơn còn trên người đưa thư, xem bằng nút "xem tin cũ hơn".
       localStorage.setItem(CHAT_KEY, JSON.stringify({
-        tin: phongChat.tin.slice(-600), sau: phongChat.sau, daDoc: phongChat.daDoc, kiaDoc: phongChat.kiaDoc | 0 }));
+        tin: phongChat.tin.slice(-600), sau: phongChat.sau, daDoc: phongChat.daDoc, kiaDoc: phongChat.kiaDoc | 0, hoiXem: phongChat.hoiXem || [] }));
     } catch(e){}
   }
 
@@ -2732,6 +2732,11 @@
           continue;
         }
         if (typeof r.j.kiaDoc === "number" && r.j.kiaDoc > (phongChat.kiaDoc | 0)) phongChat.kiaDoc = r.j.kiaDoc;
+        if (Array.isArray(r.j.hoiDaXem)){
+          const cu = phongChat.hoiXem || [];
+          const hop = Array.from(new Set(cu.concat(r.j.hoiDaXem.filter(k => /^hoi-d\d{1,2}$/.test(k)))));
+          if (hop.length !== cu.length) phongChat.hoiXem = hop;
+        }
         const truoc = new Set(phongChat.tin.map(x => x.id));
         themTin(r.j.tin);
         for (const t of r.j.tin){
@@ -2743,6 +2748,7 @@
     } catch(e){}
     finally { dangDongBo = false; }
     chatLuu();
+    try { baoHoiDaXem(); } catch(e){}
     if (typeof capNhatSauDongBo === "function") capNhatSauDongBo(moiTuNguoiKia);
     if (canNhapLaiMa && typeof showLock === "function"){ canNhapLaiMa = false; showLock(true); }
   }
@@ -2806,6 +2812,20 @@
     }
   }
   // Máy Minh báo cho người đưa thư "em đã đọc tới tin số N" để máy chị hiện "đã xem". Chỉ tăng.
+  // Máy Minh cũng báo những pop-up đã mở (hoi-dN) để máy chị hiện "đã xem" dưới đúng pop-up đó.
+  var dangBaoHoi = false;
+  async function baoHoiDaXem(){
+    if (mayCuaChi() || dangBaoHoi || !layToken()) return;
+    if (!progress.hoiDaBao) progress.hoiDaBao = {};
+    const ds = Object.keys(progress.noi || {}).filter(k => /^hoi-d\d{1,2}$/.test(k) && progress.noi[k] && !progress.hoiDaBao[k]);
+    if (!ds.length) return;
+    dangBaoHoi = true;
+    try {
+      const r = await goiThu("/da-xem-hoi", { method: "POST", body: JSON.stringify({ khoa: ds }) });
+      if (r.ok){ ds.forEach(k => { progress.hoiDaBao[k] = true; }); saveProgress(); }
+    } catch(e){}
+    finally { dangBaoHoi = false; }
+  }
   var daBaoXem = 0, dangBaoXem = false;
   async function baoDaXem(){
     if (mayCuaChi() || dangBaoXem || !layToken() || phongChat.daDoc <= daBaoXem) return;
@@ -5969,7 +5989,7 @@
         if (ds[i].k === "tin" && ds[i].tu === toi && ds[i].stt && ds[i].stt <= (phongChat.kiaDoc | 0)){ xemId = ds[i].id; break; }
       }
     }
-    const dau = ds.map(x => x.id + (x.cho ? "~" : "")).join("|") + "#" + toi + (coThemCu ? "+" : "-") + (dangLayCu ? "…" : "") + "!" + xemId;
+    const dau = ds.map(x => x.id + (x.cho ? "~" : "")).join("|") + "#" + toi + (coThemCu ? "+" : "-") + (dangLayCu ? "…" : "") + "!" + xemId + (toi === "chi" ? "@" + (phongChat.hoiXem || []).join(",") : "");
     if (dau === roomChuKy) return;
     roomChuKy = dau;
 
@@ -6089,6 +6109,12 @@
         g.textContent = x.cho ? "đang chờ gửi" : gioPhut(x.t);
         bong.appendChild(g);
       }
+      if (toi === "chi" && x.k === "hoi" && (phongChat.hoiXem || []).indexOf(x.khoa) >= 0){
+        const xh = document.createElement("div");
+        xh.className = "rm-gio rm-xem";
+        xh.textContent = "đã xem";
+        bong.appendChild(xh);
+      }
       if (x.id === xemId){
         const xm = document.createElement("div");
         xm.className = "rm-gio rm-xem";
@@ -6146,7 +6172,7 @@
     for (const p of thuDaToi()){
       if (!progress.noi["hoi-d" + p.day]){ progress.noi["hoi-d" + p.day] = true; doi = true; }
     }
-    if (doi) saveProgress();
+    if (doi){ saveProgress(); try { baoHoiDaXem(); } catch(e){} }
   }
 
   function openRoom(khoa){
@@ -6303,6 +6329,7 @@
     if (!progress.noi) progress.noi = {};
     progress.noi[khoa] = true;
     saveProgress();
+    try { baoHoiDaXem(); } catch(e){}
     if (typeof renderThu === "function") renderThu();
     if (typeof refreshBells === "function") refreshBells();
   }
