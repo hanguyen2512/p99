@@ -2288,9 +2288,10 @@
              en:"one last story — will you hear it?",
              zh:"还有最后一个故事，听吗?" }
   };
-  // Hai truyện đã bỏ hẳn, không viết nữa (ngày 11/11 "kiemhiep" và ngày 22/11 "nguoinghegiacmo"):
-  // không hiện tên, không khoá, không tính số thứ tự. Lời nhắn pop-up của ngày đó vẫn giữ.
-  const TRUYEN_DA_BO = [7, 11];
+  // Bốn truyện đã bỏ hẳn, không viết nữa (ngày 11/11 "kiemhiep", 17/11 "hoasu", 19/11 "talaai"
+  // và ngày 22/11 "nguoinghegiacmo"): không hiện tên, không khoá, không tính số thứ tự.
+  // Lời nhắn pop-up của ngày đó vẫn giữ.
+  const TRUYEN_DA_BO = [7, 9, 10, 11];
   PAIRS.forEach((p, i) => {
     STORIES[p.id] = {
       bo: TRUYEN_DA_BO.includes(i + 1),
