@@ -791,35 +791,6 @@
   }
   .lock-note.on{ opacity:1; }
 
-  /* ---------- lời hứa: hiện ra sau bài thứ 23 ---------- */
-  /* Hai câu cuối là tin nhắn thật, nên hiện dạng khung chat — nhưng dùng
-     màu của app chứ không phải xanh Facebook, để không phá không khí. */
-  .reveal{
-    position:fixed; inset:0; z-index:20;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:9vh 7vw; overflow-y:auto; background:#05070b;
-    opacity:0; pointer-events:none; transition:opacity 1.6s ease;
-  }
-  .reveal.s4{ justify-content:flex-start; padding-top:6vh; padding-bottom:16vh; }
-  .reveal.on{ opacity:1; pointer-events:auto; }
-
-  .reveal-glow{
-    position:absolute; left:50%; top:52%; width:120vmin; height:120vmin;
-    margin:-60vmin 0 0 -60vmin; pointer-events:none;
-    background:radial-gradient(circle, rgba(200,162,74,.10) 0%, rgba(200,162,74,.04) 34%, transparent 66%);
-    opacity:0; transition:opacity 2.6s ease;
-  }
-  .reveal.s1 .reveal-glow{ opacity:1; }
-  .reveal.s3 .reveal-glow{ opacity:0; }
-
-  .reveal-stage{
-    position:relative; display:flex; flex-direction:column; align-items:center;
-    width:100%; max-width:380px;
-    opacity:1; transition:opacity 1.4s ease;
-  }
-  .reveal.s3 .reveal-stage, .reveal.s3 .fwd{ opacity:0; }
-  .reveal.s4 .reveal-stage, .reveal.s4 .fwd{ display:none; }
-
   /* ---- khung chat ---- */
   .chat{
     display:flex; align-items:flex-end; gap:.55em;
@@ -866,97 +837,13 @@
     30%{ opacity:1; transform:translateY(-3px); }
   }
   .chat.said .chat-text{ display:block; }
-  /* hai tin nhắn liền nhau của cùng một người: chỉ tin cuối có avatar */
-  .chat.stack .chat-avatar{ visibility:hidden; }
   .chat:not(.said) .chat-text{ display:none; }
-
-  /* ---- ảnh chuyển tiếp ---- */
-  /* Đây là ảnh chụp đoạn chat cũ, nên để nguyên tỉ lệ — cắt vuông là mất chữ.
-     Canh thẳng với khung chat phía trên, không avatar, như một tin gửi tiếp. */
-  .fwd{
-    width:100%; max-width:380px; margin:.5em auto 0;
-    padding-left:calc(34px + .55em);
-    opacity:0; transform:translateY(10px);
-    transition:opacity .9s ease, transform .9s cubic-bezier(.16,.7,.28,1);
-  }
-  .fwd.in{ opacity:1; transform:none; }
-  .fwd-label{
-    display:flex; align-items:center; gap:.4em;
-    font-family:'Work Sans',system-ui,sans-serif; font-weight:300;
-    font-size:.74rem; letter-spacing:.04em; color:#7e7359;
-    margin:0 0 .45em;
-  }
-  .fwd-label svg{ width:12px; height:12px; flex:none; opacity:.85; }
-  .fwd-frame{
-    border-radius:14px; overflow:hidden; background:#0b0e14;
-    border:1px solid rgba(200,162,74,.22);
-    box-shadow:0 18px 46px rgba(0,0,0,.6);
-  }
-  .fwd-frame img{ display:block; width:100%; height:auto; }
-
-  /* ---- hai tấm vé ---- */  /* ---- hai tấm vé ---- */
-  /* Bảng gốc nằm ngang, không vừa màn hình điện thoại, nên xếp dọc:
-     chuyến bay ở đầu, rồi nơi đi, rồi nơi đến. Chữ giữ nguyên. */
-  .tickets{
-    width:100%; max-width:360px; margin:0 auto;
-    display:flex; flex-direction:column; gap:1.1em;
-  }
-  .tickets[hidden]{ display:none; }
-
-  .ticket{
-    background:#eaf2f6; border-radius:5px; overflow:hidden;
-    box-shadow:0 18px 44px rgba(0,0,0,.6);
-    opacity:0; transform:translateY(18px) scale(.97);
-    transition:opacity 1s ease, transform 1s cubic-bezier(.16,.7,.28,1);
-    font-family:'Work Sans',system-ui,sans-serif;
-  }
-  .ticket.in{ opacity:1; transform:none; }
-
-  .tk-head{
-    background:#2d5668; color:#fff;
-    display:flex; justify-content:space-between; align-items:baseline;
-    padding:.6em .95em;
-  }
-  .tk-head span{ font-size:.72rem; font-weight:600; letter-spacing:.14em; opacity:.85; }
-  .tk-head b{ font-size:1.02rem; font-weight:600; letter-spacing:.05em; }
-
-  .tk-body{ padding:.95em .95em 1.05em; color:#16303d; }
-  .tk-leg + .tk-leg{ margin-top:.85em; padding-top:.85em; border-top:1px dashed #b4cbd6; }
-  .tk-label{
-    font-size:.66rem; font-weight:600; letter-spacing:.16em;
-    color:#5c8598; margin:0 0 .3em;
-  }
-  .tk-place{ font-size:.92rem; line-height:1.45; margin:0; font-weight:400; }
-  .tk-place b{ font-weight:700; }
-  .tk-term{ font-size:.79rem; color:#4d7080; margin:.18em 0 0; }
-  .tk-time{
-    display:flex; align-items:baseline; gap:.5em;
-    margin:.45em 0 0; font-size:.75rem; color:#5c8598;
-    letter-spacing:.1em; font-weight:600;
-  }
-  .tk-time b{ font-size:1.05rem; color:#102730; font-weight:700; letter-spacing:.01em; }
-  .tk-time i{ font-style:normal; font-size:.8rem; color:#4d7080; font-weight:400; letter-spacing:0; }
-
-  /* tin nhắn cuối — nằm dưới hai tấm vé */
-  .chat.final{ width:100%; max-width:360px; margin:.3em auto 0; }
-  .chat.final + .chat.final{ margin-top:.45em; }
-
-  .reveal-hint{
-    position:fixed; bottom:0; left:0; right:0; text-align:center;
-    padding:2.6vh 0 3.4vh; pointer-events:none;
-    background:linear-gradient(to top, #05070b 38%, rgba(5,7,11,0));
-    font-family:'EB Garamond',serif; font-size:.68rem;
-    letter-spacing:.34em; color:#5d5644;
-    opacity:0; transition:opacity 1.8s ease;
-  }
-  .reveal.s2 .reveal-hint, .reveal.s4 .reveal-hint{ opacity:1; }
 
   @media (prefers-reduced-motion:reduce){
     .ask-card .btns.on button{ animation:none; box-shadow:0 0 0 3px rgba(200,162,74,.14); }
-    .reveal, .reveal-stage, .reveal-glow, .chat, .fwd{
+    .chat{
       transition-duration:.3s;
     }
-    .fwd{ transform:none; }
     .chat-typing i{ animation:none; opacity:.6; }
   }
 
@@ -1311,9 +1198,6 @@
   .rm.cuoi-nhom{ margin-bottom:.45em; }
   .rm-bong{ display:flex; flex-direction:column; min-width:0; max-width:calc(100% - 46px); }
   .rm.toi .rm-bong{ align-items:flex-end; max-width:82%; }
-  .rm-fwd{ width:min(280px, 100%); }
-  .rm-ve{ width:min(290px, 100%); }
-  .rm-ve .ticket{ box-shadow:0 8px 22px rgba(0,0,0,.45); font-size:.92em; }
   .rm-hop{
     background:rgba(236,227,209,.07); border:1px solid rgba(200,162,74,.26);
     border-radius:16px 16px 16px 4px; padding:.62em .95em;
@@ -1875,87 +1759,6 @@
   <p class="ba-nho">You have unlocked <span class="ba-cum">a new song</span></p>
   <button class="ba-nghe" id="baNghe" type="button">chạm để nghe</button>
   <button class="ba-sau" id="baSau" type="button">để sau</button>
-</div>
-
-<div class="reveal" id="reveal" aria-hidden="true">
-  <div class="reveal-glow"></div>
-  <div class="reveal-stage">
-    <div class="chat" id="chat1">
-      <div class="chat-avatar"><img src="assets/images/avatar.jpg" alt=""></div>
-      <div class="chat-bubble">
-        <span class="chat-typing" aria-hidden="true"><i></i><i></i><i></i></span>
-        <p class="chat-text">Minh ơi Minh à...</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="fwd" id="fwd">
-    <p class="fwd-label">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <polyline points="15 17 20 12 15 7"></polyline>
-        <path d="M4 18v-2a4 4 0 0 1 4-4h12"></path>
-      </svg>
-      đã chuyển tiếp một tin nhắn
-    </p>
-    <div class="fwd-frame"><img id="revealImg" src="assets/images/promise.jpg" alt=""></div>
-  </div>
-
-  <div class="tickets" id="tickets" hidden>
-    <div class="ticket" id="tk1">
-      <div class="tk-head"><span>Flight</span><b>VN107</b></div>
-      <div class="tk-body">
-        <div class="tk-leg">
-          <p class="tk-label">From</p>
-          <p class="tk-place"><b>DA NANG</b> INTERNATIONAL, VN</p>
-          <p class="tk-term">Terminal: 1</p>
-          <p class="tk-time">Departure <b>07:55</b> <i>06Jan2027</i></p>
-        </div>
-        <div class="tk-leg">
-          <p class="tk-label">To</p>
-          <p class="tk-place"><b>HO CHI MINH CITY</b> TAN SON NHAT INTL, VN</p>
-          <p class="tk-term">Terminal: 3</p>
-          <p class="tk-time">Arrival <b>09:30</b> <i>06Jan2027</i></p>
-        </div>
-      </div>
-    </div>
-
-    <div class="ticket" id="tk2">
-      <div class="tk-head"><span>Flight</span><b>VN248</b></div>
-      <div class="tk-body">
-        <div class="tk-leg">
-          <p class="tk-label">From</p>
-          <p class="tk-place"><b>HO CHI MINH CITY</b> TAN SON NHAT INTL, VN</p>
-          <p class="tk-term">Terminal: 3</p>
-          <p class="tk-time">Departure <b>13:00</b> <i>16Jan2027</i></p>
-        </div>
-        <div class="tk-leg">
-          <p class="tk-label">To</p>
-          <p class="tk-place"><b>HANOI</b> NOI BAI INTL, VN</p>
-          <p class="tk-term">Terminal: 1</p>
-          <p class="tk-time">Arrival <b>15:10</b> <i>16Jan2027</i></p>
-        </div>
-      </div>
-    </div>
-
-    <div class="chat final stack" id="chat2">
-      <div class="chat-avatar"><img src="assets/images/avatar.jpg" alt=""></div>
-      <div class="chat-bubble">
-        <span class="chat-typing" aria-hidden="true"><i></i><i></i><i></i></span>
-        <p class="chat-text">em tới chơi với Minh nè</p>
-      </div>
-    </div>
-
-    <div class="chat final" id="chat3">
-      <div class="chat-avatar"><img src="assets/images/avatar.jpg" alt=""></div>
-      <div class="chat-bubble">
-        <span class="chat-typing" aria-hidden="true"><i></i><i></i><i></i></span>
-        <p class="chat-text">*xoè váy nhún nhảy*</p>
-      </div>
-    </div>
-  </div>
-
-  <p class="reveal-hint" id="revealHint">chạm để đi tiếp</p>
 </div>
 
 <div class="ask" id="askBox" aria-hidden="true">
@@ -2769,13 +2572,9 @@
     finally { dangLayCu = false; }
   }
 
-  // Chuỗi của bài ẩn (đoạn chat + hai vé) nằm trong phòng ngay khi Friday Night chạy hết.
-  // Minh chưa xem tới thì nó là những tin chưa đọc như mọi tin của chị.
-  const SO_TIN_AN = 6;
-  function anChuaDoc(){ return !!(progress.anLuc && !progress.anDoc && !mayCuaChi()); }
   function chatChuaDoc(){
     const toi = vaiCuaToi();
-    return phongChat.tin.filter(t => t.tu !== toi && t.stt > phongChat.daDoc).length + (anChuaDoc() ? SO_TIN_AN : 0);
+    return phongChat.tin.filter(t => t.tu !== toi && t.stt > phongChat.daDoc).length;
   }
   // "Đã đọc" = tin ấy thực sự hiện trên màn hình phòng chat (xem kiemTraDaThay).
   // Mốc daDoc chỉ nhích qua từng tin của người kia theo thứ tự, tin nào chưa hiện thì dừng lại ở đó.
@@ -2789,18 +2588,6 @@
       const phan = Math.min(r.bottom, khung.bottom) - Math.max(r.top, khung.top);
       if (phan >= Math.min(r.height * 0.6, 60)) daThay.add(+e.dataset.stt);
     });
-    // chuỗi bài ẩn: kéo tới tin cuối của nó là coi như đã đọc
-    if (anChuaDoc()){
-      const cuoi = roomIn.querySelector('.rm[data-an="an-' + SO_TIN_AN + '"]');
-      if (cuoi){
-        const r = cuoi.getBoundingClientRect();
-        const phan = Math.min(r.bottom, khung.bottom) - Math.max(r.top, khung.top);
-        if (phan >= Math.min(r.height * 0.6, 40)){
-          progress.anDoc = true; saveProgress();
-          renderThu(); refreshBells(); capNhatTinMoi();
-        }
-      }
-    }
     const toi = vaiCuaToi();
     let moc = phongChat.daDoc;
     const kia = phongChat.tin.filter(t => t.tu !== toi && t.stt > moc).sort((a, b) => a.stt - b.stt);
@@ -5294,8 +5081,7 @@
     if (!HIDDEN.video) return;                       // chưa có file thì chưa hiện
     // đang có khung hỏi / khung bài mở thì chờ, đừng chen ngang
     if (askBox.classList.contains("open") || portal.classList.contains("open") ||
-        roomEl.classList.contains("open") || popBox.classList.contains("open") ||
-        (typeof revealStage !== "undefined" && revealStage)){
+        roomEl.classList.contains("open") || popBox.classList.contains("open")){
       setTimeout(hienBaiAn, 2500); return;
     }
     if (!progress.hidden) unlockHidden();
@@ -5327,30 +5113,26 @@
 
   // ---- sau khi Friday Night chạy hết (lần đầu) ----
   // 1) khung tin nhắn giữa màn hình: "vậy giờ thì, anh nghĩ P99 có ý nghĩa gì?…"
-  // 2) khép lại thì tới đoạn chat + vé máy bay (runReveal)
+  // 2) khép lại thì sang bước cuối (sauReveal)
   // 3) xem hết rồi, mà chưa vào Ngăn truyện: "You have unlocked a new story."
   // progress.anXong: đã xem trọn chuỗi này. Giữa chừng thoát app thì lần nghe sau chạy lại.
   function chuoiBaiAn(){
-    if (progress.anXong || revealStage) return;
+    if (progress.anXong) return;
     const p = POPUPS.find(x => !x.at);
-    const sangReveal = () => { progress.anLuc = Date.now(); saveProgress(); runReveal(); };
-    // Bài vừa hết: đoạn chat và hai vé vào phòng NGAY (chưa đọc), phòng khi Minh thoát giữa chừng.
-    const t0 = Date.now();
-    progress.anLuc = t0 + 1; progress.anDoc = false;
     if (p){
+      const t0 = Date.now();
       if (!progress.pops) progress.pops = {};
       if (!progress.popsLuc) progress.popsLuc = {};
       progress.pops[popupKey(p)] = true;                    // lá thư này nằm vào Ngăn thư
       progress.popsLuc[popupKey(p)] = t0;                   // và nằm đúng chỗ trong phòng chat
       saveProgress();
       try { refreshBells(); capNhatTinMoi(); } catch(e){}
-      moNoi("hoi-d" + p.day, "câu hỏi ngày " + p.day, [p.text], sangReveal, true, false, true);
-    } else sangReveal();
+      moNoi("hoi-d" + p.day, "câu hỏi ngày " + p.day, [p.text], sauReveal, true, false, true);
+    } else sauReveal();
   }
   function sauReveal(){
-    progress.anXong = true; progress.anDoc = true; saveProgress();     // xem trọn rồi thì cũng là đã đọc
+    progress.anXong = true; saveProgress();
     try { refreshBells(); capNhatTinMoi(); } catch(e){}
-    if (typeof veLaiPhongNeuMo === "function") veLaiPhongNeuMo();   // đoạn chat + vé nằm vào "Nhắn với em / anh"
     // xem hết rồi thì khép khung bài ẩn lại, về màn hình chính
     if (portal.classList.contains("open")){ songOrigin = null; closeSong(); }
     // vừa xem hết mà chưa chạm vào Ngăn truyện: nhắc nhẹ
@@ -5921,18 +5703,6 @@
       ds.push({ k: "hoi", id: "hoi-d" + p.day, tu: "chi", chu: p.text,
                 t: lucCauHoi(p), khoa: "hoi-d" + p.day, noi: "", day: p.day });
     }
-    // Sau khi Minh xem hết chuỗi của bài ẩn: đoạn chat và hai tấm vé ở lại trong phòng, trên cả hai máy.
-    if (progress.anLuc){
-      const AN = [
-        { loai: "chu", chu: "Minh ơi Minh à..." },
-        { loai: "fwd" },
-        { loai: "ve", i: 0 },
-        { loai: "ve", i: 1 },
-        { loai: "chu", chu: "em tới chơi với Minh nè" },
-        { loai: "chu", chu: "*xoè váy nhún nhảy*" }
-      ];
-      AN.forEach((a, i) => ds.push(Object.assign({ k: "an", id: "an-" + (i + 1), tu: "chi", t: progress.anLuc + i }, a)));
-    }
     const co = new Set();
     for (const t of phongChat.tin){
       co.add(t.id);
@@ -5958,25 +5728,6 @@
   function rutGon(s, n){ s = (s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
 
   function veLaiPhongNeuMo(){ if (roomMo) veLaiPhong(); }
-
-  // Ảnh chuyển tiếp và hai tấm vé của chuỗi bài ẩn, vẽ lại cho nằm trong phòng chat.
-  function taoMucAn(x){
-    const w = document.createElement("div");
-    if (x.loai === "fwd"){
-      w.className = "rm-fwd";
-      w.innerHTML = '<p class="fwd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg>đã chuyển tiếp một tin nhắn</p>' +
-                    '<div class="fwd-frame"><img src="assets/images/promise.jpg" alt=""></div>';
-    } else {
-      w.className = "rm-ve";
-      const goc = document.getElementById("tk" + (x.i + 1));
-      if (goc){
-        const b = goc.cloneNode(true);
-        b.removeAttribute("id"); b.classList.add("in");
-        w.appendChild(b);
-      }
-    }
-    return w;
-  }
 
   function veLaiPhong(){
     const toi = vaiCuaToi();
@@ -6044,7 +5795,6 @@
       if (x.khoa) rm.dataset.khoa = x.k === "hoi" ? x.khoa : "";
       if (x.stt) rm.dataset.stt = x.stt;
       if (x.k === "tin") rm.dataset.mid = x.id;
-      if (x.k === "an") rm.dataset.an = x.id;
       if (x.tu !== toi){
         if (!cuoiLuot) rm.classList.add("an-av");
         rm.appendChild(taoAvatar(x.tu));
@@ -6077,13 +5827,11 @@
       const hop = document.createElement("div");
       hop.className = "rm-hop";
       hop.textContent = x.chu;
-      if (x.k === "an" && x.loai !== "chu"){
-        bong.appendChild(taoMucAn(x));
-      } else if (x.k === "hoi"){
+      if (x.k === "hoi"){
         hop.title = "chạm để trả lời câu này";
         hop.addEventListener("click", () => datTrich({ khoa: x.khoa, noi: "câu hỏi ngày " + x.day, trich: rutGon(x.chu, 60) }));
       }
-      if (!(x.k === "an" && x.loai !== "chu")) bong.appendChild(hop);
+      bong.appendChild(hop);
       if (x.k === "tin"){
         // chạm vào tin → hiện nút "trả lời"; chạm nút → trích tin này vào ô nhập
         hop.addEventListener("click", () => {
@@ -6202,9 +5950,8 @@
       setTimeout(() => nhayToi(khoa), 80);
     } else {
       // Có tin của người kia chưa đọc thì kéo tới tin chưa đọc ĐẦU TIÊN (chừa một chút phía trên cho thấy tin trước nó).
-      const anCho = anChuaDoc();
       const dau = Array.prototype.find.call(roomIn.querySelectorAll(".rm.kia"),
-        e => (e.dataset.stt && +e.dataset.stt > daDocCu) || (anCho && e.dataset.an));
+        e => e.dataset.stt && +e.dataset.stt > daDocCu);
       if (dau){
         roomFlow.scrollTop += dau.getBoundingClientRect().top - roomFlow.getBoundingClientRect().top - 70;
       } else {
@@ -6868,89 +6615,6 @@
   xaHangDoi();                    // còn lời nào chưa gửi được thì gửi nốt
   watchGeo();                     // hỏi trình duyệt xem đang cho hay đang chặn
   if (helloDone) askMySky();      // đã chào rồi thì lặng lẽ lấy lại tên nơi chốn
-
-  // ---- lời hứa: chuỗi hiện ra sau khi nghe hết bài thứ 23 ----
-  const revealEl = document.getElementById("reveal");
-  const revealHint = document.getElementById("revealHint");
-  const chat1 = document.getElementById("chat1");
-  const chat2 = document.getElementById("chat2");
-  const fwd = document.getElementById("fwd");
-  const chat3 = document.getElementById("chat3");
-  const tickets = document.getElementById("tickets");
-  const tk1 = document.getElementById("tk1");
-  const tk2 = document.getElementById("tk2");
-  let revealStage = 0;
-  const timers = [];
-  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
-  const clearLater = () => { while (timers.length) clearTimeout(timers.pop()); };
-
-  // tin nhắn tới: khung nổi lên với ba chấm đang gõ, rồi mới thành chữ
-  function sendMsg(el, delay){
-    later(() => el.classList.add("in"), delay);
-    later(() => el.classList.add("said"), delay + 1500);
-  }
-
-  function runReveal(){
-    if (revealStage) return;
-    revealEl.setAttribute("aria-hidden", "false");
-    revealEl.classList.add("on");
-    document.body.style.overflow = "hidden";
-    revealStage = 1;
-    later(() => revealEl.classList.add("s1"), 700);
-    sendMsg(chat1, 700);                                   // lời nhắn tới trước
-    later(() => fwd.classList.add("in"), 2900);            // rồi ảnh chuyển tiếp
-    later(() => { revealEl.classList.add("s2"); revealStage = 2; }, 3600);
-  }
-
-  function revealNext(){
-    if (revealStage === 1){                 // chạm sớm thì cho mọi thứ tới luôn
-      clearLater();
-      revealEl.classList.add("s1", "s2"); revealStage = 2;
-      sendMsg(chat1, 100);
-      later(() => fwd.classList.add("in"), 900);
-      return;
-    }
-    if (revealStage === 2){
-      clearLater();
-      revealEl.classList.add("s3"); revealStage = 3;
-      revealHint.textContent = "";
-      later(() => {                          // tối hẳn một nhịp rồi hai tấm vé mới tới
-        revealEl.classList.add("s4"); revealStage = 4;
-        tickets.hidden = false;
-        later(() => tk1.classList.add("in"), 300);
-        later(() => tk2.classList.add("in"), 1250);
-        sendMsg(chat2, 2500);                // hai lời nhắn cuối
-        sendMsg(chat3, 4900);
-        later(() => revealHint.textContent = "chạm để đóng", 7400);
-      }, 2400);
-      return;
-    }
-    if (revealStage === 4){
-      clearLater();
-      revealEl.classList.remove("on");
-      revealEl.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-      sauReveal();
-      later(() => {
-        revealEl.classList.remove("s1","s2","s3","s4");
-        chat1.classList.remove("in","said");
-        chat2.classList.remove("in","said");
-        chat3.classList.remove("in","said");
-        fwd.classList.remove("in");
-        tk1.classList.remove("in"); tk2.classList.remove("in");
-        tickets.hidden = true;
-        revealEl.scrollTop = 0;
-        revealStage = 0;
-        revealHint.textContent = "chạm để đi tiếp";
-      }, 900);
-    }
-  }
-  revealEl.addEventListener("click", revealNext);
-  document.addEventListener("keydown", e => {
-    if (revealStage && (e.key === "Enter" || e.key === " " || e.key === "Escape")){
-      e.preventDefault(); revealNext();
-    }
-  });
 
   renderAlbum(); renderStories();
 
