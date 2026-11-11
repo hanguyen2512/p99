@@ -4508,15 +4508,16 @@
         if (!song) return;
         const id = slotId(world, h);
         if (songGone(id)) return;                 // không còn xảy ra: bài ở lại mãi
-        // Bài bên khoảng trời của chị đã tới ngày mà chưa có video: hiện tên, đang khoá.
-        if (world === "nu" && !songReady(song) && daToiLuot(world, h)){
+        // Bài đã tới ngày mà chưa có video: hiện tên, đang khoá.
+        // Bên chị: chờ ảnh của anh. Bên Minh: bài đang sửa, chờ chị chút.
+        if (!songReady(song) && daToiLuot(world, h)){
           const kh = document.createElement("button");
-          kh.className = "row nu khoa";
+          kh.className = "row " + world + " khoa";
           kh.innerHTML =
             '<span class="hour">' + HOUR_LABEL(h) + '</span>' +
             '<span class="name"><i class="heart rong"></i>' + songTitleHtml(song) + '</span>' +
             '<span class="mark"><svg class="o-khoa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
-          kh.addEventListener("click", () => showLoiKhoa(BAI_CHO_ANH));
+          kh.addEventListener("click", () => showLoiKhoa(world === "nu" ? BAI_CHO_ANH : BAI_DANG_SUA));
           dsHang.push({ k: gioMinh(h), row: kh });
           return;
         }
@@ -5513,6 +5514,7 @@
   ];
   // Chạm vào bài hát đang khoá trong Ngăn nhạc (đã tới ngày mà chưa có video bên khoảng trời của chị).
   const BAI_CHO_ANH = [ "để mở khoá bài hát này thì em chờ ảnh của anh ở khung giờ này nhéee" ];
+  const BAI_DANG_SUA = [ "bài hát này đang trong quá trình sửa chữa. chờ em chút nhé" ];
   // Lời khi chạm vào truyện đang khoá; phần cuối của Tiếng động (ngày 5/11) có lời riêng.
   function khoaTruyen(p, coBai){
     if (p.day === 4 && !coBai) showLoiKhoa(["để nghe phần cuối của câu chuyện này thì anh cần mở khoá cả hai bài hát nhaaa"]);
