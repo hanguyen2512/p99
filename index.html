@@ -623,8 +623,8 @@
     display:block; margin-top:.3em; font-family:'Work Sans',system-ui,sans-serif;
     font-size:.72rem; letter-spacing:.04em; color:#8d8370;
   }
-  .thu-row.daMo:not(.mayChi) .thu-ngay::after{ content:" · đã trả lời"; }
-  .thu-row.unread:not(.mayChi) .thu-ngay::after{ content:" · chưa đọc"; color:#f1d98a; }
+  .thu-row.daMo .thu-ngay::after{ content:" · đã trả lời"; }
+  .thu-row.unread .thu-ngay::after{ content:" · chưa đọc"; color:#f1d98a; }
 
   /* trái tim nhỏ trước tên: thứ vừa về mà chưa mở ra lần nào */
   .heart{
@@ -2541,7 +2541,7 @@
         if (Array.isArray(r.j.hoiDaXem)){
           const cu = phongChat.hoiXem || [];
           const hop = Array.from(new Set(cu.concat(r.j.hoiDaXem.filter(k => /^hoi-d\d{1,2}$/.test(k)))));
-          if (hop.length !== cu.length) phongChat.hoiXem = hop;
+          if (hop.length !== cu.length){ phongChat.hoiXem = hop; try{ renderThu(); }catch(e){} }
         }
         const truoc = new Set(phongChat.tin.map(x => x.id));
         themTin(r.j.tin);
@@ -4820,12 +4820,21 @@
     thuList.appendChild(hangChat());
     const ds0 = thuDaToi();
     const chi = mayCuaChi();
-    // Máy Minh: thư chưa trả lời nổi lên đầu danh sách; trả lời xong thì về đúng chỗ theo ngày.
-    const ds = chi ? ds0 : ds0.filter(p => !daNoiRoi("hoi-d" + p.day)).concat(ds0.filter(p => daNoiRoi("hoi-d" + p.day)));
+    // Đã trả lời? Máy Minh: cờ trong máy. Máy chị: Worker báo "đã xem", hoặc có tin Minh gửi cho đúng lá này.
+    const xongLa = (p) => {
+      const k = "hoi-d" + p.day;
+      if (!chi) return daNoiRoi(k);
+      try {
+        if ((phongChat.hoiXem || []).indexOf(k) >= 0) return true;
+        return (phongChat.tin || []).some(t => t.tu !== "chi" && t.khoa === k);
+      } catch(e){ return false; }
+    };
+    // Thư chưa trả lời nổi lên đầu; trả lời xong thì về đúng chỗ theo ngày.
+    const ds = ds0.filter(p => !xongLa(p)).concat(ds0.filter(xongLa));
     for (const p of ds){
-      const daMo = chi || daNoiRoi("hoi-d" + p.day);
+      const daMo = xongLa(p);
       const row = document.createElement("button");
-      row.className = "row nu thu-row" + (chi ? " daMo mayChi" : daMo ? " daMo" : " unread");
+      row.className = "row nu thu-row" + (daMo ? " daMo" : " unread");
       row.innerHTML =
         '<span class="thu-hoi">' + (daMo ? "" : '<i class="heart"></i>') +
           p.text.replace(/[<>]/g, "") + '</span>' +
