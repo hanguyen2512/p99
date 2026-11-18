@@ -623,7 +623,8 @@
     display:block; margin-top:.3em; font-family:'Work Sans',system-ui,sans-serif;
     font-size:.72rem; letter-spacing:.04em; color:#8d8370;
   }
-  .thu-row.daMo .thu-ngay::after{ content:" · đã mở"; }
+  .thu-row.daMo:not(.mayChi) .thu-ngay::after{ content:" · đã trả lời"; }
+  .thu-row.unread:not(.mayChi) .thu-ngay::after{ content:" · chưa đọc"; color:#f1d98a; }
 
   /* trái tim nhỏ trước tên: thứ vừa về mà chưa mở ra lần nào */
   .heart{
@@ -1241,6 +1242,7 @@
     font-size:.64rem; letter-spacing:.02em; color:#7c735f;
   }
   .rm-xem{ margin-top:.05em; color:#9a8f72; }
+  .rm-chua{ margin-top:.05em; color:#f1d98a; }
   .rm.chay .rm-hop{ animation:rmChay 1.7s ease; }
   @keyframes rmChay{
     0%,100%{ box-shadow:0 0 0 0 rgba(200,162,74,0); }
@@ -4816,12 +4818,14 @@
     if (!thuList) return;
     thuList.innerHTML = "";
     thuList.appendChild(hangChat());
-    const ds = thuDaToi();
+    const ds0 = thuDaToi();
     const chi = mayCuaChi();
+    // Máy Minh: thư chưa trả lời nổi lên đầu danh sách; trả lời xong thì về đúng chỗ theo ngày.
+    const ds = chi ? ds0 : ds0.filter(p => !daNoiRoi("hoi-d" + p.day)).concat(ds0.filter(p => daNoiRoi("hoi-d" + p.day)));
     for (const p of ds){
       const daMo = chi || daNoiRoi("hoi-d" + p.day);
       const row = document.createElement("button");
-      row.className = "row nu thu-row" + (daMo ? " daMo" : " unread");
+      row.className = "row nu thu-row" + (chi ? " daMo mayChi" : daMo ? " daMo" : " unread");
       row.innerHTML =
         '<span class="thu-hoi">' + (daMo ? "" : '<i class="heart"></i>') +
           p.text.replace(/[<>]/g, "") + '</span>' +
@@ -4846,7 +4850,7 @@
     const el = document.getElementById("tinMoi");
     if (!el) return;
     let n = 0;
-    try { n = mayCuaChi() ? 0 : chatChuaDoc(); } catch(e){}
+    try { n = mayCuaChi() ? 0 : thuChuaMo(); } catch(e){}
     if (n > 0){
       el.textContent = "";
       const i = document.createElement("i"); i.className = "tim-chu";
@@ -5743,7 +5747,7 @@
         if (ds[i].k === "tin" && ds[i].tu === toi && ds[i].stt && ds[i].stt <= (phongChat.kiaDoc | 0)){ xemId = ds[i].id; break; }
       }
     }
-    const dau = ds.map(x => x.id + (x.cho ? "~" : "")).join("|") + "#" + toi + (coThemCu ? "+" : "-") + (dangLayCu ? "…" : "") + "!" + xemId + (toi === "chi" ? "@" + (phongChat.hoiXem || []).join(",") : "");
+    const dau = ds.map(x => x.id + (x.cho ? "~" : "")).join("|") + "#" + toi + (coThemCu ? "+" : "-") + (dangLayCu ? "…" : "") + "!" + xemId + (toi === "chi" ? "@" + (phongChat.hoiXem || []).join(",") : "#" + Object.keys(progress.noi || {}).filter(k => progress.noi[k]).join(","));
     if (dau === roomChuKy) return;
     roomChuKy = dau;
 
@@ -5832,7 +5836,9 @@
       hop.textContent = x.chu;
       if (x.k === "hoi"){
         hop.title = "chạm để trả lời câu này";
-        hop.addEventListener("click", () => datTrich({ khoa: x.khoa, noi: "câu hỏi ngày " + x.day, trich: rutGon(x.chu, 60) }));
+        hop.addEventListener("click", () => {
+          datTrich({ khoa: x.khoa, noi: "câu hỏi ngày " + x.day, trich: rutGon(x.chu, 60) });
+        });
       }
       bong.appendChild(hop);
       if (x.k === "tin"){
@@ -5862,6 +5868,12 @@
         g.className = "rm-gio";
         g.textContent = x.cho ? "đang chờ gửi" : gioPhut(x.t);
         bong.appendChild(g);
+      }
+      if (toi !== "chi" && x.k === "hoi" && !daNoiRoi(x.khoa)){
+        const ch = document.createElement("div");
+        ch.className = "rm-gio rm-chua";
+        ch.textContent = "chưa đọc";
+        bong.appendChild(ch);
       }
       if (toi === "chi" && x.k === "hoi" && ((phongChat.hoiXem || []).indexOf(x.khoa) >= 0 || daTraLoi.has(x.khoa))){
         const xh = document.createElement("div");
@@ -5920,14 +5932,9 @@
   }
   document.getElementById("roomDtlX").addEventListener("click", () => datTrich(null));
 
-  function danhDauThuDaXem(){
-    let doi = false;
-    if (!progress.noi) progress.noi = {};
-    for (const p of thuDaToi()){
-      if (!progress.noi["hoi-d" + p.day]){ progress.noi["hoi-d" + p.day] = true; doi = true; }
-    }
-    if (doi){ saveProgress(); try { baoHoiDaXem(); } catch(e){} }
-  }
+  // Mở phòng chat KHÔNG tự coi mọi lá thư là đã đọc nữa: lá nào Minh chưa mở và
+  // chưa trả lời thì vẫn giữ dấu "chưa đọc" cho tới khi cậu ấy chạm vào lá đó.
+  function danhDauThuDaXem(){}
 
   function openRoom(khoa){
     const chi = mayCuaChi();
@@ -6227,9 +6234,9 @@
       const st = STORIES[p.truyen];
       return !!(st && st.audio);
     }
-    const pair = PAIRS.find(x => x.day === p.day);
-    if (!pair) return false;
-    return songReady(songAt("nam", pair.nam)) || songReady(songAt("nu", pair.nu));
+    // Lời theo giờ: tới giờ là hiện, không cần bài hát của ngày ấy đã có video hay chưa,
+    // để thông báo trên điện thoại và Ngăn thư luôn khớp nhau.
+    return !!NGAY_MO[p.day];
   }
 
   // Đã tới lúc Minh được nhận lời này chưa? KHÔNG hết hạn: qua ngày rồi vẫn
