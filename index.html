@@ -2030,7 +2030,7 @@
       17:{ video:"", poster:"", title:{ vi:"Ta lạc bước giữa chốn nhân gian", en:"Ta lạc bước giữa chốn nhân gian", zh:"Ta lạc bước giữa chốn nhân gian" } },   // assets/songs/talacbuoc.mp4
       19:{ video:"", poster:"", title:{ vi:"Ráng mây chiều rực rỡ - 霞明", en:"Ráng mây chiều rực rỡ - 霞明", zh:"Ráng mây chiều rực rỡ - 霞明" } },   // assets/songs/rangmaychieu.mp4
       21:{ video:"", poster:"", title:{ vi:"Chờ cậu đặt tên", en:"Chờ cậu đặt tên", zh:"Chờ cậu đặt tên" } },   // assets/songs/chocaudatten.mp4
-      23:{ video:"assets/songs/hieuta.mp4", poster:"", title:{ vi:"知我 - Hiểu ta\n(Để người đợi đến kiếp này)", en:"知我 - Hiểu ta\n(Để người đợi đến kiếp này)", zh:"知我 - Hiểu ta\n(Để người đợi đến kiếp này)" } },   // assets/songs/hieuta.mp4
+      23:{ video:"assets/songs/hieuta.mp4", poster:"", title:{ vi:"知我 - Hiểu ta", en:"知我 - Hiểu ta", zh:"知我 - Hiểu ta" } },   // assets/songs/hieuta.mp4
     }
   };
 
@@ -4355,10 +4355,11 @@
     // trả lời đã đóng — hai thứ chen nhau thì dồn dập quá.
     const ch = choHoiSauBai; choHoiSauBai = null;
     if (ch && !AUTHOR_REVEAL){
+      const laHieuTa = ch.world === "nu" && ch.hour === 23;   // chỉ riêng bài Hiểu ta hỏi về lời bài
       setTimeout(() => moNoi(
         "bai-" + slotId(ch.world, ch.hour),
         "bài " + songTitle(ch.song),
-        [HOI_THEM], maybeOffer), 1400);
+        [laHieuTa ? HOI_BAI : HOI_THEM], maybeOffer, laHieuTa), 1400);   // Hiểu ta: vào thẳng khung trả lời, có nút "kết thúc"
     } else {
       maybeOffer();
     }
@@ -6394,6 +6395,7 @@
   popEnd.addEventListener("click", dongNoi);
 
   const HOI_THEM = "anh có muốn nói gì với em không ạ?";
+  const HOI_BAI = "i hope you like this lyric version (and also the name i gave to it)";   // chỉ hỏi sau khi nghe trọn bài Hiểu ta
 
   function openPopup(text, day, moLai){
     if (mayCuaChi()){ openRoom(day ? "hoi-d" + day : null); return; }
