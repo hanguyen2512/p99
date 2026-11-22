@@ -1083,10 +1083,10 @@
   .noi-go textarea::placeholder{ color:#8d8166; font-style:italic; }
   .noi-go textarea:focus{ outline:none; border-color:var(--brass); }
   .noi-send{
-    flex:0 0 auto; width:2.5em; height:2.5em; border-radius:50%;
+    flex:0 0 auto; height:2.5em; padding:0 1.1em; border-radius:999px; white-space:nowrap;
+    font:inherit; font-size:.9rem; font-style:italic; letter-spacing:.02em;
     background:rgba(200,162,74,.9); border:1px solid var(--brass); color:#241a0c;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
-    padding:0;
   }
   .noi-send svg{ width:1.1em; height:1.1em; }
   .noi-send:disabled{ opacity:.35; cursor:default; }
@@ -1864,12 +1864,7 @@
       <textarea id="popInput" rows="1" placeholder="nhắn cho em…"
         autocomplete="off" autocorrect="on" spellcheck="false"
         aria-label="Nhắn cho em"></textarea>
-      <button class="noi-send" id="popSend" type="button" aria-label="Gửi">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline>
-        </svg>
-      </button>
+      <button class="noi-send" id="popSend" type="button" aria-label="Trả lời">trả lời</button>
     </div>
     <p class="noi-cho" id="popCho" hidden></p>
     <button class="noi-end" id="popEnd" type="button" hidden>kết thúc</button>
@@ -2179,6 +2174,8 @@
     { day:9, at:[1,1], text:"Nếu anh được đưa cho một chiếc hộp có tất cả những điều anh đã từng đánh mất, thì thứ đầu tiên mà anh tìm kiếm là gì?" },
     { day:10, at:[5,5], text:"Nếu một mai mọi thứ anh trân trọng đều biến mất, mà anh lại chỉ có thể biết rằng mình đã mất đi thứ gì đó quan trọng, nhưng anh không thể nhớ ra được đó là thứ gì, thì anh sẽ làm gì?" },
     { day:11, at:[23,11], text:"“You become responsible, forever, for what you have tamed.” – Antoine de Saint-Exupéry, The Little Prince." },
+    // Sau khi nghe trọn bài Hiểu ta lần đầu (không theo giờ): nằm vào Ngăn thư như lời hỏi P99.
+    { day:14, at:null, sauBai:"nu-23", text:"i hope you like this lyric version (and also the name i gave to it)" },
     { day:12, at:null, text:"vậy giờ thì, anh nghĩ P99 có ý nghĩa gì? nói cho em nghe thử được khôngg" },   // sau khi nghe hết tất cả
     // Lời hỏi han hằng ngày lúc 0:00 — không đi kèm bài hát hay truyện nào ("hangNgay")
     { day:21, at:[0,0], hangNgay:true,
@@ -4354,11 +4351,23 @@
     // Vừa nghe trọn lần đầu thì hỏi trước; mời nghe truyện để sau, khi mạch
     // trả lời đã đóng — hai thứ chen nhau thì dồn dập quá.
     const ch = choHoiSauBai; choHoiSauBai = null;
+    const laHieuTa = !!ch && ch.world === "nu" && ch.hour === 23;   // chỉ riêng bài Hiểu ta hỏi về lời bài
+    if (laHieuTa && !AUTHOR_REVEAL){
+      // Lời này nằm vào Ngăn thư (cả máy Minh lẫn máy chị), y như câu hỏi P99.
+      const pb = POPUPS.find(x => x.sauBai === "nu-23");
+      if (!progress.pops) progress.pops = {};
+      if (!progress.popsLuc) progress.popsLuc = {};
+      if (!progress.pops[popupKey(pb)]){
+        progress.pops[popupKey(pb)] = true;
+        progress.popsLuc[popupKey(pb)] = Date.now();
+        saveProgress();
+        try { refreshBells(); capNhatTinMoi(); renderThu(); } catch(e){}
+      }
+    }
     if (ch && !AUTHOR_REVEAL){
-      const laHieuTa = ch.world === "nu" && ch.hour === 23;   // chỉ riêng bài Hiểu ta hỏi về lời bài
       setTimeout(() => moNoi(
-        "bai-" + slotId(ch.world, ch.hour),
-        "bài " + songTitle(ch.song),
+        laHieuTa ? "hoi-d14" : "bai-" + slotId(ch.world, ch.hour),
+        laHieuTa ? "lời nhắn sau bài Hiểu ta" : "bài " + songTitle(ch.song),
         [laHieuTa ? HOI_BAI : HOI_THEM], maybeOffer, laHieuTa), 1400);   // Hiểu ta: vào thẳng khung trả lời, có nút "kết thúc"
     } else {
       maybeOffer();
@@ -4716,7 +4725,7 @@
     if (progress.hidden){
       const lab = document.createElement("p");
       lab.className = "group-label";
-      lab.textContent = "\u9690\u85cf\u6b3e";
+      lab.textContent = "Phiên ngoại";
       const row = document.createElement("button");
       const chuaNgheAn = !heard("hidden");
       row.className = "row nam" + (chuaNgheAn ? " unread bi-an" : "");
@@ -5303,7 +5312,18 @@
     baiAnEl.classList.remove("on");
     baiAnEl.setAttribute("aria-hidden", "true");
     setTimeout(() => { baiAnEl.classList.remove("s1","s2","s3","s4"); baiAnEl.hidden = true; }, 1000);
-    if (moBai) setTimeout(() => { songOrigin = null; openHidden(); }, 500);
+    if (moBai){
+      // Mở ngay trong lúc còn đang cử chỉ bấm (không hẹn giờ) để điện thoại cho phát luôn.
+      // Đang đứng trong Ngăn nào thì khép Ngăn đó lại, không thì khung bài mở ra nằm
+      // phía sau Ngăn (đóng bài lại mới thấy). Đóng bài xong thì về đúng Ngăn nhạc.
+      const tuNgan = albumShelf.classList.contains("open");
+      [albumShelf, storyShelf, thuShelf].forEach(sh => { if (sh.classList.contains("open")) closeShelf(sh); });
+      songOrigin = tuNgan ? albumShelf : null; openHidden();
+      try {
+        const v = artworksEl.querySelector("video");
+        if (v){ const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); }
+      } catch(e){}
+    }
   }
   document.getElementById("baNghe").addEventListener("click", () => dongBaiAn(true));
   document.getElementById("baSau").addEventListener("click", () => dongBaiAn(false));
@@ -5319,7 +5339,7 @@
   // progress.anXong: đã xem trọn chuỗi này. Giữa chừng thoát app thì lần nghe sau chạy lại.
   function chuoiBaiAn(){
     if (progress.anXong) return;
-    const p = POPUPS.find(x => !x.at);
+    const p = POPUPS.find(x => !x.at && !x.sauBai);
     if (p){
       const t0 = Date.now();
       if (!progress.pops) progress.pops = {};
@@ -6395,7 +6415,7 @@
   popEnd.addEventListener("click", dongNoi);
 
   const HOI_THEM = "anh có muốn nói gì với em không ạ?";
-  const HOI_BAI = "i hope you like this lyric version (and also the name i gave to it)";   // chỉ hỏi sau khi nghe trọn bài Hiểu ta
+  const HOI_BAI = POPUPS.find(x => x.sauBai).text;   // chỉ hỏi sau khi nghe trọn bài Hiểu ta
 
   function openPopup(text, day, moLai){
     if (mayCuaChi()){ openRoom(day ? "hoi-d" + day : null); return; }
@@ -6511,7 +6531,7 @@
 
   // lời nhắn của bài ẩn: không theo giờ, mà theo việc đã nghe hết hay chưa
   function popupHidden(){
-    const p = POPUPS.find(x => !x.at);
+    const p = POPUPS.find(x => !x.at && !x.sauBai);
     if (!p || !progress.pops || progress.pops[popupKey(p)]) return;
     progress.pops[popupKey(p)] = true;
     saveProgress();
