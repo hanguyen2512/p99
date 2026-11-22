@@ -2963,7 +2963,8 @@
   }
 
   function storiesWaiting(){
-    return PAIRS.filter(p => pairComplete(p) && truyenChuaNghe(p.id)).length
+    // chỉ đếm truyện có thật và đã có audio: truyện bị bỏ (bo) hay chưa thu thì không có gì để nghe
+    return PAIRS.filter(p => pairComplete(p) && !STORIES[p.id].bo && STORIES[p.id].audio && truyenChuaNghe(p.id)).length
          + (moDauCho()  && truyenChuaNghe(MO_DAU_ID) ? 1 : 0)
          + (naritaCho() && truyenChuaNghe(NARITA_ID) ? 1 : 0)
          + (caiAmCho()  && truyenChuaNghe(CAI_AM_ID) ? 1 : 0)
@@ -4993,7 +4994,7 @@
   // và trả lời lúc nào cũng được — không còn bị khung chat chen ngang nữa.
   function thuDaToi(){
     return POPUPS.filter(p => p.at ? (coBaiNgay(p) && daToiLucNhan(p))
-                                   : (progress.pops && progress.pops[popupKey(p)]));
+                                   : ((progress.pops && progress.pops[popupKey(p)]) || (p.sauBai && heard(p.sauBai))));
   }
   function thuChuaMo(){
     // chị không "nhận" lá thư nào — chỉ Minh có thư chưa mở
