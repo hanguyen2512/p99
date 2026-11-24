@@ -4351,7 +4351,9 @@
     if (back) setTimeout(() => openShelf(back), 320);
     // Vừa nghe trọn lần đầu thì hỏi trước; mời nghe truyện để sau, khi mạch
     // trả lời đã đóng — hai thứ chen nhau thì dồn dập quá.
-    const ch = choHoiSauBai; choHoiSauBai = null;
+    let ch = choHoiSauBai; choHoiSauBai = null;
+    // Đường màu xanh (bài 23h bên Minh): không hỏi thêm, để hiệu ứng mở bài ẩn chạy ngay
+    if (ch && ch.world === "nam" && ch.hour === 23) ch = null;
     const laHieuTa = !!ch && ch.world === "nu" && ch.hour === 23;   // chỉ riêng bài Hiểu ta hỏi về lời bài
     if (laHieuTa && !AUTHOR_REVEAL){
       // Lời này nằm vào Ngăn thư (cả máy Minh lẫn máy chị), y như câu hỏi P99.
@@ -5252,7 +5254,7 @@
   function maybeOffer(){
     const p = PAIRS.find(pp => pairComplete(pp) && !progress.asked[pp.id]);
     if (p) setTimeout(() => offerStory(p), 3000);
-    if (khungCuoiDaNghe() && !progress.anBao) setTimeout(hienBaiAn, 3000);
+    if (khungCuoiDaNghe() && !progress.anBao) setTimeout(hienBaiAn, 700);
   }
 
   // ---- 隐藏款 (bài ẩn Friday Night) ----
