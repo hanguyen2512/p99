@@ -1168,6 +1168,12 @@
     color:var(--parchment);
   }
   .thu-chat.unread .thu-hoi{ color:#f1d98a; }
+  .thu-so{
+    display:inline-block; vertical-align:middle; margin-left:.6em; min-width:1.45em; padding:.05em .45em;
+    border-radius:999px; background:rgba(200,162,74,.22); border:1px solid rgba(200,162,74,.5);
+    color:#f1d98a; font-family:'Work Sans',system-ui,sans-serif; font-size:.72rem; font-style:normal;
+    font-weight:400; text-align:center; line-height:1.5; letter-spacing:0;
+  }
   .thu-chat .thu-xem{
     display:block; margin-top:.28em; font-family:'Work Sans',system-ui,sans-serif;
     font-size:.78rem; font-weight:300; color:#8d8370;
@@ -2687,6 +2693,19 @@
     const toi = vaiCuaToi();
     return phongChat.tin.filter(t => t.tu !== toi && t.stt > phongChat.daDoc).length;
   }
+  // Lời hỏi lúc 0:00 (hằng ngày) cũng hiện trong phòng chat. Trả lời ngay ở pop-up chưa tính là "đã đọc":
+  // Minh phải mở phòng chat và lời ấy hiện trên màn hình thì số trên dòng "Nhắn với em" mới hết.
+  // Lời của những ngày trước ngày bản này chạy lần đầu thì coi như đã qua (khỏi hiện một con số khổng lồ).
+  function ngayVietNamHomNay(){ return new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10); }
+  function hoiDaThayTrongPhong(p){
+    if (mayCuaChi() || !p.hangNgay) return true;
+    if (!progress.hoiPhongMoc){ progress.hoiPhongMoc = ngayVietNamHomNay(); saveProgress(); }
+    const ng = NGAY_MO[p.day];
+    if (ng && ng < progress.hoiPhongMoc) return true;
+    return !!(progress.hoiTrongPhong && progress.hoiTrongPhong["hoi-d" + p.day]);
+  }
+  function hoiChuaDocPhong(){ return thuDaToi().filter(p => !hoiDaThayTrongPhong(p)).length; }
+  function soTrenHangChat(){ return chatChuaDoc() + hoiChuaDocPhong(); }
   // "Đã đọc" = tin ấy thực sự hiện trên màn hình phòng chat (xem kiemTraDaThay).
   // Mốc daDoc chỉ nhích qua từng tin của người kia theo thứ tự, tin nào chưa hiện thì dừng lại ở đó.
   var daThay = new Set();
@@ -2699,6 +2718,19 @@
       const phan = Math.min(r.bottom, khung.bottom) - Math.max(r.top, khung.top);
       if (phan >= Math.min(r.height * 0.6, 60)) daThay.add(+e.dataset.stt);
     });
+    // lời hỏi lúc 0:00 hiện trên màn hình phòng chat → đã đọc
+    let daHoi = false;
+    roomIn.querySelectorAll(".rm.hoi[data-khoa]").forEach(e => {
+      const k = e.dataset.khoa;
+      if (!k || (progress.hoiTrongPhong && progress.hoiTrongPhong[k])) return;
+      const r = e.getBoundingClientRect();
+      const phan = Math.min(r.bottom, khung.bottom) - Math.max(r.top, khung.top);
+      if (phan >= Math.min(r.height * 0.6, 60)){
+        if (!progress.hoiTrongPhong) progress.hoiTrongPhong = {};
+        progress.hoiTrongPhong[k] = true; daHoi = true;
+      }
+    });
+    if (daHoi){ saveProgress(); renderThu(); refreshBells(); }
     const toi = vaiCuaToi();
     let moc = phongChat.daDoc;
     const kia = phongChat.tin.filter(t => t.tu !== toi && t.stt > moc).sort((a, b) => a.stt - b.stt);
@@ -5068,7 +5100,7 @@
   }
   function thuChuaMo(){
     // chị không "nhận" lá thư nào — chỉ Minh có thư chưa mở
-    const thu = mayCuaChi() ? 0 : thuDaToi().filter(p => !daNoiRoi("hoi-d" + p.day)).length;
+    const thu = mayCuaChi() ? 0 : thuDaToi().filter(p => !daNoiRoi("hoi-d" + p.day) || !hoiDaThayTrongPhong(p)).length;
     return thu + chatChuaDoc();
   }
   const THANG = { "01":"tháng Một","02":"tháng Hai","03":"tháng Ba","04":"tháng Tư",
@@ -6337,13 +6369,14 @@
     const chi = mayCuaChi();
     const ds = cacMucPhong();
     const cuoi = ds[ds.length - 1];
-    const n = chatChuaDoc();
+    const n = soTrenHangChat();
     const row = document.createElement("button");
     row.className = "row nu thu-row thu-chat" + (n ? " unread" : "");
     const a = document.createElement("span");
     a.className = "thu-hoi";
     if (n){ const h = document.createElement("i"); h.className = "heart"; a.appendChild(h); }
     a.appendChild(document.createTextNode(chi ? "Nhắn với anh" : "Nhắn với em"));
+    if (n && !chi){ const so = document.createElement("span"); so.className = "thu-so"; so.textContent = n; a.appendChild(so); }
     row.appendChild(a);
     if (cuoi){
       const b = document.createElement("span");
