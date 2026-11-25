@@ -4455,6 +4455,7 @@
   // ================= trình phát: màn hình khoá · lặp lại · phát tất cả =================
   // Biểu tượng nhỏ cho các nút
   const BT_LAP    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+  const BT_CAP    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/></svg>';
   const BT_PHAT   = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
   const BT_NGAU   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>';
   const BT_TRUOC  = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>';
@@ -4527,7 +4528,7 @@
 
   // ---- danh sách phát ----
   //   loai: "bai" | "truyen" | ""   ds: các bài/truyện sẽ phát   i: đang ở mục nào
-  var dsPhat = { loai: "", ds: [], i: 0, ngauNhien: false };
+  var dsPhat = { loai: "", ds: [], i: 0, ngauNhien: false, kieu: "tat" };
   var loiLienTiep = 0;
   function phatDangMo(){ return dsPhat.loai !== ""; }
 
@@ -4561,10 +4562,23 @@
     ).filter(id => STORIES[id] && STORIES[id].audio && progress.stories[id]);   // chỉ truyện đã nghe
   }
 
+  // Phát theo cặp: lần lượt từng cặp bài (bên Minh rồi bên chị) từ trên xuống dưới.
+  // Cặp nào còn thiếu một bài (bài khoá, chưa mở, hay chưa nghe lần đầu) thì bỏ qua, sang cặp kế.
+  function dsTheoCap(){
+    const co = dsBaiHienCo();
+    const coBai = (w, h) => co.some(x => x.world === w && x.h === h);
+    const ds = [];
+    PAIRS.forEach(p => {
+      if (coBai("nam", p.nam) && coBai("nu", p.nu)){ ds.push({ world: "nam", h: p.nam }); ds.push({ world: "nu", h: p.nu }); }
+    });
+    return ds;
+  }
   function batDauDanhSach(loai, ngau){
-    const ds = loai === "bai" ? dsBaiHienCo() : dsTruyenHienCo();
+    const ds = ngau === "cap" ? dsTheoCap() : (loai === "bai" ? dsBaiHienCo() : dsTruyenHienCo());
     if (!ds.length) return;
-    dsPhat = { loai, ds: ngau ? xaoTron(ds) : ds, i: 0, ngauNhien: !!ngau };
+    // kieu: "tat" (lần lượt) | "ngau" (xáo trộn) | "cap" (từng cặp bài một, xem dsTheoCap)
+    const kieu = ngau === "cap" ? "cap" : (ngau ? "ngau" : "tat");
+    dsPhat = { loai, ds: kieu === "ngau" ? xaoTron(ds) : ds, i: 0, ngauNhien: kieu === "ngau", kieu };
     loiLienTiep = 0;
     capNhatNutDanhSach();
     if (loai === "bai" && !portal.classList.contains("open")){
@@ -4574,7 +4588,7 @@
   }
   function ketThucDanhSach(){
     if (!phatDangMo()) return;
-    dsPhat = { loai: "", ds: [], i: 0, ngauNhien: false };
+    dsPhat = { loai: "", ds: [], i: 0, ngauNhien: false, kieu: "tat" };
     capNhatNutDanhSach();
   }
 
@@ -4616,7 +4630,7 @@
     const sb = document.getElementById("storyBar");
     if (sb) sb.classList.toggle("pl", pl && dsPhat.loai === "truyen");
     document.querySelectorAll(".pl-top button[data-pl]").forEach(b =>
-      b.classList.toggle("on", pl && b.dataset.loai === dsPhat.loai && b.dataset.pl === (dsPhat.ngauNhien ? "ngau" : "tat")));
+      b.classList.toggle("on", pl && b.dataset.loai === dsPhat.loai && b.dataset.pl === dsPhat.kieu));
     capNhatNutTruocSauMedia();
   }
 
@@ -4631,6 +4645,12 @@
     a.addEventListener("click", () => batDauDanhSach(loai, false));
     b.addEventListener("click", () => batDauDanhSach(loai, true));
     w.appendChild(a); w.appendChild(b);
+    if (loai === "bai" && dsTheoCap().length){        // chỉ hiện khi đã có ít nhất một cặp nghe đủ
+      const c = taoNutPhat("phát theo cặp", BT_CAP, "pl-btn");
+      c.dataset.pl = "cap"; c.dataset.loai = loai;
+      c.addEventListener("click", () => batDauDanhSach(loai, "cap"));
+      w.appendChild(c);
+    }
     return w;
   }
 
