@@ -456,6 +456,46 @@
     .sky-point .sky-label{ font-size:0.74rem; }
   }
 
+  /* ---------- hai khoảng trời hoà làm một ---------- */
+  .sky-toggle.hoa-mot .sky-path, .sky-toggle.hoa-mot #pointHers{ display:none; }
+  .sky-toggle.hoa-mot{ justify-content:center; }
+  .sky-toggle.hoa-mot #pointMine .dot{
+    background:#a9cdf2; transform:scale(1.5);
+    box-shadow:0 0 14px rgba(140,190,245,.95), 0 0 30px rgba(110,165,235,.5), 0 0 0 1.5px rgba(0,0,0,.35);
+  }
+  .sky-toggle.hoa-mot #pointMine .sky-label{ color:#bcd9f7; text-shadow:0 1px 3px rgba(0,0,0,.7), 0 0 12px rgba(120,175,240,.6); }
+  .clock-wrap{ transition:filter 1.2s ease; }
+  .clock-wrap.hoa-xanh{ filter:drop-shadow(0 0 16px rgba(110,170,235,.42)); }
+  .row.ghep{ margin-left:1.7em; border-left:1px solid rgba(160,200,245,.28); padding-left:.7em; }
+  .sky-path{ transition:opacity .9s ease; }
+  .hoa-ov{ position:fixed; inset:0; z-index:40; pointer-events:none; overflow:hidden; }
+  .hoa-veil{ position:absolute; inset:0; opacity:0; transition:opacity .7s ease;
+    background:radial-gradient(circle at 50% 42%, rgba(46,84,150,.55), rgba(4,8,22,.9) 72%); }
+  .hoa-veil.on{ opacity:1; }
+  .hoa-orb{
+    position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%;
+    background:#e6c46a; box-shadow:0 0 16px rgba(230,196,106,.95), 0 0 36px rgba(230,196,106,.55);
+  }
+  .hoa-orb.o2{ background:#c8d9ee; box-shadow:0 0 16px rgba(180,210,245,.95), 0 0 36px rgba(140,185,240,.55); }
+  .hoa-orb.chung{ background:#fff4fa; box-shadow:0 0 18px rgba(255,190,225,1), 0 0 40px rgba(190,160,255,.7), 0 0 70px rgba(140,200,255,.4); }
+  .hoa-tr{ position:absolute; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:50%; }
+  .hoa-tr.t1{ background:#f0d58a; box-shadow:0 0 8px rgba(230,196,106,.9); }
+  .hoa-tr.t2{ background:#d6e6f7; box-shadow:0 0 8px rgba(170,205,245,.9); }
+  .hoa-st{ position:absolute; width:var(--s,3px); height:var(--s,3px); margin:-2px 0 0 -2px; border-radius:50%;
+    background:#eaf4ff; box-shadow:0 0 8px currentColor; }
+  .hoa-st.chu{ background:transparent !important; width:auto; height:auto; font-size:var(--s,12px); line-height:1; margin:0; translate:-50% -50%;
+    box-shadow:none; text-shadow:0 0 8px currentColor, 0 0 16px currentColor; }
+  .hoa-sao{ position:absolute; left:0; top:0; overflow:visible; pointer-events:none; filter:drop-shadow(0 0 4px rgba(200,225,255,.9)); }
+  .hoa-flash{ position:absolute; width:40px; height:40px; margin:-20px 0 0 -20px; border-radius:50%; opacity:0;
+    background:radial-gradient(circle, rgba(255,240,250,.95) 0, rgba(255,170,215,.55) 30%, rgba(160,140,255,0) 70%); }
+  .hoa-vong{
+    position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%;
+    border:1.5px solid rgba(170,210,250,.9); opacity:0;
+  }
+  .hoa-sang{ animation:hoaSang 1.3s ease-out; }
+  @keyframes hoaSang{ 0%{ filter:none; } 30%{ filter:drop-shadow(0 0 10px rgba(150,200,250,.95)) brightness(1.5); } 100%{ filter:none; } }
+  @media (prefers-reduced-motion: reduce){ .hoa-ov{ display:none; } }
+
   /* ---------- the song portal ---------- */
   .portal{
     position:fixed; inset:0; z-index:10;
@@ -709,6 +749,12 @@
   }
   .row.cap-sang{ animation:capSang 1.2s ease-in-out 3; }
   .row.cap-sang .cap-dau{ color:#f1d98a; }
+  .row .cap-dau.dao{ color:#e7a7bd; }
+  .row.cap-sang .cap-dau.dao{ color:#f6c3d4; }
+  .row.moi-mo{ background:linear-gradient(90deg, rgba(240,175,205,.22), rgba(240,175,205,0) 88%); box-shadow:inset 2px 0 0 rgba(240,170,200,.9), 0 0 0 rgba(240,170,200,0); border-radius:10px; animation:moiMo 2.2s ease-in-out infinite; }
+  .moi-nhan{ font-style:normal; font-size:.62em; letter-spacing:.06em; padding:.1em .6em; margin-left:.4em; border-radius:99px; color:#f6c3d4; letter-spacing:.04em; border:1px solid rgba(240,170,200,.6); vertical-align:.15em; white-space:nowrap; }
+  @keyframes moiMo{ 0%,100%{ background-color:rgba(240,175,205,.04); box-shadow:inset 2px 0 0 rgba(240,170,200,.9), 0 0 0 rgba(240,170,200,0); } 50%{ background-color:rgba(240,175,205,.26); box-shadow:inset 2px 0 0 rgba(255,190,220,1), 0 0 18px rgba(240,170,200,.55); } }
+  @media (prefers-reduced-motion: reduce){ .row.moi-mo{ animation:none; } }
   @keyframes capSang{ 0%,100%{ background:transparent; } 50%{ background:rgba(214,176,92,.16); } }
   @media (prefers-reduced-motion: reduce){ .row.cap-sang{ animation:none; background:rgba(214,176,92,.16); } }
   .row .name{ flex:1; font-size:1.05rem; font-style:italic; line-height:1.45; }
@@ -2790,7 +2836,7 @@
     if (!songReady(song)) return null;
     // PHẢI tới ngày của khung giờ này đã. Thiếu câu này thì hễ up bài sớm là
     // chữ số sáng sớm theo, và cả mười một bài mở toang cùng một lúc.
-    if (!daToiLuot(world, h)) return null;
+    if (!dangHoaMot() && !daToiLuot(world, h)) return null;
     return songGone(slotId(world, h)) ? null : song;
   }
 
@@ -2836,7 +2882,7 @@
   // Truyện khép lại: chỉ mở sau khi đã nghe trọn bài ẩn.
   function ketCho(){
     const st = STORIES[KET_ID];
-    return !!(st && st.audio) && heard("hidden") && !storyGone(KET_ID);
+    return !!(st && st.audio) && (heard("hidden") || truyenMoHet()) && !storyGone(KET_ID);
   }
   // Trái tim trên Ngăn truyện chỉ để báo CÓ TRUYỆN MỚI. Nghe rồi là tắt.
   // Trước đây nó đếm mọi truyện đã mở khoá, mà truyện thì không còn biến mất
@@ -3044,7 +3090,7 @@
 
   function storiesWaiting(){
     // chỉ đếm truyện có thật và đã có audio: truyện bị bỏ (bo) hay chưa thu thì không có gì để nghe
-    return PAIRS.filter(p => pairComplete(p) && !STORIES[p.id].bo && STORIES[p.id].audio && truyenChuaNghe(p.id)).length
+    return PAIRS.filter(p => pairNghe(p) && !STORIES[p.id].bo && STORIES[p.id].audio && truyenChuaNghe(p.id)).length
          + (moDauCho()  && truyenChuaNghe(MO_DAU_ID) ? 1 : 0)
          + (naritaCho() && truyenChuaNghe(NARITA_ID) ? 1 : 0)
          + (caiAmCho()  && truyenChuaNghe(CAI_AM_ID) ? 1 : 0)
@@ -3391,6 +3437,8 @@
 
   // ---- hai bầu trời: của bạn (giờ/địa điểm thiết bị) và của Hà (Leuven, Bỉ) ----
   let activeSky = "nam";
+  let hoaMotTruoc = null;
+  let hoaChuaHienSo = false;      // hiệu ứng hoà một đang chạy: số trên hai ngăn đợi tới cuối mới chồi ra   // null: chưa xét lần nào
 
   function hexToRgb(hex){ hex = hex.replace("#",""); return [0,2,4].map(i => parseInt(hex.substr(i,2),16)); }
   function rgbToHex(rgb){ return "#" + rgb.map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0")).join(""); }
@@ -3733,6 +3781,12 @@
     const laChi = mayCuaChi();
     const t = (typeof I18N !== "undefined" && I18N[currentLang]) || null;
     const dat = (id, chu) => { const e = document.getElementById(id); if (e && chu) e.textContent = chu; };
+    if (dangHoaMot()){
+      dat("namTitle", TEN_HOA);
+      const e = document.getElementById("mySkyPlace");
+      if (e) e.textContent = noiCuaToi || noiNguoiKia || noiTheoMui(muiGioNam()) || "";
+      return;
+    }
     dat("namTitle", laChi ? "his sky" : "my sky");
     dat("nuTitle",  laChi ? "my sky"  : "her sky");
 
@@ -3821,7 +3875,18 @@
     return { h: d.getUTCHours(), m: d.getUTCMinutes(), s: d.getUTCSeconds() };
   }
 
+  // ---------- hai khoảng trời hoà làm một: 6/1/2027 10:00 → 16/1/2027 13:00 (giờ Việt Nam) ----------
+  // Hai người gặp nhau: chỉ còn MỘT đồng hồ chạy theo giờ của Minh, không còn "his sky / my sky".
+  const HOA_TU  = Date.parse("2027-01-06T10:00:00+07:00");
+  const HOA_DEN = Date.parse("2027-01-16T13:00:00+07:00");
+  const TEN_HOA = "the blue line";
+  // Truyện mở hết từ lúc gặp nhau và ở lại mãi; bài hát chỉ mở trong cửa sổ gặp nhau.
+  function truyenMoHet(){ return Date.now() >= HOA_TU; }
+  function pairNghe(p){ return pairComplete(p) || truyenMoHet(); }
+  function dangHoaMot(d){ const t = (d || new Date()).getTime(); return t >= HOA_TU && t < HOA_DEN; }
+
   function worldParts(world, date){
+    if (dangHoaMot(date)) return gioBenNam(date);     // một đồng hồ: giờ của Minh
     if (world === "nu"){
       const g = gioBenNu(date);
       let h = g.h;
@@ -4067,6 +4132,7 @@
     // Chỉ canh sau khi lúc mở app đã ghi được múi giờ đầu tiên; trước đó
     // những thứ ở dưới còn chưa dựng xong.
     if (typeof muiGioDaBao === "string" && muiGioMay() !== muiGioDaBao) baoLaiMuiGio(true);
+    capNhatHoaMot();
     const nowMin = new Date().getMinutes();
     if (nowMin !== lastPopMin && window.__popsReady){ lastPopMin = nowMin; checkPopups(); }
     const p = worldParts(activeSky, new Date());
@@ -4144,7 +4210,219 @@
     });
   }
 
+  // Bật/tắt chế độ một bầu trời. Lần đầu thấy nó bật (đúng lúc app đang mở, hoặc mở app giữa kỳ)
+  // thì chạy hiệu ứng hai ánh sáng nhập làm một.
+  function ganHoaMot(bat){
+    const tg = document.getElementById("skyToggle"), cw = document.querySelector(".clock-wrap");
+    if (tg){
+      // giữ nguyên bề rộng của hàng nhãn để chấm duy nhất nằm đúng chỗ hai ánh sáng vừa nhập lại
+      if (bat && !tg.classList.contains("hoa-mot")) tg.style.minWidth = tg.offsetWidth + "px";
+      if (!bat) tg.style.minWidth = "";
+      tg.classList.toggle("hoa-mot", bat);
+    }
+    if (cw) cw.classList.toggle("hoa-xanh", bat);
+    if (bat && activeSky !== "nam"){
+      activeSky = "nam";
+      const a = document.getElementById("pointMine"), b = document.getElementById("pointHers");
+      if (a){ a.classList.add("active"); a.setAttribute("aria-pressed", "true"); }
+      if (b){ b.classList.remove("active"); b.setAttribute("aria-pressed", "false"); }
+    }
+    if (typeof veNhanTroi === "function") veNhanTroi();
+    try { renderAlbum(); } catch(e){}
+  }
+  function hieuUngHoaMot(xong){
+    const a = document.querySelector("#pointMine .dot"), b = document.querySelector("#pointHers .dot");
+    const giam = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const hetHieuUng = () => { hoaChuaHienSo = false; try { refreshBells(); } catch(e){} };
+    if (!a || !b || giam || !a.animate){ xong(); hetHieuUng(); return; }
+    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+    const ax = ra.left + ra.width/2, ay = ra.top + ra.height/2, bx = rb.left + rb.width/2, by = rb.top + rb.height/2;
+    const tgr = (document.getElementById("skyToggle") || a).getBoundingClientRect();
+    const mx = tgr.left + tgr.width/2, my = (ay + by)/2;       // chỗ chấm duy nhất sẽ nằm
+    const W = innerWidth, H = innerHeight, cx = W/2, cy = H*0.42;   // chỗ hai ánh sáng gặp nhau
+    const ov = document.createElement("div");
+    ov.className = "hoa-ov";
+    ov.innerHTML = '<i class="hoa-veil"></i><i class="hoa-orb o1"></i><i class="hoa-orb o2"></i>';
+    document.body.appendChild(ov);
+    const veil = ov.children[0], o1 = ov.children[1], o2 = ov.children[2];
+    const sp = document.querySelector(".sky-path");
+    const ease = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
+    const dat = (e, x, y) => { e.style.left = x + "px"; e.style.top = y + "px"; };
+    const them = (cls, x, y) => { const e = document.createElement("i"); e.className = cls; dat(e, x, y); ov.appendChild(e); return e; };
+    dat(o1, ax, ay); dat(o2, bx, by);
+    requestAnimationFrame(() => { veil.classList.add("on"); if (sp) sp.style.opacity = "0"; });
+
+    // 1) hai ánh sáng lướt về giữa màn hình theo hai đường cong, để lại vệt sao nhỏ
+    const T1 = 1900, t0 = performance.now();
+    let lastTrail = 0;
+    const duong = (p0x, p0y, kx, ky, t) => {            // bezier bậc hai
+      const u = 1 - t; return [u*u*p0x + 2*u*t*kx + t*t*cx, u*u*p0y + 2*u*t*ky + t*t*cy];
+    };
+    const k1 = [ax - W*0.30, (ay + cy)/2 + H*0.10], k2 = [bx + W*0.30, (by + cy)/2 - H*0.10];
+    function bay(now){
+      const t = Math.min(1, (now - t0 - 250) / T1);
+      if (t >= 0){
+        const e = ease(t);
+        const p1 = duong(ax, ay, k1[0], k1[1], e), p2 = duong(bx, by, k2[0], k2[1], e);
+        dat(o1, p1[0], p1[1]); dat(o2, p2[0], p2[1]);
+        if (now - lastTrail > 55 && t < 1){
+          lastTrail = now;
+          [[p1, "t1"], [p2, "t2"]].forEach(([p, c]) => {
+            const d = them("hoa-tr " + c, p[0] + (Math.random()-.5)*8, p[1] + (Math.random()-.5)*8);
+            d.animate([{ opacity:.9, transform:"scale(1)" }, { opacity:0, transform:"scale(.2) translateY(10px)" }], { duration:900, easing:"ease-out" }).onfinish = () => d.remove();
+          });
+        }
+      }
+      if (t < 1) requestAnimationFrame(bay);
+    }
+    requestAnimationFrame(bay);
+
+    // 2) gặp nhau: loé sáng, ba vòng sóng, sao toả ra; phía sau lớp sáng này, trời đổi sang một bầu
+    setTimeout(() => {
+      o1.style.opacity = "0"; o2.style.opacity = "0";
+      // chạm nhau: màn hình rung nhẹ (máy Android còn rung thật; iPhone thì chỉ có rung trên hình)
+      try { if (navigator.vibrate) navigator.vibrate([35, 50, 70, 40, 30]); } catch(e){}
+      const rung = document.querySelector(".clock-wrap");
+      if (rung && rung.animate) rung.animate([
+        { transform:"translate(0,0)" }, { transform:"translate(-3px,2px)" }, { transform:"translate(3px,-2px)" },
+        { transform:"translate(-2px,-1px)" }, { transform:"translate(2px,1px)" }, { transform:"translate(-1px,0)" }, { transform:"translate(0,0)" }
+      ], { duration:650, easing:"ease-out" });
+      const chung = them("hoa-orb chung", cx, cy);
+      chung.animate([{ transform:"scale(.6)" }, { transform:"scale(1.9)" }, { transform:"scale(1.4)" }], { duration:900, easing:"ease-out", fill:"forwards" });
+      // một vầng sáng hồng-tím rất nhẹ thay cho loé trắng, và một vòng sóng nhỏ
+      const fl = them("hoa-flash", cx, cy);
+      fl.animate([{ opacity:0, transform:"scale(.3)" }, { opacity:.8, transform:"scale(3)", offset:.3 }, { opacity:0, transform:"scale(7)" }], { duration:1400, easing:"ease-out" }).onfinish = () => fl.remove();
+      const v = them("hoa-vong", cx, cy);
+      v.animate([{ opacity:.8, transform:"scale(.2)" }, { opacity:0, transform:"scale(11)" }], { duration:1300, easing:"ease-out" }).onfinish = () => v.remove();
+      // pháo hoa pastel: ba chùm nở nối nhau, hạt là chấm tròn, ngôi sao lấp lánh và trái tim nhỏ
+      const MAU = ["#ff9ec7", "#ffd86b", "#8ff0d0", "#b9a2ff", "#8fd3ff", "#ffb88c"];
+      const HINH = ["", "", "", "\u2726", "\u2726", "\u2665"];
+      const chum = (ox, oy, n, tam) => {
+        for (let i = 0; i < n; i++){
+          const ang = (i / n) * Math.PI * 2 + Math.random()*0.35, dis = tam*(0.6 + Math.random()*0.5);
+          const mau = MAU[(Math.random()*MAU.length) | 0], hinh = HINH[(Math.random()*HINH.length) | 0];
+          const st = them("hoa-st" + (hinh ? " chu" : ""), ox, oy);
+          st.style.color = mau; st.style.background = hinh ? "transparent" : mau;
+          st.style.setProperty("--s", hinh ? (11 + Math.random()*9) + "px" : (3 + Math.random()*3) + "px");
+          if (hinh) st.textContent = hinh;
+          const dx = Math.cos(ang)*dis, dy = Math.sin(ang)*dis;
+          st.animate([{ opacity:1, transform:"translate(0,0) scale(.6)" },
+                      { opacity:1, transform:"translate(" + dx + "px," + dy + "px) scale(1.1)", offset:.55 },
+                      { opacity:0, transform:"translate(" + dx*1.08 + "px," + (dy + 46) + "px) scale(.4)" }],
+                     { duration:1500 + Math.random()*500, easing:"cubic-bezier(.15,.7,.3,1)" }).onfinish = () => st.remove();
+        }
+      };
+      chum(cx, cy, 22, 120);
+      setTimeout(() => chum(cx - 70, cy - 55, 16, 85), 260);
+      setTimeout(() => chum(cx + 75, cy - 40, 16, 85), 480);
+      setTimeout(() => chum(cx - 10, cy + 60, 14, 75), 700);
+      // bụi nhỏ li ti toả ra từ chỗ hai ánh sáng gặp nhau, bay lững lờ rồi tan
+      for (let i = 0; i < 150; i++){
+        const ang = Math.random()*Math.PI*2, dis = 40 + Math.pow(Math.random(), .6)*260;
+        const d = them("hoa-st bui-nho", cx, cy);
+        d.style.background = MAU[(Math.random()*MAU.length) | 0]; d.style.color = d.style.background;
+        d.style.setProperty("--s", (1.4 + Math.random()*2.2) + "px");
+        const dx = Math.cos(ang)*dis, dy = Math.sin(ang)*dis;
+        d.animate([{ opacity:0, transform:"translate(0,0)" }, { opacity:1, transform:"translate(" + dx*.7 + "px," + dy*.7 + "px)", offset:.3 },
+                   { opacity:0, transform:"translate(" + dx + "px," + (dy + 30 + Math.random()*40) + "px)" }],
+                  { duration:1800 + Math.random()*1600, delay:Math.random()*500, easing:"cubic-bezier(.2,.7,.3,1)", fill:"backwards" }).onfinish = () => d.remove();
+      }
+      // pháo hoa xếp thành chòm sao Ma Kết (Capricornus): các hạt bay tới đúng chỗ từng ngôi sao, rồi nối nét sáng mảnh
+      // [xích kinh (giờ), xích vĩ (độ), cỡ]: α, θ, ι, γ, δ, ζ, ω, ψ, β
+      const SAO = [[20.30,-12.5,1.0],[21.10,-17.2,.7],[21.37,-16.8,.7],[21.67,-16.7,.85],[21.78,-16.1,1.0],[21.44,-22.4,.8],[20.86,-26.9,.8],[20.77,-25.3,.7],[20.35,-14.8,.9]];
+      const XM = SAO.map(t => -t[0]*15*Math.cos(18*Math.PI/180)), YM = SAO.map(t => -t[1]);
+      const x0 = Math.min.apply(null, XM), x1 = Math.max.apply(null, XM), y0 = Math.min.apply(null, YM), y1 = Math.max.apply(null, YM);
+      const ty = Math.min(W*0.82, 320)/(x1 - x0), kcx = cx, kcy = cy - 4;
+      const diem = SAO.map((t, i) => [kcx + (XM[i] - (x0 + x1)/2)*ty, kcy + (YM[i] - (y0 + y1)/2)*ty]);
+      const svgNS = "http://www.w3.org/2000/svg";
+      const sv = document.createElementNS(svgNS, "svg");
+      sv.setAttribute("class", "hoa-sao"); sv.setAttribute("width", W); sv.setAttribute("height", H);
+      ov.appendChild(sv);
+      const NOI = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,0]];
+      NOI.forEach(([i, j], k) => {
+        const ln = document.createElementNS(svgNS, "line");
+        ln.setAttribute("x1", diem[i][0]); ln.setAttribute("y1", diem[i][1]); ln.setAttribute("x2", diem[j][0]); ln.setAttribute("y2", diem[j][1]);
+        ln.setAttribute("stroke", "rgba(225,235,255,.75)"); ln.setAttribute("stroke-width", "1.4"); ln.setAttribute("stroke-linecap", "round");
+        const len = Math.hypot(diem[j][0] - diem[i][0], diem[j][1] - diem[i][1]);
+        ln.setAttribute("stroke-dasharray", len); ln.setAttribute("stroke-dashoffset", len);
+        sv.appendChild(ln);
+        ln.animate([{ strokeDashoffset:len, opacity:1 }, { strokeDashoffset:0, opacity:1, offset:.45 }, { strokeDashoffset:0, opacity:1, offset:.82 }, { strokeDashoffset:0, opacity:0 }],
+                   { duration:2800, delay:900 + k*110, easing:"ease-out", fill:"both" });
+      });
+      diem.forEach((p, i) => {
+        const st = them("hoa-st chu sao-ma-ket", cx, cy);
+        st.textContent = "\u2726"; st.style.color = i % 3 === 0 ? "#ffe9a8" : (i % 3 === 1 ? "#ffd0ea" : "#cfe6ff");
+        st.style.setProperty("--s", (20 + SAO[i][2]*14) + "px");
+        const dx = p[0] - cx, dy = p[1] - cy;
+        st.animate([{ opacity:0, transform:"translate(0,0) scale(.3)", easing:"cubic-bezier(.2,.8,.3,1)" },
+                    { opacity:1, transform:"translate(" + dx + "px," + dy + "px) scale(1.15)", offset:.3 },
+                    { opacity:1, transform:"translate(" + dx + "px," + dy + "px) scale(.85)", offset:.45 },
+                    { opacity:1, transform:"translate(" + dx + "px," + dy + "px) scale(1.2)", offset:.6 },
+                    { opacity:1, transform:"translate(" + dx + "px," + dy + "px) scale(.95)", offset:.8 },
+                    { opacity:0, transform:"translate(" + dx + "px," + dy + "px) scale(.4)" }],
+                   { duration:3000, delay:i*40, easing:"linear", fill:"backwards" }).onfinish = () => st.remove();
+        // mỗi ngôi sao rắc thêm bụi nhỏ quanh nó
+        for (let k = 0; k < 9; k++){
+          const d = them("hoa-st bui-nho", p[0], p[1]);
+          d.style.background = MAU[(Math.random()*MAU.length) | 0]; d.style.color = d.style.background; d.style.setProperty("--s", (1.2 + Math.random()*1.8) + "px");
+          const a2 = Math.random()*Math.PI*2, r2 = 8 + Math.random()*22;
+          d.animate([{ opacity:0, transform:"translate(0,0)" }, { opacity:1, transform:"translate(" + Math.cos(a2)*r2*.6 + "px," + Math.sin(a2)*r2*.6 + "px)", offset:.3 },
+                     { opacity:0, transform:"translate(" + Math.cos(a2)*r2 + "px," + (Math.sin(a2)*r2 + 18) + "px)" }],
+                    { duration:1500 + Math.random()*900, delay:700 + i*60 + Math.random()*1500, easing:"ease-out", fill:"backwards" }).onfinish = () => d.remove();
+          d.style.left = p[0] + "px"; d.style.top = p[1] + "px";
+        }
+      });
+      // bụi lấp lánh rơi nhẹ khắp màn hình, kiểu phép thuật
+      for (let i = 0; i < 34; i++){
+        const x = Math.random()*W, y = Math.random()*H*0.7;
+        const d = them("hoa-st chu bui", x, y);
+        d.style.color = MAU[(Math.random()*MAU.length) | 0]; d.style.setProperty("--s", (7 + Math.random()*7) + "px");
+        d.textContent = "\u2726";
+        d.animate([{ opacity:0, transform:"translateY(0) scale(.3)" }, { opacity:1, transform:"translateY(18px) scale(1)", offset:.35 }, { opacity:0, transform:"translateY(70px) scale(.4)" }],
+                  { duration:1600 + Math.random()*900, delay:300 + Math.random()*1400, easing:"ease-in-out", fill:"backwards" }).onfinish = () => d.remove();
+      }
+    }, 250 + T1);
+    setTimeout(xong, 250 + T1 + 350);                       // đổi sang một bầu trời ngay lúc ánh sáng che hết
+
+    // 3) ánh sáng chung nhẹ nhàng trượt về chấm duy nhất trên nhãn trời, màn mờ tan đi
+    setTimeout(() => {
+      const ch = ov.querySelector(".hoa-orb.chung");
+      if (ch) ch.animate([{ left:cx + "px", top:cy + "px", transform:"scale(1.8)" }, { left:mx + "px", top:my + "px", transform:"scale(1)" }],
+                         { duration:1100, easing:"cubic-bezier(.5,0,.2,1)", fill:"forwards" });
+      veil.classList.remove("on");
+    }, 250 + T1 + 2500);
+    // 4) tới nơi: chấm thật hiện lên, hai ngăn sáng lên một nhịp và số mới chồi ra
+    setTimeout(() => {
+      if (sp) sp.style.opacity = "";
+      const ch = ov.querySelector(".hoa-orb.chung");
+      if (ch) ch.animate([{ opacity:1 }, { opacity:0 }], { duration:500, fill:"forwards" });
+      [albumBell, storyBell].forEach(el => { const bt = el && el.parentElement; if (bt){ bt.classList.add("hoa-sang"); setTimeout(() => bt.classList.remove("hoa-sang"), 1400); } });
+      hetHieuUng();
+    }, 250 + T1 + 3700);
+    setTimeout(() => ov.remove(), 250 + T1 + 4300);
+  }
+
+  function capNhatHoaMot(){
+    const bat = dangHoaMot();
+    if (bat === hoaMotTruoc) return;
+    const lanDau = hoaMotTruoc === null;
+    hoaMotTruoc = bat;
+    let daXem = false, chao = false;
+    if (bat){
+      try { daXem = localStorage.getItem("wanxia-hoa-v1") === String(HOA_TU); } catch(e){}
+      try { chao = helloDone; } catch(e){}
+      if (!daXem){ try { localStorage.setItem("wanxia-hoa-v1", String(HOA_TU)); } catch(e){} }
+    }
+    const chay = bat && !daXem && !(lanDau && !chao);   // vừa mở app mà màn chào còn đó thì vào thẳng
+    if (chay) hoaChuaHienSo = true;
+    if (!lanDau){ try { renderAlbum(); renderStories(); } catch(e){} }   // công tắc mở hết bật/tắt: vẽ lại hai ngăn
+    if (!bat){ ganHoaMot(false); return; }
+    if (!chay){ ganHoaMot(true); return; }
+    hieuUngHoaMot(() => ganHoaMot(true));
+  }
+
   async function travelTo(toSky){
+    if (dangHoaMot()) return;            // đang hoà làm một: không còn hai bầu trời để đi qua lại
     if (toSky === activeSky) return;
     clockWrapEl.classList.add("traveling");
     pointMine.classList.toggle("active", toSky === "nam");
@@ -4585,6 +4863,10 @@
         ds.push({ world, h });
       });
     });
+    if (dangHoaMot()){      // hoà làm một: thứ tự trên màn hình là từng cặp, bài Minh rồi bài chị
+      const gioMinh = x => x.world === "nam" ? x.h : ((DAY_LIST.find(d => d.nu === x.h) || {}).nam || x.h);
+      ds.sort((a, b) => (gioMinh(a) - gioMinh(b)) || (a.world === b.world ? 0 : a.world === "nam" ? -1 : 1));
+    }
     return ds.filter(x => !skyLocked(x.world));       // khoảng trời còn khoá thì không phát
   }
   // Các truyện ĐÃ NGHE trong Ngăn truyện, đúng thứ tự trên màn hình.
@@ -4752,8 +5034,14 @@
   // Album chỉ bày những gì Minh đã thật sự có: bài đã nghe, chưa nghe đủ hai lần.
   // Không hiện ô "chưa gặp" — Minh không cần biết còn bao nhiêu bài đang chờ.
   // Cột ký hiệu cặp. Chạm vào ký hiệu thì cả hai bài của cặp sáng lên một lúc (không mở bài).
+  // Hoa đào tối giản cho các bài bên chị lúc hai khoảng trời hoà làm một: năm cánh khía nhẹ, một nhuỵ nhỏ.
+  const BIEU_DAO = SVG_O + [0, 72, 144, 216, 288].map(a =>
+    '<path transform="rotate(' + a + ' 12 12)" d="M12 12C9.3 10.2 9 6.2 10.3 4.2L12 5.6L13.7 4.2C15 6.2 14.7 10.2 12 12Z"/>').join("") +
+    '<circle cx="12" cy="12" r=".9"/></svg>';
   function capCot(world, h){
     const cp = capCuaBai(world, h);
+    if (cp && world === "nu" && dangHoaMot())
+      return '<span class="cap-dau dao" role="button" data-cap="' + cp.id + '" title="cặp bài">' + BIEU_DAO + '</span>';
     return cp ? '<span class="cap-dau" role="button" data-cap="' + cp.id + '" title="cặp bài">' + capKyHtml(cp) + '</span>' : "";
   }
   let capSangHen = 0;
@@ -4773,6 +5061,8 @@
   function renderAlbum(){
     albumList.innerHTML = "";
     let here = 0, choNghe = 0;
+    const hoaMot = dangHoaMot();
+    const gop = [];          // lúc hoà làm một: gom cả hai bên vào một danh sách theo cặp
     ["nam","nu"].forEach(world => {
       const dsHang = [];
       // Thứ tự theo GIỜ CỦA MINH: bài bên chị xếp theo giờ của bài đi cặp với nó bên Minh,
@@ -4794,7 +5084,7 @@
           kh.className = "row " + world + " khoa";
           { const cp = capCuaBai(world, h); if (cp) kh.dataset.cap = cp.id; }
           kh.innerHTML =
-            '<span class="hour">' + HOUR_LABEL(h) + '</span>' + capCot(world, h) +
+            '<span class="hour">' + (hoaMot && world === "nu" ? "" : HOUR_LABEL(h)) + '</span>' + capCot(world, h) +
             '<span class="name"><i class="heart rong"></i>' + songTitleHtml(song) + '</span>' +
             '<span class="mark"><svg class="o-khoa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
           kh.addEventListener("click", () => showLoiKhoa(world === "nu" ? BAI_CHO_ANH : BAI_DANG_SUA));
@@ -4806,16 +5096,19 @@
         here++;
         if (dangDoi) choNghe++;
         const isNew = dangDoi || freshSongs.has(id);
+        // bài chỉ mở được nhờ thời gian gặp nhau (chưa tới ngày thường của nó) và chưa nghe: làm nổi lên cho Minh biết
+        const moiMo = dangHoaMot() && !daToiLuot(world, h) && !heard(id);
         const row = document.createElement("button");
-        row.className = "row " + world + (isNew ? " unread" : "");
+        row.className = "row " + world + (isNew ? " unread" : "") + (moiMo ? " moi-mo" : "");
         { const cp = capCuaBai(world, h); if (cp) row.dataset.cap = cp.id; }
         row.innerHTML =
-          '<span class="hour">' + HOUR_LABEL(h) + '</span>' + capCot(world, h) +
-          '<span class="name">' + (isNew ? '<i class="heart"></i>' : "") + songTitleHtml(song) + '</span>' +
+          '<span class="hour">' + (hoaMot && world === "nu" ? "" : HOUR_LABEL(h)) + '</span>' + capCot(world, h) +
+          '<span class="name">' + (isNew ? '<i class="heart"></i>' : "") + songTitleHtml(song) + (moiMo ? ' <em class="moi-nhan">unlocked</em>' : "") + '</span>' +
           '<span class="mark">\u266a</span>';
         row.addEventListener("click", () => { songOrigin = albumShelf; closeShelf(albumShelf); openSong(world, h); });
         dsHang.push({ k: gioMinh(h), row });
       });
+      if (hoaMot){ dsHang.forEach(x => gop.push({ k: x.k, world, row: x.row })); return; }
       const rows = dsHang.sort((a, b) => a.k - b.k).map(x => x.row);
       if (!rows.length) return;
       const lab = document.createElement("p");
@@ -4825,14 +5118,26 @@
       rows.forEach(r => albumList.appendChild(r));
     });
 
-    if (progress.hidden){
+    if (hoaMot && gop.length){
+      // Một đồng hồ theo giờ của Minh: dưới mỗi bài của Minh là bài đi cặp bên chị, thụt vào một chút.
+      const lab = document.createElement("p");
+      lab.className = "group-label";
+      lab.textContent = TEN_HOA;
+      albumList.appendChild(lab);
+      const coNam = new Set(gop.filter(x => x.world === "nam").map(x => x.k));
+      gop.sort((a, b) => (a.k - b.k) || (a.world === b.world ? 0 : a.world === "nam" ? -1 : 1))
+         .forEach(x => { if (x.world === "nu" && coNam.has(x.k)) x.row.classList.add("ghep"); albumList.appendChild(x.row); });
+    }
+
+    if (progress.hidden || dangHoaMot()){
       const lab = document.createElement("p");
       lab.className = "group-label";
       lab.textContent = "Phiên ngoại";
       const row = document.createElement("button");
       const chuaNgheAn = !heard("hidden");
-      row.className = "row nam" + (chuaNgheAn ? " unread bi-an" : "");
-      row.innerHTML = '<span class="hour">\u2014</span><span class="cap-dau cap-tau">' + BIEU_TAU + '</span><span class="name">' + (chuaNgheAn ? '<i class="heart"></i>' : "") + songTitle(HIDDEN) +
+      const moiAn = dangHoaMot() && !progress.hidden && chuaNgheAn;
+      row.className = "row nam" + (chuaNgheAn ? " unread bi-an" : "") + (moiAn ? " moi-mo" : "");
+      row.innerHTML = '<span class="hour">\u2014</span><span class="cap-dau cap-tau">' + BIEU_TAU + '</span><span class="name">' + (chuaNgheAn ? '<i class="heart"></i>' : "") + songTitle(HIDDEN) + (moiAn ? ' <em class="moi-nhan">unlocked</em>' : "") +
                       '</span><span class="mark">\u266a</span>';
       row.addEventListener("click", () => { songOrigin = albumShelf; closeShelf(albumShelf); openHidden(); });
       albumList.appendChild(lab); albumList.appendChild(row);
@@ -5008,7 +5313,7 @@
         return;
       }
       if (storyGone(p.id)) return;
-      if (!pairComplete(p)){
+      if (!pairNghe(p)){
         // Minh mới nghe MỘT trong hai bài của cặp này: hiện truyện dưới dạng đang khoá,
         // chạm vào thì được nhắc nhẹ phải nghe đủ cả hai bài trước.
         const daNam = heard(slotId("nam", p.nam)), daNu = heard(slotId("nu", p.nu));
@@ -5152,17 +5457,17 @@
     }
   }
 
-  // Dòng nhắc dưới đồng hồ: chỉ máy Minh, chỉ khi có tin của chị chưa đọc trong "Nhắn với em".
+  // Dòng nhắc dưới đồng hồ: máy Minh "Nhắn với em" (tin của chị chưa đọc), máy chị "Nhắn với anh" (tin của Minh chưa đọc).
   function capNhatTinMoi(){
     const el = document.getElementById("tinMoi");
     if (!el) return;
     let n = 0;
-    try { n = mayCuaChi() ? 0 : thuChuaMo(); } catch(e){}
+    try { n = thuChuaMo(); } catch(e){}
     if (n > 0){
       el.textContent = "";
       const i = document.createElement("i"); i.className = "tim-chu";
       el.appendChild(i);
-      el.appendChild(document.createTextNode("Nhắn với em · " + n + " tin chưa đọc"));
+      el.appendChild(document.createTextNode((mayCuaChi() ? "Nhắn với anh" : "Nhắn với em") + " · " + n + " tin chưa đọc"));
       el.hidden = false;
     } else {
       el.hidden = true;
@@ -5171,8 +5476,7 @@
   document.getElementById("tinMoi").addEventListener("click", () => openRoom());
 
   function refreshBells(){
-    setBell(albumBell, songsUnseen());
-    setBell(storyBell, storiesWaiting());
+    if (!hoaChuaHienSo){ setBell(albumBell, songsUnseen()); setBell(storyBell, storiesWaiting()); }
     setBell(thuBell, thuChuaMo());
     capNhatTinMoi();
     capNhatHuyHieu();
@@ -6656,7 +6960,7 @@
   checkPopups();
   // nghe xong khung giờ cuối mà chưa kịp thấy dòng "entered another parallel world" (thoát app giữa chừng)
   if (khungCuoiDaNghe() && !progress.anBao) setTimeout(hienBaiAn, 4000);
-  else if (progress.hidden && !heard("hidden")) setTimeout(taiTruocBaiAn, 6000);
+  else if ((progress.hidden || dangHoaMot()) && !heard("hidden")) setTimeout(taiTruocBaiAn, 6000);
 
   // ---------- xin phép nhắn tới máy, kể cả lúc app đóng ----------
   // PUSH_URL để trống thì app bỏ qua hẳn phần này — an toàn để đưa lên mạng
