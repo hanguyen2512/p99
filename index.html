@@ -6376,7 +6376,7 @@
     a.className = "thu-hoi";
     if (n){ const h = document.createElement("i"); h.className = "heart"; a.appendChild(h); }
     a.appendChild(document.createTextNode(chi ? "Nhắn với anh" : "Nhắn với em"));
-    if (n && !chi){ const so = document.createElement("span"); so.className = "thu-so"; so.textContent = n; a.appendChild(so); }
+    if (n){ const so = document.createElement("span"); so.className = "thu-so"; so.textContent = n; a.appendChild(so); }
     row.appendChild(a);
     if (cuoi){
       const b = document.createElement("span");
