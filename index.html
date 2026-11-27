@@ -752,6 +752,7 @@
   .row .cap-dau.dao{ color:#e7a7bd; }
   .row.cap-sang .cap-dau.dao{ color:#f6c3d4; }
   .row.moi-mo{ background:linear-gradient(90deg, rgba(240,175,205,.22), rgba(240,175,205,0) 88%); box-shadow:inset 2px 0 0 rgba(240,170,200,.9), 0 0 0 rgba(240,170,200,0); border-radius:10px; animation:moiMo 2.2s ease-in-out infinite; }
+  .moi-nhan.moi-moi{ color:#f1d98a; border-color:rgba(241,217,138,.6); }
   .moi-nhan{ font-style:normal; font-size:.62em; letter-spacing:.06em; padding:.1em .6em; margin-left:.4em; border-radius:99px; color:#f6c3d4; letter-spacing:.04em; border:1px solid rgba(240,170,200,.6); vertical-align:.15em; white-space:nowrap; }
   @keyframes moiMo{ 0%,100%{ background-color:rgba(240,175,205,.04); box-shadow:inset 2px 0 0 rgba(240,170,200,.9), 0 0 0 rgba(240,170,200,0); } 50%{ background-color:rgba(240,175,205,.26); box-shadow:inset 2px 0 0 rgba(255,190,220,1), 0 0 18px rgba(240,170,200,.55); } }
   @media (prefers-reduced-motion: reduce){ .row.moi-mo{ animation:none; } }
@@ -2068,7 +2069,7 @@
     nu: {
       1:{ video:"", poster:"", title:{ vi:"Cây Mộc Qua đã hoá thành hạt bụi", en:"Cây Mộc Qua đã hoá thành hạt bụi", zh:"Cây Mộc Qua đã hoá thành hạt bụi" } },   // assets/songs/caymocqua.mp4
       3:{ video:"assets/songs/suongdotriennon.mp4", poster:"", title:{ vi:"Sương đổ triền non ta đợi nàng", en:"Sương đổ triền non ta đợi nàng", zh:"Sương đổ triền non ta đợi nàng" } },   // assets/songs/suongdotriennon.mp4
-      5:{ video:"", poster:"", title:{ vi:"Hưởng - 响", en:"Hưởng - 响", zh:"Hưởng - 响" } },   // assets/songs/huong.mp4
+      5:{ video:"assets/songs/huong.mp4", poster:"", title:{ vi:"Hưởng - 响", en:"Hưởng - 响", zh:"Hưởng - 响" } },   // assets/songs/huong.mp4
       7:{ video:"assets/songs/vohanluu.mp4", poster:"", title:{ vi:"无限流 - Vô hạn lưu", en:"无限流 - Vô hạn lưu", zh:"无限流 - Vô hạn lưu" } },   // assets/songs/vohanluu.mp4
       9:{ video:"", poster:"", title:{ vi:"Canh cánh trong lòng", en:"Canh cánh trong lòng", zh:"Canh cánh trong lòng" } },   // assets/songs/canhcanhtronglong.mp4
       11:SILENT,
@@ -5095,12 +5096,13 @@
         const isNew = dangDoi || freshSongs.has(id);
         // bài chỉ mở được nhờ thời gian gặp nhau (chưa tới ngày thường của nó) và chưa nghe: làm nổi lên cho Minh biết
         const moiMo = dangHoaMot() && !daToiLuot(world, h) && !heard(id);
+        const baiMoi = !moiMo && BAI_MOI.indexOf(id) >= 0 && !heard(id);      // bài vừa được thêm video: gắn nhãn "new" tới khi nghe
         const row = document.createElement("button");
         row.className = "row " + world + (isNew ? " unread" : "") + (moiMo ? " moi-mo" : "");
         { const cp = capCuaBai(world, h); if (cp) row.dataset.cap = cp.id; }
         row.innerHTML =
           '<span class="hour">' + (hoaMot && world === "nu" ? "" : HOUR_LABEL(h)) + '</span>' + capCot(world, h) +
-          '<span class="name">' + (isNew ? '<i class="heart"></i>' : "") + songTitleHtml(song) + (moiMo ? ' <em class="moi-nhan">unlocked</em>' : "") + '</span>' +
+          '<span class="name">' + (isNew ? '<i class="heart"></i>' : "") + songTitleHtml(song) + (moiMo ? ' <em class="moi-nhan">unlocked</em>' : (baiMoi ? ' <em class="moi-nhan moi-moi">new</em>' : "")) + '</span>' +
           '<span class="mark">\u266a</span>';
         row.addEventListener("click", () => { songOrigin = albumShelf; closeShelf(albumShelf); openSong(world, h); });
         dsHang.push({ k: gioMinh(h), row });
@@ -5377,6 +5379,8 @@
   // Trái tim trên Ngăn nhạc cũng chỉ đếm bài CHƯA NGHE — nghe trực tiếp trên
   // mặt đồng hồ cũng tính, không bắt Minh mở ngăn ra mới tắt. Mở ngăn ra xem
   // rồi mà chưa nghe thì vẫn đếm, vì xem thấy không phải là đã nghe.
+  // Bài mới thêm video (cập nhật sau): nhãn "new" cạnh tên, và số trên Ngăn nhạc tự cộng thêm 1 vì bài chưa nghe.
+  const BAI_MOI = ["nu-5"];      // slotId: Hưởng - 响
   function songsUnseen(){
     let n = 0;
     ["nam","nu"].forEach(w => ODD_HOURS.forEach(h => { if (baiDangDoi(w, h)) n++; }));
