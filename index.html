@@ -2243,7 +2243,7 @@
     { day:11, at:[23,11], text:"“You become responsible, forever, for what you have tamed.” – Antoine de Saint-Exupéry, The Little Prince." },
     // Sau khi nghe trọn bài Hiểu ta lần đầu (không theo giờ): nằm vào Ngăn thư như lời hỏi P99.
     { day:14, at:null, sauBai:"nu-23", text:"i hope you like this lyric version (and also the name i gave to it)" },
-    { day:12, at:null, text:"vậy giờ thì, anh nghĩ P99 có ý nghĩa gì? nói cho em nghe thử được khôngg" },   // sau khi nghe hết tất cả
+    { day:12, at:null, sauAn:true, text:"vậy giờ thì, anh nghĩ P99 có ý nghĩa gì? nói cho em nghe thử được khôngg" },   // sau khi nghe hết tất cả
     // Lời hỏi han hằng ngày lúc 0:00 — không đi kèm bài hát hay truyện nào ("hangNgay")
     { day:21, at:[0,0], hangNgay:true,
       text:"có lúc nào đấy mà anh cảm thấy chán ngán cuộc sống hiện tại của mình quá, mà anh muốn bỏ hết tất cả chỉ để đi đâu đó chưa?\nnếu anh đã từng có những lúc như thế, thì anh muốn đi đâu, và có thể là cùng với ai? rồi anh sẽ làm gì ở đó?" },
@@ -5397,9 +5397,13 @@
   // ---------------- Ngăn thư ----------------
   // Mọi lời nhắn đã tới giờ đều nằm đây, theo đúng thứ tự ngày. Minh mở ra đọc
   // và trả lời lúc nào cũng được — không còn bị khung chat chen ngang nữa.
+  // Lời không theo giờ: tới khi Minh đã nghe bài của nó. Nghe rồi là nằm sẵn trong Ngăn thư, dù lúc nghe có thoát app
+  // giữa chừng hay nghe từ trước khi có bản cập nhật này. Lời lyric: sau Hiểu ta. Câu hỏi P99: sau Phiên ngoại.
+  function loiAnDaToi(p){
+    return !!((progress.pops && progress.pops[popupKey(p)]) || (p.sauBai && heard(p.sauBai)) || (p.sauAn && heard("hidden")));
+  }
   function thuDaToi(){
-    return POPUPS.filter(p => p.at ? (coBaiNgay(p) && daToiLucNhan(p))
-                                   : ((progress.pops && progress.pops[popupKey(p)]) || (p.sauBai && heard(p.sauBai))));
+    return POPUPS.filter(p => p.at ? (coBaiNgay(p) && daToiLucNhan(p)) : loiAnDaToi(p));
   }
   function thuChuaMo(){
     // chị không "nhận" lá thư nào — chỉ Minh có thư chưa mở
@@ -6908,7 +6912,7 @@
     if (!progress.pops) progress.pops = {};
     return POPUPS.find(p => !daNoiRoi("hoi-d" + p.day) && (p.at
       ? (coBaiNgay(p) && daToiLucNhan(p))     // lời theo giờ: tới giờ là còn nợ mãi
-      : progress.pops[popupKey(p)])) || null; // lời của bài ẩn: theo việc nghe hết
+      : loiAnDaToi(p))) || null; // lời của bài ẩn: theo việc nghe hết
   }
   // Rảnh tay: không đang nghe gì, không đang mở ngăn nào, không đang dở mạch nào.
   function ranhTay(){
